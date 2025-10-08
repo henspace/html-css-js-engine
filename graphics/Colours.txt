@@ -1,0 +1,8 @@
+Colour swatch
+
+Rojo (red): #DD1C1A rgb(221 28 26)
+Papaya whip: #FFF1D0 rgb(255 241 208)
+Jonquil (yellow): #F0C808 rgb(240 200 8)
+Cerulean: #086788 rgb(8 103 136)
+Pacific cyan: #06AED5 rgb(6 174 213)
+Green: #059B15 rgb(5 155 21)
