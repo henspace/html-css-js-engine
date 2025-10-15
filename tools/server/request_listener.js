@@ -21,7 +21,9 @@
  */
 
 /**
- * Listener for use with server.js
+ * @module tools/server/requestListener
+ * @description
+ * Listener for use with {@link module:tools/server/server}
  */
 
 import * as fsPromise from 'node:fs/promises';
@@ -31,6 +33,7 @@ import * as path from 'node:path';
 /**
  * Escape sequences for terminal output. Key/value pairs
  * @type {Object<string, string>}
+ * @private
  */
 const Escape = {
   BG_BLACK: '\x1b[40m',
@@ -45,6 +48,7 @@ const Escape = {
 /**
  * Enumerated status codes.
  * @enum {number}
+ * @private
  */
 const StatusCode = {
   OK: 200,
@@ -57,11 +61,13 @@ const StatusCode = {
  * @typedef {Object} HeaderInfo
  * @property {string} name
  * @property {string} value
+ * @private
  */
 
 /**
  * Header keys for arrays of {@link HeaderInfo} objects.
  * @type {Object<string, HeaderInfo[]> }
+ * @private
  */
 const HEADERS = {
   css: [{ name: 'Content-Type', value: 'text/css' }],
@@ -91,9 +97,10 @@ const HEADERS = {
 };
 
 /**
- *
- * @param {*} pathname
+ * Get headers for  a file
+ * @param {*} pathname - path to the file.
  * @returns {HeaderInfo[]}
+ * @private
  */
 function getHeadersForPath(pathname) {
   const extension = path.extname(pathname);
@@ -102,15 +109,17 @@ function getHeadersForPath(pathname) {
 
 /**
  * @typedef {Object} ResponseDetail
- * @property {number} status
- * @property {HeaderInfo[]} headers
- * @property {string | Buffer} content
+ * @property {number} status - response status code
+ * @property {HeaderInfo[]} headers - response headers
+ * @property {string | Buffer} content - response content
+ * @private
  */
 
 /**
  * Get response details for a plain text message. This is normally used for
  * 404 or 500 messages.
  * @returns {ResponseDetail}
+ * @private
  */
 function getTextResponseDetails(status, message) {
   console.log(
@@ -128,6 +137,7 @@ function getTextResponseDetails(status, message) {
  * @param {string} root - the root path
  * @param {URL} requestedUrl - the requested path
  * @returns {ResponseDetail}
+ * @private
  */
 function getResponseDetail(root, requestedUrl) {
   let detail = {};
@@ -173,11 +183,14 @@ function getResponseDetail(root, requestedUrl) {
 
 /**
  * RequestListener for use by http server.
+ * @see {@link https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener}
  */
 export class RequestListener {
+  /** Path to directory from which files are served. @type {string} */
   #root;
+
   /**
-   * Listener for hander
+   * Construct a requestListener for the http server.
    * @param {string} root - path from where files are served
    */
   constructor(root) {
@@ -188,8 +201,9 @@ export class RequestListener {
   }
 
   /**
-   * Get a listener fuction for use with the http server.
+   * Get a listener function for use with the http server.
    * @returns {function(ClientRequest, ServerResponse)}
+   * @see {@link https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener}
    */
   get listener() {
     return (req, res) => {

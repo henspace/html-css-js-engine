@@ -1,0 +1,34 @@
+{
+  "outputDir": "./build",
+  "zippedOutputDir": "./build_ZIPPED",
+  "root": "source",
+  "filter": {
+    "includeFiles": {
+      "regex": "[.](?:css|html|jpeg|jpg|js|json|png|md|mp3|txt)$",
+      "flags": "i"
+    },
+    "excludeFiles": {
+      "regex": "(?:^[_.]|\\.test\\.js$)",
+      "flags": ""
+    },
+    "excludeDirs": {
+      "regex": "^[_.]",
+      "flags": ""
+    }
+  },
+  "parserConfig": {
+    "html": {
+      "prefix": "",
+      "suffix": ""
+    },
+    "md": {
+      "prefix": "",
+      "suffix": ""
+    },
+    "js": {
+      "prefix": "/* Copyright %%_BUILD_YEAR_%% %%_AUTHOR_%%\n * License: %%_LICENCE_%%\n */\n",
+      "suffix": ""
+    }
+  },
+  "zipCommand": "\"C:\\Program Files\\7-Zip\\7z.exe\" a -tzip ${zipOutputDir} .\\${zipSourceDir}\\*"  
+}

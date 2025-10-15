@@ -1,0 +1,9 @@
+{
+  "opts": {
+    "recurse": true
+  },
+  "plugins": ["plugins/markdown"],
+  "source": {
+    "excludePattern": "\\.test\\.js$"
+  }
+}

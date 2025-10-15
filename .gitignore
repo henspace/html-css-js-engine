@@ -1,2 +1,5 @@
 /jsdoc_out
 /node_modules
+/build
+/build_ZIPPED
+/jsdoc

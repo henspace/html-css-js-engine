@@ -1,13 +1,17 @@
 {
-  "name": "html-css-js-engine",
+  "name": "hcje",
   "version": "0.0.1",
-  "description": "A very, very simple engine for HTML, JS and CSS games",
+  "description": "HTML-CSS-JS-Engine",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "document": "jsdoc ./source/hcje/scripts -c jsdoc.config.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve-source": "node ./tools/server/server.js 8080 ./source"
+    "document": "npm run document-engine & npm run document-tools",
+    "document-engine": "jsdoc ./source/scripts --destination ./jsdoc/engine -c jsdoc-config.json --readme ./source/README.md",
+    "document-tools": "jsdoc ./tools --destination ./jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md",
+    "test": "node ./tools/testing/runner.js test-config.json",
+    "serve-build": "node ./tools/server/server.js 8080 ./build",
+    "serve-source": "node ./tools/server/server.js 8080 ./source",
+    "build": "node ./tools/build/build.js ./build-config.json"
   },
   "keywords": [
     "game",

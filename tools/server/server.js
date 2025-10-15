@@ -21,14 +21,20 @@
  */
 
 /**
- * @name "server.js"
- * @global
+ * @module tools/server/server
  * @description
  * Simple test server.
- * Usage server folder [port]
+ *
+ * This module is intended to be run as node script.
+ *
+ * Usage:
+ * + server port folder [subfolder]
+ *     + port: only ports 8080 or 8008 are accepted
+ *     + folder: root folder from which files are served. Note that files can only be served from directories within
+ *     the script's current working directory.
+ *     + subfolder: optional subfolder. If provided, files are served from **folder/subfolder**
  */
 
-/*global process */
 import * as  http from 'http';
 import * as path from 'node:path';
 import { existsSync, lstatSync } from 'node:fs';
@@ -38,18 +44,44 @@ if (process.argv.length < 4 || process.argv.length > 5) {
   throw new Error('Incorrect arguments.\nUsage server port folder [subfolder]');
 }
 
+/** 
+ * Host @type{string}
+ * @private
+ */
 const HOST = '127.0.0.1';
+/** 
+ * Port @type{string|number}
+ * @private
+ */
 const PORT = process.argv[2];
 
 if (!/^(?:8080|8008)$/.test(PORT)) {
   throw new Error(`Only ports 8008 and 8080 supported. Cannot serve on ${PORT}`);
 }
 
+
+/** 
+ * Folder used to form the root folder from which files are served. @type{string}
+ * @private
+ */
 const FOLDER  = process.argv[3];
+/** 
+ * Optional subfolder within the FOLDER @type{string}
+ * @private
+ */
 const SUBFOLDER = process.argv[4] ?? '';
+/** 
+ * Root folder which is formed as FOLDER/SUBFOLDER @type{string}
+ * @private
+ */
 const ROOT = path.join(process.cwd(), FOLDER, SUBFOLDER);
+/** 
+ * Path to the root folder relative to the current working directory @type{string}
+ * @private
+ */
 const relativePath = path.relative(process.cwd(), ROOT);
 
+/* Ensure that files outside the current working directory are not served. */
 if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
   throw new Error(
     `The test server can only serve files from within the current working folder.`
@@ -64,6 +96,10 @@ if (!lstatSync(ROOT).isDirectory()) {
   throw new Error(`The root ${ROOT} is not a folder.`);
 }
 
+/**
+ * The server's request listener. @type{module:tools/server/request_listener~RequestListener}
+ * @private
+ */
 const reqListener = new RequestListener(ROOT);
 
 http.createServer(reqListener.listener).listen(PORT, HOST, () => {
