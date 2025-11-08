@@ -32,8 +32,8 @@ import * as utils from "./utils.js";
 /**
  * @typedef {Object} CellPainterData
  * @propery {CanvasRenderingContext2D} context - rendering context
- * @property {module:hcje/utils~Dimension} imageSize
- * @property {module:hcje/utils~Rectangle} cell
+ * @property {module:hcje/utils~Dimensions} imageSize
+ * @property {module:hcje/utils~RectData} cell
  * @property {Object} custom - additional painter specific data
  */
 
@@ -152,7 +152,7 @@ export function randomPathCellPainter(data) {
 /**
  * @see module:hcje/images~CellPainter
  * @param {module:hcje/images~CellPainterData} data
- * @param {Array<module:hcje/utils~Point> data.custom.points
+ * @param {Array<module:hcje/utils~Coordinate> data.custom.points
  * @param {boolean} data.custom.fill
  */
 export function pathCellPainter(data) {
@@ -176,7 +176,7 @@ export function pathCellPainter(data) {
 
 /**
  * @typedef {Object} ImageConfig
- * @property {module:hcje/utils~Dimension} imageSize
+ * @property {module:hcje/utils~Dimensions} imageSize
  * @property {CellPainter} cellPainter
  * @property {Object} cellConfig
  * @property {string} [cellConfig.backgroundColor = 'transparent'] - CSS color of background

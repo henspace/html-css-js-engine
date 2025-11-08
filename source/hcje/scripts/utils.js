@@ -27,24 +27,41 @@
  */
 
 /**
- * @typedef Dimension
+ * @typedef Dimensions
  * @property {number} width
  * @property {number} height
  */
 
 /**
- * @typedef Point
+ * @typedef Coordinate
  * @property {number} x
  * @property {number} y
  */
 
 /**
- * @typedef Rectangle
+ * @typedef RectData
  * @property {number} x - left position
  * @property {number} y - top position
  * @property {number} width
  * @property {number} height
  */
+
+/**
+ * @typedef PositionData
+ * @property {number} x - x position.
+ * @property {number} y - y - position.
+ * @property {number} angle - radians.
+ */
+
+/**
+ * Safely parse an integer.
+ * @param {string} str - string to parse.
+ * @param {number} [defaultValue = 0] - value to return on failure. Note this should be an integer but it is not validated.
+ */
+export function parseInt(str, defaultValue = 0) {
+  const result = Number.parseInt(str);
+  return Number.isNaN(result) ? defaultValue : result;
+}
 
 /**
  * Get random number between min (inclusive) and max (exclusive).
@@ -248,13 +265,47 @@ export function shuffle(arr) {
 }
 
 /**
+ * Content types keys for arrays .
+ * @type {Object<string, HeaderInfo[]> }
+ * @private
+ */
+const ContentType = {
+  css: 'text/css',
+  csv: 'text/csv',
+  cur: 'image/x-icon',
+  gif: 'image/gif',
+  html: 'text/html',
+  ico: 'image/x-icon',
+  jpeg: 'image/jpeg',
+  jpg: 'image/jpeg',
+  json: 'application/json',
+  js: 'text/javascript',
+  map: 'application/json',
+  md: 'text/markdown',
+  mp3: 'audio/mpeg',
+  mp4: 'video/mp4',
+  mpeg: 'video/mpeg',
+  png: 'image/png',
+  svg: 'image/svg+xml',
+  ttf: 'font/ttf',
+  txt: 'text/plain',
+  woff: 'font/woff',
+  woff2: 'font/woff2',
+};
+
+
+
+
+
+/**
  * Call to fetch to get text.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch}
  * @param {string | URL | Request} url
  * @param {boolean} asJson - if true pass the result as JSON.
  * @param {string | Object} fallbackResult - result if error
  * @returns {Promise} fulfils to text or json. On error, fulfils to
- *  fallbackResult.
+ *  fallbackResult. If fallbackResult is undefined, an error is thrown.
+ * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchTextOrJson(url, asJson, fallbackResult) {
   return fetch(url)
@@ -267,6 +318,9 @@ export function fetchTextOrJson(url, asJson, fallbackResult) {
     })
     .catch((error) => {
       console.error(error.message);
+      if (fallbackResult === undefined) {
+        throw new Error(`Failed to load ${url}: ${error}`);
+      }
       return fallbackResult;
     });
 }
@@ -277,7 +331,8 @@ export function fetchTextOrJson(url, asJson, fallbackResult) {
  * @param {string | URL | Request} url
  * @param {string} fallbackResult - result if error
  * @returns {Promise} fulfils to text. On error, fulfils to
- *  fallbackResult.
+ *  fallbackResult or throws error.
+ * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchText(url, fallbackResult) {
   return fetchTextOrJson(url, false, fallbackResult);
@@ -289,7 +344,8 @@ export function fetchText(url, fallbackResult) {
  * @param {string | URL | Request} url
  * @param {Object} fallbackResult - result if error
  * @returns {Promise} fulfils to Object. On error, fulfils to
- *  fallbackResult.
+ *  fallbackResult or throws error.
+ * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchJson(url, fallbackResult) {
   return fetchTextOrJson(url, true, fallbackResult);
@@ -300,11 +356,28 @@ export function fetchJson(url, fallbackResult) {
  * Call to fetch to get text.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch}
  * @param {string | URL | Request} url
+ * @param {Object} headers - the [Headers]{@link https://developer.mozilla.org/en-US/docs/Web/API/Headers} to add to
+ * the request.
+ * @param {RequestInit} options - if null, the content type is derived from the url.
+ *  See [RequestInit]{@link https://developer.mozilla.org/en-US/docs/Web/API/RequestInit}.
  * @returns {Promise} fulfils to the ArrayBuffer. 
  * @throws {Error}
  */
-export function fetchArrayBuffer(url) {
-  return fetch(url)
+export function fetchArrayBuffer(url, options) {
+  let requestInit = options; 
+  if (!requestInit) {
+    const fileType = url?.match(/\.([\w\d]+)$/)?.[1];
+    if (fileType) {
+      requestInit = {
+        method: 'GET',
+        headers: {
+          'Content-Type' :ContentType[fileType],
+        }
+      }; 
+      console.debug(`Fetch ${url} with Content-Type = ${requestInit.headers['Content-Type']}`);
+    }
+  }
+  return fetch(url, requestInit)
     .then((response) => {
       if (response.ok) {
         return response.arrayBuffer();

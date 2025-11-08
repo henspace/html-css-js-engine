@@ -24,7 +24,7 @@
 /**
  * @module hcje/device
  * @description
- * Various utilities for getting information from the system
+ * Various utilities for getting information from the system. This includes the keyboard.
  */
 
 /**
@@ -36,8 +36,8 @@ export function getDimensions(element) {
   let width;
   let height;
   if (element) {
-    width = element.clientWidth;
-    height = element.clientHeight;
+    width = element.clientWidth || Number.parseInt(element.style.width);
+    height = element.clientHeight || Number.parseInt(element.style.height);
   } else {
     width = window.innerWidth;
     height = window.innerHeight;
@@ -47,7 +47,7 @@ export function getDimensions(element) {
 
 /** 
  * Get an appropriate scale to allow a rectangle to fit in the body.
- * The body should have been set in css to fit the screen.
+ * Typically no element is provided and the body will have been set in css to fit the screen.
  * @param {number} width - rectangle width
  * @param {height} height - rectangle height
  * @param {boolean} cover - should rect cover body. Fits if false
@@ -101,6 +101,65 @@ export function getScaleToFit(width, height, options) {
  */
 export function getScaleToCover(width, height, options) {
   return getScaleToFitOrCover(width, height, true, options ?? {});
+}
+
+
+
+/**
+ * Detail provided in the details property of the options object provided to the 
+ * [CustomEvent]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent}.
+ * @typedef {Object} VirtualKeyDetail
+ * @property {string} key - see the 
+ *    [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
+ */
+
+/**
+ * Keyboard handler.
+ */
+export class Keyboard {
+  static #VIRTUAL_KEYDOWN_EVENT = 'virtualKeyDown';
+
+  /** Map of listeners. @type {Map<string, function>} */
+  #listeners;
+  /**
+   * Construct the keyboard handler.
+   */ 
+  constructor() {
+    this.#listeners = new Map();
+    addEventListener('keydown', (evt) => {
+      this.#listeners.get(evt.key)?.();
+    });
+    addEventListener(Keyboard.#VIRTUAL_KEYDOWN_EVENT, (evt) => {
+      console.debug(`Virtual key `, evt);
+      this.#listeners.get(evt.detail.key)?.();
+    });
+  }
+  /**
+   * Add keydown listener.
+   * @param {string} key - string representation of key. 
+   *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
+   * @param {function()} listener - callback function.
+   */
+  addDownListener(key, listener) {
+    this.#listeners.set(key, listener);
+  }
+  /**
+   * Remove keydown listener.
+   * @param {string} key - string representation of key. 
+   */
+  removeDownListener(key) {
+    this.#listeners.delete(key);
+  }
+
+  /**
+   * Dispatch a virtual key down event.
+   * @param {string} key - string representation of key. 
+   *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
+   * @param {EventTarget} [dispatcher = window] - event target used to dispatch the event.
+   */
+  static simulateKeydown(key, dispatcher = window) {
+    dispatcher.dispatchEvent(new CustomEvent(Keyboard.#VIRTUAL_KEYDOWN_EVENT, {detail: {key}}));
+  }
 }
 
 

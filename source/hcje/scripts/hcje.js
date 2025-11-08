@@ -26,12 +26,13 @@
  * This is a barrel module aggregating the engine modules and provided for convenience only.
  */
 
-export * as 'utils' from './utils.js';
-export * as 'domTools' from './dom-tools.js';
-export * as 'device' from './device.js'; 
-export * as 'images' from './images.js';
-export * as 'audio' from './audio.js';
-export * as 'buildConstants' from './build-constants.js';
-export * as 'errors' from './errors.js';
-export * as 'storage' from './storage.js';
+export * as utils from './utils.js';
+export * as domTools from './dom-tools.js';
+export * as device from './device.js'; 
+export * as images from './images.js';
+export * as audio from './audio.js';
+export * as buildConstants from './build-constants.js';
+export * as errors from './errors.js';
+export * as storage from './storage.js';
+export * as sprites from './sprites.js';
 

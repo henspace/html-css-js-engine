@@ -38,7 +38,7 @@
 import * as  http from 'http';
 import * as path from 'node:path';
 import { existsSync, lstatSync } from 'node:fs';
-import { RequestListener } from './request_listener.js';
+import { RequestListener } from './request-listener.js';
 
 if (process.argv.length < 4 || process.argv.length > 5) {
   throw new Error('Incorrect arguments.\nUsage server port folder [subfolder]');

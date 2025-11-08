@@ -1,0 +1,32 @@
+
+body {
+}
+
+.hcje-game-area {
+  background-color: transparent;
+  background-image: url('./assets/space-background.jpg');
+  background-size: cover;
+  font-family: "Pixelify Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+} 
+
+.bridger-score {
+  color: green;
+  position: absolute;
+  left: 0px;
+  top: 15px;
+}
+
+.bridger-control {
+  bottom: 1em;
+  position: absolute;
+}
+
+.bridger-control--left {
+  left: 1em;
+}
+.bridger-control--right {
+  right: 1em;
+}
