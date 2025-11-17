@@ -10,7 +10,7 @@ Amstrad monitor was black and white, but I've gone with green on black as it jus
 
 ## Version details
 
-+ version %%_VERSION_%% [%%_BUILD_ID%%]
++ version %%_VERSION_%% [%%_BUILD_ID_%%]
 + &copy; %%_BUILD_YEAR_%% %%_AUTHOR_%%
 
 ## Credits
