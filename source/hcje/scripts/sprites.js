@@ -56,9 +56,10 @@ import * as domTools from './dom-tools.js';
  * @enum {CycleTypeEnumValue}
  */
 export const CycleType = {
-  LOOP: 0,
-  OSCILLATE: 1,
-  STOP: 2
+  NONE: 0, 
+  LOOP: 1,
+  OSCILLATE: 2,
+  STOP: 3
 };
 
 /**
@@ -96,10 +97,97 @@ export const CycleType = {
  */ 
 
 /**
- * Renderer for sprites using the DOM.
+ * Renderer for a text sprite using the DOM.
  * @implements {module:hcje/sprites~SpriteRenderer}
  */
-export class DomSpriteRenderer extends domTools.ElementWrapper {
+export class DomTextSpriteRenderer extends domTools.TextElement {
+  /**
+   * Construct renderer.
+   * @param {Element} container - DOM element that holds the sprite. The sprite element is automatically appended to
+   * the container.
+   * @param {string} txt - the text content for the sprite.
+   * @pararm {Object} [options]
+   * @param {boolean} options.markdown - true if the txt is markdown.
+   */
+  constructor(container, txt, options) {
+    super();
+    container.appendChild(this);
+    if (options?.markdown) {
+      this.setMarkdown(txt);
+    } else {
+      this.innerText = txt;
+    }
+    this.className = 'hcje-sprites-sprite hcje-sprites-sprite--text';
+    this.style.position = 'absolute';
+  }
+
+  /**
+   * Render the sprite.
+   */
+  render(sprite) {
+    const frameData = sprite.frameData;
+    const position = sprite.position;
+    let transform = '';
+    if (frameData.flipX) {
+      transform += 'scaleX(-1) ';
+    }
+    if (frameData.flipY) {
+      transform += 'scaleY(-1) ';
+    }
+    if (position.angle !== 0) {
+      transform += ` rotateZ(${position.angle}rad)`;
+    }
+    this.style.opacity = sprite.opacity;
+    this.style.width = `${frameData.width}px`;
+    if (frameData.height) {
+      this.style.height = `${frameData.height}px`;
+    }
+    this.style.transform =  transform;
+    this.style.left = `${position.x}px`;
+    this.style.top = `${position.y}px`;
+  }
+
+  /**
+   * Release resources used by the renderer. This involves removal of the sprite element.
+   */
+  kill() {
+    this.remove();
+  }
+
+}
+
+/**
+ * Create a text sprite.
+ * @param {Element|ElementWrapper} container - the sprite is appended to the container.
+ * @param {string} txt - the contents of the sprite.
+ * @param {Object} options - configuration options.
+ * @param {boolean} options.markdown - should markdown be used.
+ * @param {module:hcje/utils~Dimensions} dimensions - Sprite size. Width must be provided. Use 0 for the height if you
+ *  want this to size automatically.
+ */
+export function createTextSprite(container, txt, options) {
+  const sprite = new Sprite('Text');
+  const renderer = new DomTextSpriteRenderer(container, txt, options);
+  sprite.renderer = renderer;
+
+  const rect = {x: 0, y: 0, width: options.dimensions.width, height: options.dimensions.height};
+  sprite.setStateFrames('anon', {
+    cycleType: CycleType.NONE,
+    frames: [rect],
+    interval: 0
+  });
+  sprite.renderer.render(sprite);
+  console.debug(`${renderer.offsetWidth} ${renderer.offsetHeight} `);
+  sprite.dimensions = {width: renderer.offsetWidth, height: renderer.offsetHeight}
+
+  return sprite;
+}
+
+/**
+ * Renderer for sprites using the DOM and images from a texture.
+ * @implements {module:hcje/sprites~SpriteRenderer}
+ */
+export class DomImageSpriteRenderer extends domTools.ElementWrapper {
   /** Texture used for the sprite. @type {HTMLIMageElement} */
   #texture;
 
@@ -114,7 +202,7 @@ export class DomSpriteRenderer extends domTools.ElementWrapper {
     super('div');
     container.appendChild(this);
     this.#texture = texture;
-    this.className = 'hcje-sprites-sprite';
+    this.className = 'hcje-sprites-sprite hcje-sprites-sprite--texture';
     this.style.backgroundImage = `url(${this.#texture.src})`;
     this.style.position = 'absolute';
   }
@@ -151,7 +239,6 @@ export class DomSpriteRenderer extends domTools.ElementWrapper {
     this.remove();
   }
 }
-
 
 /**
  * Sprite class.
@@ -553,21 +640,22 @@ export class Dynamics {
 
 /**
  * Sprite factory.
- * @interface SpriteFactory
+ * @interface ImageSpriteFactory
  */
 
 /**
  * Create a rendered sprite.
- * @function module:hcje/sprites~SpriteFactory#createSprite
+ * @function module:hcje/sprites~ImageSpriteFactory#createSprite
  * @param {string} logId - id used for debugging.
  * @param {HTMLImageElement} texture - image used for the texture.
  */
 
+
 /**
- * Class for creating sprites that are rendered as elements in the DOM.
- * @implements module:hcje/sprites~SpriteFactory
+ * Class for creating sprites with images from a texture that are rendered as elements in the DOM.
+ * @implements module:hcje/sprites~ImageSpriteFactory
  */
-export class DomSpriteFactory {
+export class DomImageSpriteFactory {
   /** Container @type {Element} */
   parentElement;
 
@@ -580,11 +668,11 @@ export class DomSpriteFactory {
   }
 
   /**
-   * @borrows {module:hcje/sprites~SpriteFactory#createSprite}
+   * @borrows {module:hcje/sprites~ImageSpriteFactory#createSprite}
    */
   createSprite(logId, texture) {
     const sprite = new Sprite(logId);
-    sprite.renderer = new DomSpriteRenderer(this.parentElement, texture);
+    sprite.renderer = new DomImageSpriteRenderer(this.parentElement, texture);
     return sprite;
   }
 }
@@ -595,7 +683,7 @@ export class DomSpriteFactory {
 export class TextureManager {
   /** Data to access sprites in the texture. @type {Object} */
   #data;
-  /** Sprite factory @type {module:hcje/sprites~SpriteFactory} */
+  /** Sprite factory @type {module:hcje/sprites~ImageSpriteFactory} */
   spriteFactory;
   /** Texture @type {HTMLImageElement} */
   #texture;
@@ -658,7 +746,7 @@ export class TextureManager {
     const sprite = this.spriteFactory.createSprite(baseName, this.#texture);
     if (!stateConfigs || stateConfigs.length === 0) {
       sprite.setStateFrames('anon', {
-        cycleType: CycleType.STOP,
+        cycleType: CycleType.NONE,
         frames: [this.createRectData(this.#data.frames[baseName])],
         interval: 0
       });
@@ -855,6 +943,10 @@ export class TerminateOutOfBounds extends BaseSpriteAdjuster {
       if (this.#kill) {
         this._sprite.kill();    
       }
+      this._sprite.dynamics.vx = 0;
+      this._sprite.dynamics.vy = 0;
+      this._sprite.dynamics.ax = 0;
+      this._sprite.dynamics.ay = 0;
       this.markComplete();
     }
   }
@@ -862,7 +954,7 @@ export class TerminateOutOfBounds extends BaseSpriteAdjuster {
 
 /**
  * Adjuster that completes when the sprite reaches a point. Note the dynamics should have been configured first.
- * If not moving, the adjuster is marked as complete.
+ * If not moving, the adjuster is marked as complete. Once completed, the velocity and acceleration are set to zero.
  */
 export class ReachTargetXY extends BaseSpriteAdjuster {
   #targetX;
@@ -929,11 +1021,15 @@ export class Animator {
   /** Previous time stamp @type {DOMHighResTimeStamp} */
   #lastTimeStamp;
 
+  /** Flag to indicate that the animation is paused. @type {boolean} */
+  #paused;
+
   /**
    * Construct the animator.
    */
   constructor () {
     this.active = false;
+    this.#paused = false;
     this.#children = new Map();
   }
 
@@ -952,12 +1048,34 @@ export class Animator {
    * @param {boolean} state
    */
   set active(state) {
-    const oldState = this.#active;
-    this.#active = state;
-    if (!state) {
-      this.#lastTimeStamp = undefined;
-    } else if (!oldState) {
+    if (!this.#active && state) {
+      this.#active = state;
       this.#animate();
+    } else {
+      this.#lastTimeStamp = undefined;
+      this.#active = state;
+    }
+  }
+
+  /**
+   * Pause the animator. This will pause the animation. The active property is unchanged. The allows the **pause** 
+   * and **resume** methods to be safely called without modifying the **active** state of the animator.
+   */
+  pause() {
+    this.#paused = true;
+    this.#lastTimeStamp = undefined;
+  }
+
+  /**
+   * Resume the animator. This will resume animations. Note the animations may still not actually start if the animator
+   * is not active. If the animator is not paused, the call is ignored.
+   */
+  resume() {
+    if (this.#paused) {
+      this.#paused = false;
+      if (this.#active) {
+        this.#animate();
+      }
     }
   }
 
@@ -967,6 +1085,9 @@ export class Animator {
    * @param {DOMHighResTimeStamp} timeStamp - end time of the previous frame.
    */
   #animate(timeStamp) {
+    if (!this.active || this.#paused) {
+      return;
+    }
     if (timeStamp) {
       const deltaT = this.#lastTimeStamp ? (timeStamp - this.#lastTimeStamp) / 1000 : 0;
       this.#lastTimeStamp = timeStamp;
@@ -977,9 +1098,7 @@ export class Animator {
         }
       });
     }
-    if (this.#active) {
-      requestAnimationFrame((evtTimeStamp) => this.#animate(evtTimeStamp));
-    }
+    requestAnimationFrame((evtTimeStamp) => this.#animate(evtTimeStamp));
   }
 
   /**
@@ -1001,7 +1120,7 @@ export class Animator {
   killTarget(target) {
     const child = this.#children.get(target);
     if (child) {
-      child.target.kill();
+      child.kill();
     }
     this.#children.delete(target);
   }
@@ -1011,7 +1130,7 @@ export class Animator {
    */
   clear() {
     this.#active = false;
-    this.#children.forEach((child) => this.killTarget(target));
+    this.#children.forEach((child) => this.killTarget(child));
   }
 
 }

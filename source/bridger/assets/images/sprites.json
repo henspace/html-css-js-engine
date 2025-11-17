@@ -1,0 +1,292 @@
+{"frames": {
+
+"sprites_retro_rock.png":
+{
+	"frame": {"x":467,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_scaffold.png":
+{
+	"frame": {"x":1,"y":1,"w":96,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":96,"h":48},
+	"sourceSize": {"w":96,"h":48}
+},
+"sprites_retro_spaceman_fall0.png":
+{
+	"frame": {"x":517,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_fall1.png":
+{
+	"frame": {"x":567,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_fall2.png":
+{
+	"frame": {"x":617,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_idle0.png":
+{
+	"frame": {"x":667,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_idle1.png":
+{
+	"frame": {"x":717,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_idle2.png":
+{
+	"frame": {"x":767,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk0.png":
+{
+	"frame": {"x":817,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk1.png":
+{
+	"frame": {"x":867,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk2.png":
+{
+	"frame": {"x":917,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk3.png":
+{
+	"frame": {"x":967,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk4.png":
+{
+	"frame": {"x":1017,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk5.png":
+{
+	"frame": {"x":1067,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk6.png":
+{
+	"frame": {"x":1117,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceman_walk7.png":
+{
+	"frame": {"x":1167,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_retro_spaceship_fly0.png":
+{
+	"frame": {"x":99,"y":1,"w":96,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":96,"h":48},
+	"sourceSize": {"w":96,"h":48}
+},
+"sprites_retro_spaceship_fly1.png":
+{
+	"frame": {"x":197,"y":1,"w":96,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":96,"h":48},
+	"sourceSize": {"w":96,"h":48}
+},
+"sprites_retro_spaceship_fly2.png":
+{
+	"frame": {"x":295,"y":1,"w":96,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":96,"h":48},
+	"sourceSize": {"w":96,"h":48}
+},
+"sprites_rock.png":
+{
+	"frame": {"x":1217,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_scaffold.png":
+{
+	"frame": {"x":393,"y":1,"w":72,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":72,"h":48},
+	"sourceSize": {"w":72,"h":48}
+},
+"sprites_spaceman_fall0.png":
+{
+	"frame": {"x":1267,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_fall1.png":
+{
+	"frame": {"x":1317,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_fall2.png":
+{
+	"frame": {"x":1367,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_idle0.png":
+{
+	"frame": {"x":1417,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_idle1.png":
+{
+	"frame": {"x":1467,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_idle2.png":
+{
+	"frame": {"x":1517,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk0.png":
+{
+	"frame": {"x":1567,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk1.png":
+{
+	"frame": {"x":1617,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk2.png":
+{
+	"frame": {"x":1667,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk3.png":
+{
+	"frame": {"x":1717,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk4.png":
+{
+	"frame": {"x":1767,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk5.png":
+{
+	"frame": {"x":1817,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk6.png":
+{
+	"frame": {"x":1867,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"sprites_spaceman_walk7.png":
+{
+	"frame": {"x":1917,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "sprites.png",
+	"format": "RGBA8888",
+	"size": {"w":1966,"h":50},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:17eb848c74bc61ea1a72f87c82fda65a:96946474f0f469fc98aa07d9c8098846:1eabdf11f75e3a4fe3147baf7b5be24b$"
+}
+}

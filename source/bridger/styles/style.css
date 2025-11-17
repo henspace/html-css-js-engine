@@ -1,0 +1,111 @@
+:root {
+  --color-primary: #00FF00;
+  --color-secondary: #F0C808;
+  --color-tertiary: #FFF1D0;
+  --color-highlight: #DD1C1A;
+  --color-highlight2: #059B15;
+  
+  --color-primary-contrast: #000;
+  --color-secondary-contrast: #000;
+  --color-tertiary-contrast: #000;
+  --color-highlight-contrast: #fff;
+  
+  --color-primary-shadow: #00FF00;
+  --color-dark-grey: #404040;
+  --color-light-grey: #d3d3d3; 
+}
+
+#bridger-loading {
+  opacity: 1;
+  text-align: center;
+  transition: opacity 1s;
+}
+
+html {
+  font-family: "Jersey 10", sans-serif; 
+  font-weight: 400;
+  font-size: 22px;
+  font-style: normal;
+
+}
+
+h1, h2, h3, h4, .bridger-title {
+  font-family: "Pixelify Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+}
+
+.bridger-title {
+  bottom: 2em;
+  color: green;
+  font-size: 32px;
+  left: 0;
+  width: 100%;
+  position: absolute;
+  text-align: center;
+  text-shadow: 1px 1px 2px black;
+  z-index: 100;
+}
+
+.hcje-button-image, .hcje-toggle-button-image {
+  border-radius: 0;
+}
+
+.hcje-dialog-box {
+  background-color: black;
+  color: green;
+}
+
+.hcje-game-area {
+  background-color: transparent;
+  background-image: url('../assets/images/space-background-retro.png');
+  background-size: cover;
+} 
+
+.bridger-score {
+  color: green;
+  position: absolute;
+  left: 1em;
+  top: 1em;
+}
+
+.hcje-button.bridger-control {
+  bottom: 1em;
+  display: flex;
+  flex-direction: column-reverse;
+  height: 100%;
+  opacity: 0;
+  position: absolute;
+  transition: opacity 0.5s;
+  width: 50%;
+}
+
+.bridger-control--left {
+  left: 0;
+}
+.bridger-control--right {
+  right: 0;
+}
+
+.bridger-message {
+  background-color: black;
+  color: green;
+  left: 50%;
+  padding: 1em;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+}
+
+.bridger-walker {
+  opacity: 1;
+  transition: opacity 2s;
+}
+
+.bridger-dialog__about_button {
+  display: block;
+  margin: auto;
+}

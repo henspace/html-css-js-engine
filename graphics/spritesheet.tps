@@ -50,7 +50,7 @@
         <key>dxtCompressionMode</key>
         <enum type="SettingsBase::DxtCompressionMode">DXT_PERCEPTUAL</enum>
         <key>ditherType</key>
-        <enum type="SettingsBase::DitherType">NearestNeighbour</enum>
+        <enum type="SettingsBase::DitherType">PngQuantLow</enum>
         <key>backgroundColor</key>
         <uint>0</uint>
         <key>libGdx</key>
@@ -68,13 +68,13 @@
         <key>jpgQuality</key>
         <uint>80</uint>
         <key>pngOptimizationLevel</key>
-        <uint>1</uint>
+        <uint>0</uint>
         <key>webpQualityLevel</key>
         <uint>101</uint>
         <key>textureSubPath</key>
         <string></string>
         <key>textureFormat</key>
-        <enum type="SettingsBase::TextureFormat">png</enum>
+        <enum type="SettingsBase::TextureFormat">png8</enum>
         <key>borderPadding</key>
         <uint>0</uint>
         <key>maxTextureSize</key>
@@ -124,7 +124,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename>../source/bridger/assets/sprites.json</filename>
+                <filename>../source/bridger/assets/images/sprites.json</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -173,6 +173,21 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">spritesheet-images/sprites_retro_rock.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_fall0.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_fall1.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_fall2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_idle0.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_idle1.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_idle2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk0.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk1.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk3.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk4.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk5.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk6.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_walk7.png</key>
             <key type="filename">spritesheet-images/sprites_rock.png</key>
             <key type="filename">spritesheet-images/sprites_scaffold.png</key>
             <key type="filename">spritesheet-images/sprites_spaceman_fall0.png</key>
@@ -200,6 +215,21 @@
                 <rect>12,12,24,24</rect>
                 <key>scale9Paddings</key>
                 <rect>12,12,24,24</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">spritesheet-images/sprites_retro_scaffold.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>18,12,36,24</rect>
+                <key>scale9Paddings</key>
+                <rect>18,12,36,24</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>

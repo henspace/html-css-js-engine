@@ -21,35 +21,15 @@
  */
 
 /**
- * @module hcje/errors
+ * @module hcjeLib 
  * @description
- * Error handling utilities.
- * Including this module will automatically handle 'error' and 'unhandledrejection' events if not caught.
+ * This adds the hcje library to the window object using the hcjeLib namespace.
  */
+import * as hcje from './hcje.js';
 
-/**
- * Show a fatal error. NB we don't use translation in case the error occurred in translation.
- * There is no return as the function either reloads or goes back in the history.
- * @param {string} message
- */
-export function showAndHandleFatalError(message) {
-  console.trace(message);
-  const choice = confirm(`Whoops! A serious error has occurred: ${message}\n\nDo you want to reload the page? If you cancel, we'll try to go back to the previous page.`);
-  if (choice) {
-    location.reload();
-  } else {
-    history.back();
-  }
+if (window.hcjeLib) {
+  throw('hcjeLib already exists in window object. Rename.');
+} else {
+  window.hcjeLib = hcje;
 }
-
-/* Add handlers for unexpected events. */
-window.addEventListener('error', ((error) => {
-  showAndHandleFatalError(`${error.message} ${error.filename}[${error.lineno}:${error.colno}]`);
-}));
-
-window.addEventListener('unhandledrejection', ((event) => {
-  showAndHandleFatalError(`Unhandled promise rejection: ${event.reason}`);
-}));
-
-
 

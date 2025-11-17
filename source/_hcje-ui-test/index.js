@@ -55,6 +55,7 @@ Some character entities &copy; &reg; &#169; and &illegal; .
 \`code here\` more code \`here\` and escaped &#96;here&#x60;.
 `;
 
+const AUDIO = hcje.audio.getAudioManager();
 
 /**
  * Class for creating melodies.
@@ -372,9 +373,9 @@ function addMusicTest(id, definition) {
     labelOn: `STOP ${id}`,
     onClick: (ev, on) => {
       if (on) {
-        hcje.audio.setMusic(definition);
+        AUDIO.setMusic(definition);
       } else {
-        hcje.audio.stopMusic();
+        AUDIO.stopMusic();
       }
     }
   })
@@ -517,7 +518,7 @@ function synthToCode(synthDef) {
         lines.push(`      },`);
       }
       lines.push(`      notes: '${track.notes}',`);
-      lines.push(`      octave: "${track.octave}"`);
+      lines.push(`      octave: ${track.octave}`);
       lines.push(`    },`);
     }
   }
@@ -645,22 +646,22 @@ function addSynthesiserTest() {
     fadeSeconds: 0.1, 
     tracks: [
       {
-        instrument: hcje.audio.Instrument.PIANO,
+        instrument: structuredClone(hcje.audio.Instrument.PIANO),
         octave: 4,
         notes: 'CDEFGAB+C'
       },
       {
-        instrument: hcje.audio.Instrument.CYMBAL, 
+        instrument: structuredClone(hcje.audio.Instrument.CYMBAL), 
         octave: 7,
         notes: 'G'
       },
       {
-        instrument: hcje.audio.Instrument.SNARE,
+        instrument: structuredClone(hcje.audio.Instrument.SNARE),
         octave: 6,
         notes: '~G'
       },
       {
-        instrument: hcje.audio.Instrument.DRUM,
+        instrument: structuredClone(hcje.audio.Instrument.DRUM),
         octave: 2,
         notes: 'C~C~'
       },
@@ -672,7 +673,7 @@ function addSynthesiserTest() {
    */
   const updateMusic = () => {
     synthDefinition.tracks[0].notes = melodyMaker.getNotes();
-    hcje.audio.setMusic(synthDefinition);
+    AUDIO.setMusic(synthDefinition);
   }
 
   const children = [];
@@ -685,7 +686,7 @@ function addSynthesiserTest() {
     step: 10,
     onChange: (bpm) => {
       synthDefinition.bpm = bpm;
-      hcje.audio.setMusic(synthDefinition);
+      AUDIO.setMusic(synthDefinition);
     }
   });
 
@@ -695,9 +696,9 @@ function addSynthesiserTest() {
     const editButton = new hcje.domTools.Button({
       label: `Edit track ${n}`,
       onClick: () =>{
-        hcje.audio.stopMusic();
+        AUDIO.stopMusic();
         editTrack(n, synthDefinition.tracks[n])
-          .then(() => hcje.audio.setMusic(synthDefinition));
+          .then(() => AUDIO.setMusic(synthDefinition));
       }
     });
     children.push(editButton);
@@ -830,7 +831,7 @@ function addSynthesiserTest() {
         buttonDefns: [{id:'OK', label: 'OK'}]
       })
     })
-    .then(() => hcje.audio.stopMusic());
+    .then(() => AUDIO.stopMusic());
 }
 
 /**
@@ -859,7 +860,7 @@ function addSpriteTest() {
       timeoutMessage: 'Failed to load in time.'
     }))
     .then((textureManager) => {
-      textureManager.spriteFactory = new hcje.sprites.DomSpriteFactory(gameArea);
+      textureManager.spriteFactory = new hcje.sprites.DomImageSpriteFactory(gameArea);
       const spaceman = textureManager.createSprite('sprites_spaceman.png', [
         {name:'idle', interval:1000},
         {name:'walk', interval:(dynamics) => hcje.sprites.Sprite.deriveWalk(dynamics, 2)}
@@ -872,10 +873,21 @@ function addSpriteTest() {
       );
       spaceman.state = 'walk';
       spaceman.dynamics.vx = 50;
+      spaceman.dynamics.vy = 60;
       spaceman.autoFlipX = true;
       animator.addTarget(spaceman);
       animator.active = true;
     });
+  const textSprite = hcje.sprites.createTextSprite(gameArea, 'Test of **markdown** text', {
+    dimensions: {width: 200, height: 0},
+    markdown:true,
+  });
+  textSprite.dynamics = new hcje.sprites.Dynamics(
+    new hcje.sprites.Bouncer(textSprite.dimensions, gameArea.designBounds)
+  );
+  textSprite.dynamics.vx = 50;
+  textSprite.dynamics.vy = 50;
+  animator.addTarget(textSprite);
   gameArea.appendChild(close);
   
 }
@@ -922,12 +934,12 @@ await addMusicTest('Synth1', {
 
 addTest({
   label: 'SFX', 
-  setup: ()=>hcje.audio.addAudioSfx({url: './hcje-ui-test/assets/jump.mp3', title: 'JUMP'}),
-  executor: ()=> hcje.audio.playAudioSfx('JUMP')
+  setup: ()=>AUDIO.addAudioSfx({url: './hcje-ui-test/assets/jump.mp3', title: 'JUMP'}),
+  executor: ()=> AUDIO.playAudioSfx('JUMP')
 });
 addTest({
   label: 'SFX Synth', 
-  setup: ()=>hcje.audio.addAudioSfx({
+  setup: ()=>AUDIO.addAudioSfx({
     title: 'JUMP2',
     bpm: 60,
     tracks: [{
@@ -943,7 +955,7 @@ addTest({
       notes: 'C8',
     }]
   }),
-  executor: ()=> hcje.audio.playAudioSfx('JUMP2')
+  executor: ()=> AUDIO.playAudioSfx('JUMP2')
 });
 
 addTest({

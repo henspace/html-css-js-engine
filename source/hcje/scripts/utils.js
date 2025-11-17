@@ -103,6 +103,23 @@ export function getRandomIntInclusive(min, max) {
   return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
 }
 
+/**
+ * Get dice roll.
+ * @param {number} sides - number of sides on the dice.
+ * @returns {number}
+ */
+export function rollDice(sides = 9) {
+  return getRandomIntInclusive(1, sides);
+}
+
+/**
+ * Get coin toss.
+ * @returns {boolean}
+ */
+export function tossCoin() {
+  return Math.random() >= 0.5;
+}
+
 /** 
  * Get a random entry from an array or string.
  * @param {Array<*>} arr

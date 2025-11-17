@@ -108,7 +108,7 @@ export function parseMarkdown(markdown) {
 /**
  * Create an element as a child of another. This is just a convenience method to simplify the creation of an element,
  * the addition of a class name, and attachment to a parent element.
- * @param {module:hcje/domTools~ElementSubset} parentElement
+ * @param {module:hcje/domTools~ElementWrapper|Element} parentElement
  * @param {string} tagName
  * @param {string} className
  * @returns {Element}
@@ -164,21 +164,23 @@ export function createDivider(config) {
  * @property {string} labelOn - label for toggle buttons if on.
  * @property {string} className - additional class name applied to the button's container.
  * @property {module:hcje/domTools~ButtonListener} onClick - listener called on the click event.
+ * @property {number} repeatInterval - set the button to repeat with the specified interval in ms. If the button is
+ * set as a toggle button, this is ignored.
  */
 
 /**
- * Wrapper for an [Element]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element} which allow objects
+ * Wrapper for an [HTMLElement]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement} which allow objects
  * inherited from this class to be used inplace of an
  * [Element]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element} in some limited applications.
  * @implements module:hcje/domTools~ElementSubset
  */ 
 export class ElementWrapper {
-  /** The base element @type{Element} */ 
+  /** The base element @type{HTMLlement} */ 
   #element;
 
   /**
    * Construct the base element
-   * @param {string|Element} elementType - tag name or the actual element to be wrapped.
+   * @param {string|HTMLElement} elementType - tag name or the actual element to be wrapped.
    */ 
   constructor(elementType) {
     this.#element = elementType instanceof Element ? elementType : document.createElement(elementType);
@@ -229,6 +231,24 @@ export class ElementWrapper {
    */ 
   get classList() {
     return this.#element.classList;
+  }
+
+  /**
+   * Get the offset height.
+   * @returns {number}
+   * @readonly
+   */
+  get offsetHeight() {
+    return this.#element.offsetHeight;
+  }
+
+  /**
+   * Get the offset width.
+   * @returns {number}
+   * @readonly
+   */
+  get offsetWidth() {
+    return this.#element.offsetWidth;
   }
 
   /** 
@@ -295,6 +315,19 @@ export class ElementWrapper {
   }
 
   /**
+   * Remove the element's focus.
+   */
+  blur() {
+    this.#element.blur();
+  }
+  /**
+   * Give the element focus.
+   */
+  focus() {
+    this.#element.focus();
+  }
+
+  /**
    * Convert item to underlying element. 
    * @param {Element|ElementWrapper} item - the object to return as an Element.
    * @returns {Element}
@@ -343,6 +376,75 @@ export class TextElement extends ElementWrapper {
   }
 }
 
+/** Standard keyboard repeat delay in milliseconds @type {number} */
+const SIM_KBD_REPEAT_DELAY = 44;
+/** Standard key board repeat interva in milliseconds @type {number} */
+const SIM_KBD_REPEAT_INTERVAL = 33;
+
+/** 
+ * Interval for button repeats.
+ * @typedef {Object} ButtonRepeatInterval
+ * @property {number} delay - delay for first repeat.
+ * @property {number} repeat - interval between subsequent repeats.
+ */
+
+/** Simulated keyboard interval @type {module:hcje/domTools~ButtonRepeatInterval} */
+export const SIM_KBD_INTERVAL = {delay: 750, repeat: 33};
+
+/**
+ * Class to handle button repeats.
+ */
+class ButtonRepeater {
+  /** @type {function} */
+  #callback;
+  /** @type {module:hcje/domTools~ButtonRepeatInterval} */
+  #interval;
+  /** @type {number} */
+  #timeoutId;
+
+
+  /**
+   * Constuct the repeater.
+   * @param {module:hcje/domTools~button} button - the button dispatching the event.
+   * @param {Object} interval
+   * @param {number} interval.delay - the delay for the first event.
+   * @param {number} interval.repeat - the time between subsequent events.
+   * @param {function()} callback - the function to call when the button is held down.
+   */
+  constructor(button, interval, callback) {
+    console.debug(`Button repeat  interval`, interval);
+    this.#interval = interval;
+    this.#callback = callback;
+    button.addEventListener('pointerdown', () => this.#start());
+    button.addEventListener('pointerup', () => this.#end());
+    button.addEventListener('pointercancel', () => this.#end());
+    button.addEventListener('pointerleave', () => this.#end());
+  }
+
+  /**
+   * Start the repetitions. This call introduces a delay before callbacks begin.
+   */
+  #start() {
+    this.#callback();
+    this.#timeoutId = setTimeout(() => this.#repeat(), this.#interval.delay);
+  }
+  /**
+   * Send notification to callback at the repeat rate.
+   */
+  #repeat() {
+    this.#callback();
+    this.#timeoutId = setTimeout(() => this.#repeat(), this.#interval.repeat);
+  }
+
+  /**
+   * End the repetition. If no callbacks have occured, send an event as this indicates a release before the delay
+   * expired.
+   */
+  #end() {
+    clearTimeout(this.#timeoutId);
+  }
+}
+
 /**
  * Button which wraps a standard HTMLButtonElement and provides additional control over the presentation, especially
  * when used as a toggle button.
@@ -350,6 +452,8 @@ export class TextElement extends ElementWrapper {
 export class Button extends ElementWrapper {
   /** Button element @type {HTMLButtonElement} */
   #button;
+  /** Repeater for buttons that repeat their actions like keys. @type {ButtonRepeater} */
+  #buttonRepeater;
   /** Is the button a toggle button @type {boolean} */
   #toggleButton;
   /** Button on state. Always false if not a toggle button. */
@@ -400,8 +504,11 @@ export class Button extends ElementWrapper {
     this._element.title = config.label ?? '';
 
     config.parentElement?.appendChild(this._element);
-    if (config.onClick || this.#toggleButton) {
-      this._element.addEventListener('click', (ev) => {
+    if (config.onClick && config.interval && !this.toggleButton) {
+      this.#buttonRepeater = new ButtonRepeater(this, config.interval, config.onClick);
+    }
+    else if (config.onClick || this.#toggleButton) {
+      this.addEventListener('click', (ev) => {
         if (this.#toggleButton) {
           this.#buttonOn = !this.#buttonOn;
           this.#setButtonFace();
@@ -409,8 +516,9 @@ export class Button extends ElementWrapper {
         config?.onClick(ev, this.#buttonOn);
       });
     }
-    this._element.addEventListener('contextmenu', (ev) => ev.preventDefault());
-    this._element.addEventListener('dragstart', (ev) => ev.preventDefault());
+
+    this.addEventListener('contextmenu', (ev) => ev.preventDefault());
+    this.addEventListener('dragstart', (ev) => ev.preventDefault());
   }
 
   /**
@@ -884,9 +992,9 @@ export class MenuBar {
   /** The element that opens the menu. @type {module:hcje/domTools~ElementSubset} */
   #closer;
   /** Function called when menu opened. @type {function()} */
-  #onOpen;
+  onOpen;
   /** Function called when menu opened. @type {function()} */
-  #onClose;
+  onClose;
 
 
 
@@ -921,8 +1029,8 @@ export class MenuBar {
   constructor(config) {
     this.#menuBar = document.createElement('div');
     this.#menuBar.className = 'hcje-menu-bar';
-    this.#onOpen = config.onOpen;
-    this.#onClose = config.onClose;
+    this.onOpen = config.onOpen;
+    this.onClose = config.onClose;
     this.#opener = config.opener;
     this.#closer = config.close;
 
@@ -939,7 +1047,7 @@ export class MenuBar {
       this.#opener.classList.add('hcje-menu-opener--visible');
       this.#opener.addEventListener('click', () => {
         this.#setMenuOpen(true);
-        this.#onOpen?.();
+        this.onOpen?.();
       });
       this.#opener
     }
@@ -953,7 +1061,7 @@ export class MenuBar {
       }
       this.#closer.addEventListener('click', () => {
         this.#setMenuOpen(false);
-        this.#onClose?.();
+        this.onClose?.();
       });
     }
 
@@ -984,7 +1092,7 @@ export class MenuBar {
    */
   close() {
     this.#setMenuOpen(false);
-    this.#onClose?.();
+    this.onClose?.();
   }
   
   /**
@@ -1094,6 +1202,8 @@ export function createDialog(config) {
     }
   }
   const buttonBar = createChild(box, 'div', 'hcje-dialog-box__buttons');
+  document.body.appendChild(mask);
+  document.body.appendChild(box);
 
   const promises = [];
   for (const defn of config.buttonDefns) {
@@ -1114,9 +1224,10 @@ export function createDialog(config) {
         }, 500);
       }, {once: true})
     }));
+    if (promises.length === 1) {
+      button.focus();
+    }
   }
-  document.body.appendChild(mask);
-  document.body.appendChild(box);
   
   mask.style.zIndex = BASE_Z_INDEX + existingDialogs * 2;
   box.style.zIndex = BASE_Z_INDEX + existingDialogs * 2 + 1;

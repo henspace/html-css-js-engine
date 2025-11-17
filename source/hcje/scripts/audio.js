@@ -32,7 +32,7 @@ import * as utils from './utils.js';
 /**
  * Definition of sound based on a media file. 
  * @typedef {Object} AudioDefinition
- * @property {string} title - identification for music. This is just used in messages.
+ * @property {string} title - identification for music. This is used as its look up key.
  * @property {string} url - url to sound file.
  * @property {boolean} loop - should the tracks loop. This is ignored if used as a sound effect.
  * @property {number} fadeSeconds - only used for music; ignored for effects. Allows soft start and stop.
@@ -68,7 +68,7 @@ import * as utils from './utils.js';
  * Note that characters shown in square brackets are optional. The square brackets do not form part of the notation.
  * + [O]N[M][F][.][@]
  *     + O: octave modifier: + or -: shifts the octave for the note up or down one octave from the track octave set
- *     by the [SynthTrack]{@link module:hcje/audio~SynthTrack} octave property.
+ *     by the [SynthTrack]{@link module:hcje/audiSynthTrack} octave property.
  *     + N: note: A, B, C, D, E, F, G or ~ for a rest.
  *     + M: modifier: # or b for sharps and flats.
  *     + F: fraction of note; e.g. note duration is 1/F. Defaults to a quarter note, 4.
@@ -110,18 +110,25 @@ import * as utils from './utils.js';
  * @private
  */
 
+
 /**
  * Class which provides a connection for all outputs. Only a single instance is 
  * normally created.
  * @private
  */
 class AudioManager {
+  /** Audio player factory @type {module:hcje/audio~AudioPlayerFactory} */
+  #audioPlayerFactory;
+  /** Map of sound effects. @type {Map<string, HTMLAudioElement>} */
+  #soundEffects = new Map();
+  /** Background music. @type {module:hcje/audio~MusicPlayer} */
+  #backgroundMusic;
   /** The underlying AudioContext @type {AudioContext} */
   context;
   /** Dynamics compressor @type {DynamicsCompressorNode} */
   #decompressor;
   /** Global gain @type {GainNode} */
-  gain
+  #gain
   
   /**
    * Construct the AudioManager
@@ -130,8 +137,9 @@ class AudioManager {
     this.context = new AudioContext();
     this.#decompressor = this.context.createDynamicsCompressor();
     this.#decompressor.connect(this.context.destination);
-    this.gain = new GainNode(this.context);
-    this.gain.connect(this.#decompressor);
+    this.#gain = new GainNode(this.context);
+    this.#gain.connect(this.#decompressor);
+    this.#audioPlayerFactory = new AudioPlayerFactory();
   }
   
   /**
@@ -140,7 +148,106 @@ class AudioManager {
    * @returns {AudioNode}
    */
   get inputNode() {
-    return this.gain;
+    return this.#gain;
+  }
+
+  /**
+   * Get the gain value. 
+   * @returns {AudioParam}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/GainNode/gain}
+   */ 
+  get gain() {
+    return this.#gain.gain
+  }
+
+  /**
+   * Set the gain value. This is an almost instantaneous change but a time constant is applied to minimise clicks.
+   * @param {number} value - gain value
+   */
+  set gain(value) {
+    this.#gain.gain.setTargetAtTime(value, this.context.currentTime, 0.08);
+  }
+  
+  /**
+   * Create a AudioSfxPlayer. It is stored in a map of 
+   * sound effects. It is only stored once ready to play, so it may not 
+   * be available in the map immediately. If the definition includes a **loop** property, it is set to false as sound
+   * effects are not allowed to loop.
+   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the sound
+   *   to add
+   * @returns {Promise} fulfils to true on success. 
+   */
+  addAudioSfx(definition) {
+    if (definition.loop) {
+      definition.loop = false;
+    }
+    return this.#audioPlayerFactory.createAudioSfxFromDefinition(definition)
+      .then((sfx) => {
+        this.#soundEffects.set(definition.title, sfx);
+        return true;
+      })
+  }
+
+  /**
+   * Play audio effect.
+   * The title is used as a lookup into the map of existing sound effects.
+   * @param {string} title - title of the sound effect.
+   */
+  playAudioSfx(title) {
+    try {
+      this.#soundEffects.get(title)?.play();
+    } catch (error) {
+      console.error(`Unable to play sound effect ${title}: ${error}`);
+    }
+  }
+
+  
+  /**
+   * Set the background music. The background music will automatically start.
+   * Any stop or start commands to the player are cached, so that if it takes a long time to 
+   * load, the final playing state will still reflect the last command received.
+   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the music
+   *   to add.
+   * @returns {Promise} fulfils to true on success.
+   */
+  setMusic(definition) {
+    console.debug(`Set music ${definition.title} called.`);
+    
+    if (this.#backgroundMusic) {
+      console.debug('Stop existing music.');
+      this.#backgroundMusic.stop();
+    }
+    this.#backgroundMusic = new MusicPlayer(definition.title, definition.fadeSeconds);
+    this.#backgroundMusic.connect(this.#gain);
+    this.#backgroundMusic.start();
+    return this.#audioPlayerFactory.createPlayerFromDefinition(definition)
+      .then((player) => this.#backgroundMusic.setPlayer(player))
+      .then(() => {
+        this.#backgroundMusic.actionCachedCommand();
+        return true;
+      })
+      .catch((error) => {
+        console.error(`Unable to create this.#background music player ${definition.title}: ${error}`);
+        this.#backgroundMusic = undefined;
+        return false;
+      });
+  }
+
+
+  /**
+   * Stop background music.
+   */
+  stopMusic() {
+    this.#backgroundMusic?.stop();
+  }
+
+  /**
+   * Start playing the background music.
+   */
+  startMusic() {
+    if (this.#backgroundMusic && !this.#backgroundMusic.isPlaying()) {
+      this.#backgroundMusic?.start();
+    }
   }
 }
 
@@ -227,7 +334,7 @@ class SequencePlayer {
    * @private
    */
   #applyEnvelope(newFreq) {
-    let start = AUDIO.context.currentTime;
+    let start = audioMgr.context.currentTime;
     this.#gainNode.gain.cancelScheduledValues(start);
     if (this.#usesAdsr) {
       if (newFreq !== this.#lastFrequency || !this.#merge) {
@@ -247,7 +354,7 @@ class SequencePlayer {
    */
   #applyRest() {
     if (!this.#usesAdsr) {
-      this.#gainNode.gain.setTargetAtTime(0, AUDIO.context.currentTime, 0.01);
+      this.#gainNode.gain.setTargetAtTime(0, audioMgr.context.currentTime, 0.01);
     }
   }
   
@@ -258,7 +365,7 @@ class SequencePlayer {
    */
   #applyFreq(newFreq) {
     if (this.#sourceNode.frequency) {
-      const start = AUDIO.context.currentTime;
+      const start = audioMgr.context.currentTime;
       this.#sourceNode.frequency.cancelScheduledValues(start);
       this.#sourceNode.frequency.setValueAtTime(newFreq, start);
       if (this.#sweepFactor !== 1) {
@@ -402,7 +509,7 @@ class Synthesiser {
     this.#gainNodes = [];
     this.#playing = false;
     for (const sequence of this.#sequences) {
-      const gainNode = new GainNode(AUDIO.context, {gain: 0});
+      const gainNode = new GainNode(audioMgr.context, {gain: 0});
       this.#gainNodes.push(gainNode);
       this.#audioSourceFactories.push(this.#createAudioSourceFactory(sequence));
     }
@@ -414,7 +521,6 @@ class Synthesiser {
    * @private
    */
   #playSequencesToCompletion() {
-    console.log(`Play to completion ${this.#sequences.length} sequences`);
     const players = [];
     this.#playing = true;
     return new Promise((resolve) => {
@@ -430,7 +536,6 @@ class Synthesiser {
         moreToPlay = player.playNext() || moreToPlay;
       }
       if (!moreToPlay) {
-        console.log(`No more to play after first note.`);
         this.#stopAllPlayers(players);
         resolve();
         return;
@@ -443,7 +548,6 @@ class Synthesiser {
         }
         if (!moreToPlay || this.#stopSignal) {
           clearInterval(intervalTimer);
-          console.log(`No more to play. Stop oscillator. Flags: moreToPlay: ${moreToPlay}; stop signal: ${this.#stopSignal}`);
           this.#stopAllPlayers(players);
           resolve();
         }
@@ -568,7 +672,7 @@ class OscillatorNodeFactory {
    * @borrows module:hcje/audio~AudioSourceFactory#createSource
    */
   createSource() {
-    return new OscillatorNode(AUDIO.context, this.#options);
+    return new OscillatorNode(audioMgr.context, this.#options);
   }  
   
 }
@@ -588,9 +692,9 @@ class WhiteNoiseSource extends BiquadFilterNode {
    * @param {Object} options - See {@link https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode} 
    */
   constructor(source, options) {
-    super(AUDIO.context, options);
+    super(audioMgr.context, options);
     this.#source = source;
-    // const filter = new BiquadFilterNode(AUDIO.context, options);
+    // const filter = new BiquadFilterNode(audioMgr.context, options);
     this.#source.connect(this);
   }
 
@@ -627,7 +731,7 @@ class WhiteNoiseFactory {
    */
   constructor(duration, options) {
     this.#options = options;
-    this.#buffer = AUDIO.context.createBuffer(1, AUDIO.context.sampleRate * duration, AUDIO.context.sampleRate);  
+    this.#buffer = audioMgr.context.createBuffer(1, audioMgr.context.sampleRate * duration, audioMgr.context.sampleRate);  
     const channelData = this.#buffer.getChannelData(0);
     for (let n = 0; n < this.#buffer.length; n++) {
       channelData[n] = 2 * Math.random() - 1;
@@ -638,7 +742,7 @@ class WhiteNoiseFactory {
    * @borrows module:hcje/audio~AudioSourceFactory#createSource
    */
   createSource() {
-    const source = AUDIO.context.createBufferSource();
+    const source = audioMgr.context.createBufferSource();
     source.buffer = this.#buffer;
     source.loop = true;
     
@@ -741,7 +845,7 @@ class AudioPlayerFactory {
       for (let index = 0; index < OCTAVE_NOTES.length; index++) {
         const semitonesFromBase = (octave - baseOctave) * OCTAVE_NOTES.length   - indexOfBaseNote + index;
         const freq = baseFreq * Math.pow(2, semitonesFromBase/12);
-        frequencies.set(OCTAVE_NOTES[index], Math.round(freq));
+        frequencies.set(OCTAVE_NOTES[index], freq);
       }
       // add flat aliases for sharps and flats which are already in octave under a different note.
       frequencies.set('Cb', frequencies.get('B'));
@@ -787,16 +891,15 @@ class AudioPlayerFactory {
     const trackOctave = track.octave ?? 4;
     let detune = track.detune ?? 0;
     
-    console.debug(`Decode track. Octave: ${track.octave}; score: ${track.notes}`);
-    const noteDefns = [...track.notes.matchAll(/(\+|-)?([ABCDEFG~](?:[#b])?)(\d)?(\.)?([@$])?/gm)];
+    const noteDefns = [...track.notes.matchAll(/(\+*|-*)?([ABCDEFG~](?:[#b])?)(\d)?(\.)?([@$])?/gm)];
     const freqData = [];
     for (const noteDefn of noteDefns) {
       let octave = trackOctave;
       const octaveModifier = noteDefn[1] ?? '';
-      if (octaveModifier === '+' && trackOctave < this.#frequencyTables.length - 2) {
-        octave = trackOctave + 1;  
-      } else if (octaveModifier === '-' && trackOctave > 0) {
-        octave = trackOctave - 1;
+      if (octaveModifier.startsWith('+')) {
+        octave = utils.clamp(trackOctave + octaveModifier.length, 0, this.#frequencyTables.length - 1);  
+      } else if (octaveModifier.startsWith('-')) {
+        octave = utils.clamp(trackOctave - octaveModifier.length, 0, this.#frequencyTables.length - 1);  
       }
       const note = noteDefn[2];
 
@@ -858,7 +961,6 @@ class AudioPlayerFactory {
       let detunePreviousBy;
       if (/^\d+$/.test(track.notes)) {
         detunePreviousBy = Number.parseInt(track.notes);
-        console.debug(`track ${index} is a copy of the previous detuned by ${detunePreviousBy} cents.`);
       }
       if (index > 0 && detunePreviousBy !== undefined) {
         decodedTrack = {
@@ -893,7 +995,7 @@ class AudioPlayerFactory {
 
   /**
    * Create a sound effect from a definition. For synthesised audio, the effect is automatically connected to the
-   * **AUDIO.inputNode**.
+   * **audioMgr.inputNode**.
    * @param {module:hcje/audio~AudioDefinition | module:hcje/audio~SynthAudioDefinition} definition - definition
    *    for audio.
    * @returns {Promise} fulfils to a [AudioSfxPlayer]{@link module:hcje.audio~AudioSfxPlayer}
@@ -906,7 +1008,7 @@ class AudioPlayerFactory {
       }
       return Promise.resolve(this.#createSynthesiser(definition))
         .then((sfx) => {
-          sfx.connect(AUDIO.inputNode);
+          sfx.connect(audioMgr.inputNode);
           return sfx;
         });
     } else {
@@ -916,25 +1018,8 @@ class AudioPlayerFactory {
 
 }
 
-/** Internal global manager used for all internal sound players. @type{module:hcje/audio~AudioManager}
- * @private
- */
-const AUDIO = new AudioManager();
 
-/** Audio player factory @type {module:hcje/audio~AudioPlayerFactory}
- * @private 
- */
-const audioPlayerFactory = new AudioPlayerFactory();
 
-/** Map of sound effects. @type {Map<string, HTMLAudioElement>} 
- * @private
- **/
-const soundEffects = new Map();
-
-/** Background music. @type {module:hcje/audio~MusicPlayer} 
- * @private
- **/
-let backgroundMusic;
 
 /**
  * Sound effect created from a media file.
@@ -1024,7 +1109,7 @@ class MediaFilePlayer {
   #setBufferFromData(data) {
     this.#ready = false;
     this.#buffer = undefined;
-    return AUDIO.context.decodeAudioData(data)
+    return audioMgr.context.decodeAudioData(data)
       .then((buffer) => {
         this.#buffer = buffer;
         this.#ready = true;
@@ -1070,7 +1155,7 @@ class MediaFilePlayer {
       return;
     }
     try {
-      this.#source = new AudioBufferSourceNode(AUDIO.context, {
+      this.#source = new AudioBufferSourceNode(audioMgr.context, {
         buffer: this.#buffer,
         loop: this.#loop
       })
@@ -1090,7 +1175,7 @@ class MediaFilePlayer {
       console.warn(`Attempt to stop audio when not playing ignored.`);
       return;
     }
-    this.#source.stop(AUDIO.context.currentTime);  
+    this.#source.stop(audioMgr.context.currentTime);  
     this.#playing = false;
   }
 
@@ -1147,7 +1232,7 @@ class MusicPlayer {
    */ 
   constructor(title, fadeSeconds = 1) {
     this.#title = title;
-    this.#gainNode = AUDIO.context.createGain();
+    this.#gainNode = audioMgr.context.createGain();
     this.#fadeSeconds = fadeSeconds;
     window.addEventListener('blur', () => {
       if (this.isPlaying()) {
@@ -1185,7 +1270,7 @@ class MusicPlayer {
    */
   #setGain(value) {
     if (this.#gainNode) {
-      this.#gainNode.gain.setValueAtTime(value, AUDIO.context.currentTime);
+      this.#gainNode.gain.setValueAtTime(value, audioMgr.context.currentTime);
     }
   }
  
@@ -1200,7 +1285,7 @@ class MusicPlayer {
     try {
       this.#setGain(0);
       this.#gainNode.gain.setTargetAtTime(
-        1.0, AUDIO.context.currentTime, this.#fadeSeconds / 3);
+        1.0, audioMgr.context.currentTime, this.#fadeSeconds / 3);
     } catch (error) {
       console.error(`Unable to fade in music ${this.#title}: ${error}`);
     }
@@ -1216,7 +1301,7 @@ class MusicPlayer {
     }
     try {
       this.#gainNode.gain.setTargetAtTime(
-        0.0, AUDIO.context.currentTime, this.#fadeSeconds / 3);
+        0.0, audioMgr.context.currentTime, this.#fadeSeconds / 3);
     } catch (error) {
       console.error(`Unable to fade out music ${this.#title}: ${error}`);
     }
@@ -1297,87 +1382,6 @@ class MusicPlayer {
 }
 
 
-/**
- * Create a AudioSfxPlayer. It is stored in a map of 
- * sound effects. It is only stored once ready to play, so it may not 
- * be available in the map immediately. If the definition includes a **loop** property, it is set to false as sound
- * effects are not allowed to loop.
- * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the sound
- *   to add
- * @returns {Promise} fulfils to true on success. 
- */
-export function addAudioSfx(definition) {
-  if (definition.loop) {
-    console.warn(`Sound effect loop set to false for ${definition.title}.`);
-    definition.loop = false;
-  }
-  return audioPlayerFactory.createAudioSfxFromDefinition(definition)
-    .then((sfx) => {
-      soundEffects.set(definition.title, sfx);
-      return true;
-    })
-}
-
-/**
- * Play audio effect.
- * The title is used as a lookup into the map of existing sound effects.
- * @param {string} title - title of the sound effect.
- */
-export function playAudioSfx(title) {
-  try {
-    soundEffects.get(title)?.play();
-  } catch (error) {
-    console.error(`Unable to play sound effect ${title}: ${error}`);
-  }
-}
-
-/**
- * Set the background music. The background music will automatically start.
- * Any stop or start commands to the player are cached, so that if it takes a long time to 
- * load, the final playing state will still reflect the last command received.
- * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the music
- *   to add.
- * @returns {Promise} fulfils to true on success.
- */
-export function setMusic(definition) {
-  console.debug(`Set music ${definition.title} called.`);
-  
-  if (backgroundMusic) {
-    console.debug('Stop existing music.');
-    backgroundMusic.stop();
-  }
-  backgroundMusic = new MusicPlayer(definition.title, definition.fadeSeconds);
-  backgroundMusic.connect(AUDIO.inputNode);
-  backgroundMusic.start();
-  return audioPlayerFactory.createPlayerFromDefinition(definition)
-    .then((player) => backgroundMusic.setPlayer(player))
-    .then(() => {
-      backgroundMusic.actionCachedCommand();
-      return true;
-    })
-    .catch((error) => {
-      console.error(`Unable to create background music player ${definition.title}: ${error}`);
-      backgroundMusic = undefined;
-      return false;
-    });
-}
-
-
-/**
- * Stop background music.
- */
-export function stopMusic() {
-  backgroundMusic?.stop();
-}
-
-/**
- * Start playing the background music.
- */
-export function startMusic() {
-  if (backgroundMusic && !backgroundMusic.isPlaying()) {
-    backgroundMusic?.start();
-  }
-}
 
 /**
  * Standard instrument definitions.
@@ -1417,5 +1421,21 @@ export const Instrument = {
     waveform: 'noise',
   }
 };
+
+/** Internal global manager used for all internal sound players. @type{module:hcje/audio~AudioManager}
+ * @private
+ */
+let audioMgr = new AudioManager();
+
+/**
+ * Get the audio manager. The first call intialises the module's internal audio manager.
+ * @returns {module:hcje/audio~AudioManager}
+ */
+export function getAudioManager() {
+  if (!audioMgr) {
+    audioMgr = new AudioManager();
+  }
+  return audioMgr;
+}
 
 

@@ -130,7 +130,6 @@ export class Keyboard {
       this.#listeners.get(evt.key)?.();
     });
     addEventListener(Keyboard.#VIRTUAL_KEYDOWN_EVENT, (evt) => {
-      console.debug(`Virtual key `, evt);
       this.#listeners.get(evt.detail.key)?.();
     });
   }
@@ -163,3 +162,28 @@ export class Keyboard {
 }
 
 
+/**
+ * Put the element into fullscreen mode.
+ * @param {Element} [element = Document.documentElement] - the element to go into fullscreen.
+ * @param {Object} [options] - see [requestFullscreen options]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen#options}
+ */ 
+export function enterFullscreen(element = document.documentElement, options) {
+  if (!document.fullscreenElement) {
+    element.requestFullscreen()
+      .then(() => console.debug(`Into fullscreen`))
+      .catch((error) => {
+        console.error(`Could not enter fullscreen mode: %{error.message}`);
+      });
+  }
+}
+
+/**
+ * Exit fullscreen mode.
+ */
+export function exitFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen()
+      .then(() => console.debug('Exited fullscreen mode.'))
+      .catch((err) => console.error('Failed to exit fullscreen mode:', err));
+  }
+}
