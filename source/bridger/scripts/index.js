@@ -23,10 +23,9 @@
 /**
  * @module bridger
  * @description
- * Bridger is a simple test game for the hcje engine.
- * It's supposed to be based on an old Amstrad game. I think it was called Bridge-It but the screenshots I've seen do
- * not match my recollection. In this game, rather than a long bridge, I've used rocks in space. This is all based on 
- * my poor memory.
+ * Bridge over Jupiter is a simple test game for the hcje engine.
+ * It's supposed to be based on an old Amstrad PC1512 game which I can't find anything about.
+ * The game is used as a test bed for the hcje engine.
  */
 
 /** Storage key prefix */
@@ -630,9 +629,9 @@ function startMusic() {
 }
 /**
  * The main game loop
- * @param {module:bridger~DifficultlyEnumValue} config.difficulty - the game difficulty.
+ * @param {module:bridgeOverJupiter~DifficultlyEnumValue} config.difficulty - the game difficulty.
  * @param {module:hcje/domTools~GameArea} config.gameArea - the main area for the game.
- * @param {module:bridger~ControlButtons} config.controls - left and right controls.
+ * @param {module:bridgeOverJupiter~ControlButtons} config.controls - left and right controls.
  * @param {module:hcje/sprites~TextureManager} config.textureManager - texture manager for sprite creation.
  */
 async function gameLoop(config) {
@@ -746,7 +745,7 @@ class DifficultyManager {
   /** Number of processions across bridge @type {number} */
   #processions;
 
-  /** Manager difficulty. @type {module:bridger~DifficultyEnumValue} */
+  /** Manager difficulty. @type {module:bridgeOverJupiter~DifficultyEnumValue} */
   difficulty;
 
   /** Maximum number of gaps. @type {number} */
@@ -1154,9 +1153,9 @@ function showAboutDialog() {
 /**
  * Show play dialog with message. This is displayed on the screen along with a button to close.
  * @param {Element|ElementWrapper} parentElement - element containing the message.
- * @param {module:bridger~ControlButtons} controls - left and right controls.
+ * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
  * @param {string} message - text to display. Supports Markdown.
- * @returns {Promise} fulfils to {@link module:bridger~DifficultyEnumValue}
+ * @returns {Promise} fulfils to {@link module:bridgeOverJupiter~DifficultyEnumValue}
  */
 function showPlayDialog(parentElement, controls, message) {
   controls.disabled = true;
@@ -1189,7 +1188,7 @@ function showPlayDialog(parentElement, controls, message) {
 /**
  * Show welcome page along with play selection buttons.
  * @param {Element|ElementWrapper} container - element containing the message.
- * @param {module:bridger~ControlButtons} controls - left and right controls.
+ * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
  * @returns {Promise} fulfils to selected difficulty.
  */
 function showWelcomeAndPlay(container, controls) {
@@ -1200,7 +1199,7 @@ function showWelcomeAndPlay(container, controls) {
 /** 
  * Show the completion/try again message along with play selection buttons.
  * @param {Element|ElementWrapper} container - element containing the message.
- * @param {module:bridger~ControlButtons} controls - left and right controls.
+ * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
  * @param {number} walkersAcross - result of game.
  * @returns {Promise} fulfils to selected difficulty.
  */
@@ -1257,7 +1256,9 @@ async function startGame() {
   controls.hide();
   showWelcomeAndPlay(gameArea, controls)
     .then((difficulty) => {
-      hcjeLib.device.enterFullscreen();
+      if (!/itch.io$/.test(window.location.hostname)) {
+        hcjeLib.device.enterFullscreen(); // not needed on itch.
+      }
       gameLoop({gameArea, controls, difficulty, textureManager});
     });
 }
