@@ -824,7 +824,7 @@ class DifficultyManager {
         break;
     }
     minFactor = 1;
-    const factor = minFactor + 0.02 * this.#processions;
+    const factor = Math.min(1, minFactor + 0.02 * this.#processions);
     const walkSpeed = factor * this.calcMaxWalkSpeed(config);
     console.debug(`Speed factor ${factor}; walker speed ${walkSpeed}`);
     return walkSpeed;
