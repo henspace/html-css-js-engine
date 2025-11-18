@@ -1,5 +1,5 @@
-**Bridge over Jupiter** is a rehash of what I think was a very old Amstrad PC1512 game. I've trawled all the Amstrad
-games I can find on the web, but I haven't found anything close. **Bridge-It** comes up as a suggestion when I search, 
+This little game is a rehash of what I think was a very old Amstrad PC1512 game. I've trawled all the Amstrad
+games I can find on the web, but I haven't found anything close. Bridge-It comes up as a suggestion when I search, 
 but that was a pseudo 3D game. The game I remember involved a procession of little characters walking from left to
 right along a very tall bridge. I can still visualise the little guys walking across my monochrome monitor and falling
 into gaps in the bridge. Perhaps I just dreamt it! Perhaps it was one of those freebies that appeared in a
@@ -16,10 +16,13 @@ Amstrad monitor was black and white, but I've gone with green on black as it jus
 ## Credits
 
 ### Images
-With the exception of the space background, which was derived from the photograph referenced below, all images were
-created by me.
+With the exception of the space background, all images were created by me.
 
-+ Space background: derived from [Gulf of Mexico space photo](https://unsplash.com/photos/photo-of-outer-space-Q1p7bh3SHj8) by [NASA](https://unsplash.com/@nasa "NASA on Unsplash"); used under the [Unsplash license](https://unsplash.com/license "Unsplash License").
+The space background image is derived from a composite of the photographs referenced below, which are used under the terms of the [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media).
+ 
++ Moon: derived from [Topography of Io color](https://images.nasa.gov/details/PIA00740) by NASA.
++ Stars: derived from [Jupiter&apos;s ring](https://images.nasa.gov/details/PIA22963) by NASA.
++ Jupiter: derived from [Juno sees turbulence in Jupiter&apos;s atmosphere](https://science.nasa.gov/photojournal/juno-sees-turbulence-in-jupiters-atmosphere/) by NASA.
 
 ### Music and sound effects
 

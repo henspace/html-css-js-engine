@@ -76,8 +76,8 @@ const MARKDOWN_REPS = [
   {re: /`(.+?)`/gm, rep: '<code>$1</code>'},
   {re: /\*\*([^\n]+?)\*\*/gm, rep: '<strong>$1</strong>'},
   {re: /\*([^\n]+?)\*/gm, rep: '<em>$1</em>'},
-  {re: /!\[([\w ,;.-]+?)\]\(((?:https:\/\/|\.\/)[^\s?]+?)(?: *&quot;([\w ]*?)&quot;)?\)/gm, rep: '<img alt = "$1" src="$2" title="$3" />'},
-  {re: /\[([\w ,;.-]+?)\]\(((?:https:\/\/|\.\/)[^\s?]+?)(?: *&quot;([\w ]*?)&quot;)?\)/gm, rep: '<a href="$2" target="_blank" title="$3">$1</a>'},
+  {re: /!\[([\w ,;.&-]+?)\]\(((?:https:\/\/|\.\/)[^\s?]+?)(?: *&quot;([\w ]*?)&quot;)?\)/gm, rep: '<img alt = "$1" src="$2" title="$3" />'},
+  {re: /\[([\w ,;.&-]+?)\]\(((?:https:\/\/|\.\/)[^\s?]+?)(?: *&quot;([\w ]*?)&quot;)?\)/gm, rep: '<a href="$2" target="_blank" title="$3">$1</a>'},
 ]
 
 
