@@ -456,9 +456,10 @@ function startProcession(config) {
   for (const index of config.indices) {
     const walker = createWalker(config.textureManager);
     allWalkers.push(walker);
+    const walkerDims = walker.dimensions;
     walker.position = {
-      x: -index * config.rockWidth, 
-      y: config.floorY - walker.dimensions.height
+      x: -index * config.rockWidth - walkerDims.width, 
+      y: config.floorY - walkerDims.height
     }
     walker.dynamics.vx = config.walkSpeed;
 
@@ -823,7 +824,7 @@ class DifficultyManager {
         break;
     }
     minFactor = 1;
-    const factor = Math.min(1, minFactor + 0.02 * this.#processions);
+    const factor = minFactor + 0.02 * this.#processions;
     const walkSpeed = factor * this.calcMaxWalkSpeed(config);
     console.debug(`Speed factor ${factor}; walker speed ${walkSpeed}`);
     return walkSpeed;

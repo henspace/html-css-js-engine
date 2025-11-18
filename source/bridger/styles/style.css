@@ -21,13 +21,14 @@
   transition: opacity 1s;
 }
 
-html {
+body {
   font-family: "Jersey 10", sans-serif; 
   font-weight: 400;
   font-size: 22px;
   font-style: normal;
-
+  color: var(--color-primary);
 }
+
 
 h1, h2, h3, h4, .bridger-title {
   font-family: "Pixelify Sans", sans-serif;
@@ -71,12 +72,14 @@ h1, h2, h3, h4, .bridger-title {
 }
 
 .hcje-button.bridger-control {
-  bottom: 1em;
+  border: none;
   display: flex;
   flex-direction: column-reverse;
   height: 100%;
-  opacity: 0;
+  margin: 0;
+  opacity: 0.5;
   position: absolute;
+ 
   transition: opacity 0.5s;
   width: 50%;
 }

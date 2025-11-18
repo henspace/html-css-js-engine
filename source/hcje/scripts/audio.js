@@ -605,7 +605,9 @@ class Synthesiser {
    */
   start() {
     this.#stopSignal = false;
-    this.#playSequencesToCompletion();  
+    if (!this.#loop || !this.#playing) {
+      this.#playSequencesToCompletion();
+    }
   }
   
   /**

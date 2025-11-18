@@ -400,6 +400,8 @@ class ButtonRepeater {
   /** @type {module:hcje/domTools~ButtonRepeatInterval} */
   #interval;
   /** @type {number} */
+  #intervalId;
+  /** @type {number} */
   #timeoutId;
 
 
@@ -415,33 +417,42 @@ class ButtonRepeater {
     console.debug(`Button repeat  interval`, interval);
     this.#interval = interval;
     this.#callback = callback;
-    button.addEventListener('pointerdown', () => this.#start());
-    button.addEventListener('pointerup', () => this.#end());
-    button.addEventListener('pointercancel', () => this.#end());
-    button.addEventListener('pointerleave', () => this.#end());
+    button.addEventListener('pointerdown', () => {console.debug('Pointer down');this.#start();});
+    button.addEventListener('pointerup', () => {console.debug('Pointer up');this.#end();});
+    button.addEventListener('pointercancel', () => {console.debug('Pointer cancel');this.#end();});
+    button.addEventListener('pointerleave', () => {console.debug('Pointer leave'); this.#end();});
+    button.addEventListener('touchmove', (evt) => {console.debug('Touch move'); evt.preventDefault();});
   }
 
   /**
-   * Start the repetitions. This call introduces a delay before callbacks begin.
+   * Start the repetitions. This call introduces a delay before the repetition begins.
    */
   #start() {
     this.#callback();
-    this.#timeoutId = setTimeout(() => this.#repeat(), this.#interval.delay);
+    this.#timeoutId = setTimeout(() => {
+      this.#timeoutId = undefined;
+      this.#repeat();
+    }, this.#interval.delay);
   }
   /**
    * Send notification to callback at the repeat rate.
    */
   #repeat() {
     this.#callback();
-    this.#timeoutId = setTimeout(() => this.#repeat(), this.#interval.repeat);
+    this.#intervalId = setInterval(() => this.#callback(), this.#interval.repeat);
   }
 
   /**
-   * End the repetition. If no callbacks have occured, send an event as this indicates a release before the delay
-   * expired.
+   * End the repetition. This handles the timeout and interval ids separately, although as the id share the same pool,
+   * they could have shared the same property. They have only be separated for clarity; see 
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/clearInterval}.
    */
   #end() {
-    clearTimeout(this.#timeoutId);
+    if (this.#timeoutId) {
+      clearTimeout(this.#timeoutId);
+    } else {
+      clearInterval(this.#intervalId);
+    }
   }
 }
 
