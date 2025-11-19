@@ -304,7 +304,7 @@ function breakBridge(config) {
   let maxLand = config.maxLand || 4;
 
   const breakable = config.bridge.length - safeIn - safeOut;
-  const maxPossibleLand = (breakable - gaps) / (gaps - 1);
+  const maxPossibleLand = Math.floor((breakable - gaps) / (gaps - 1));
 
   minLand = Math.min(minLand, maxPossibleLand); // min space required for the gaps.
   maxLand = Math.min(maxLand, maxPossibleLand); // max space required for the gaps.
@@ -851,7 +851,7 @@ class DifficultyManager {
     }
     const factor = Math.min(1, minFactor + 0.02 * this.#processions);
     const walkSpeed = factor * this.calcMaxWalkSpeed(config);
-    LOGGER.debug(`Speed factor ${factor}; walker speed ${walkSpeed.toFixed(2)}`);
+    LOGGER.debug(`Speed factor ${factor.toFixed(2)}; walker speed ${walkSpeed.toFixed(2)}`);
     return walkSpeed;
   }
 
@@ -869,7 +869,7 @@ class DifficultyManager {
    * @readonly
    */
   get maximumLand() {
-    return 4; 
+    return 3; 
   }
 
   /**
@@ -878,7 +878,7 @@ class DifficultyManager {
    * @readonly
    */
   get gapCount() {
-    return hcjeLib.utils.getRandomIntInclusive(2, Math.min(this.#maxGaps, 2 + Math.floor(this.#processions / 2)));
+    return hcjeLib.utils.getRandomIntInclusive(2, 3);
   }
 
   /**
