@@ -42,6 +42,97 @@ export function showAndHandleFatalError(message) {
   }
 }
 
+/**
+ * Logger class. This is used for logging messages that may need to be displayed later. 
+ * It will also redirect to the console. The console methods are not hijacked so that the log does not become polluted
+ * with multiple messages that may not need to be logged.
+ */
+export class Logger {
+  /** Log messages @type {string[]} */
+  #log;
+  /** Max number of lines retained @type{number} */
+  #maxSize;
+
+  /** 
+   * Construct the logger. 
+   * @param {number} [maxSize = 100] maximum number of messages retained.
+   */
+  constructor(maxSize = 100) {
+    this.#log = [];
+    this.#maxSize = maxSize;
+  }
+
+  /**
+   * Append message to the queue.
+   * @param {string} message - the text to add to the log.
+   */
+  #append(message) {
+    if (this.#log.length >= this.#maxSize) {
+      this.#log.shift();
+    }
+    this.#log.push(message);
+  }
+
+  /**
+   * Get the log as markdown list.
+   * @returns {string}
+   */
+  get markdown() {
+    let result = '';
+    for (const line of this.#log) {
+      result += `+ ${line}\n`;
+    }
+    return result;
+  }
+
+  /**
+   * Clear the log.
+   */
+  clear() {
+    this.#log = [];
+  }
+  /**
+   * Normal log message.
+   * @param {string} message - text to add to the log.
+   */ 
+  log(message) {
+    this.#append(message);
+    console.log(message);
+  }
+  /**
+   * Debug log message.
+   * @param {string} message - text to add to the log.
+   */ 
+  debug(message) {
+    this.#append(`debug: ${message}`);
+    console.log(message);
+  }
+  /**
+   * Debug log message.
+   * @param {string} message - text to add to the log.
+   */ 
+  error(message) {
+    this.#append(`error: ${message}`);
+    console.error(message);
+  }
+  /**
+   * Info log message.
+   * @param {string} message - text to add to the log.
+   */ 
+  info(message) {
+    this.#append(`info: ${message}`);
+    console.info(message);
+  }
+  /**
+   * Warn log message.
+   * @param {string} message - text to add to the log.
+   */ 
+  warn(message) {
+    this.#append(`warn: ${message}`);
+    console.warn(message);
+  }
+}
+
 /* Add handlers for unexpected events. */
 window.addEventListener('error', ((error) => {
   showAndHandleFatalError(`${error.message} ${error.filename}[${error.lineno}:${error.colno}]`);
@@ -50,6 +141,7 @@ window.addEventListener('error', ((error) => {
 window.addEventListener('unhandledrejection', ((event) => {
   showAndHandleFatalError(`Unhandled promise rejection: ${event.reason}`);
 }));
+
 
 
 

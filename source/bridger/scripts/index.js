@@ -28,6 +28,9 @@
  * The game is used as a test bed for the hcje engine.
  */
 
+/** Global logger */
+const LOGGER = new hcjeLib.errors.Logger(20);
+
 /** Storage key prefix */
 const STORAGE_KEY_PREFIX = 'BridgeOverJupiter';
 
@@ -314,7 +317,7 @@ function breakBridge(config) {
     gapIndex += hcjeLib.utils.getRandomIntInclusive(minLand, maxLand) + 1;
   }
 
-  console.debug(`Land ${minLand} to ${maxLand}: indexes ${indexes.join(',')}`);
+  LOGGER.debug(`Land ${minLand} to ${maxLand}: indexes ${indexes.join(',')}`);
   
   const gapIndexes = [];
   for (let gap = 0; gap < gaps; gap++) {
@@ -378,7 +381,6 @@ function repairBridge(config) {
  * @returns {number[]} 
  */
 function findNoGoIndices(leaderIndex, bridgeGaps, lag) {
-  console.debug(`Lag ${lag}`);
   let noGoIndices = [];
   for (let n = 0; n < lag; n++) {
     noGoIndices.push(leaderIndex + 1 + n);
@@ -428,16 +430,14 @@ function getProcessionIndices(count, bridgeGaps, options) {
   while (--count) {
     noGoIndices = [...noGoIndices, ...findNoGoIndices(leaderIndex, bridgeGaps, options.walkerLag)];
     let spreadPlace = spread <= 1 ? 1 : hcjeLib.utils.getRandomIntInclusive(1, spread);
-    console.debug(`Place walker in possible position ${spreadPlace}; allowed spread was ${spread}`);
     while (spreadPlace-- > 0) {
-      console.debug(`Find place for walker`);
       leaderIndex = getWalkerIndex(leaderIndex + 1, noGoIndices);  
     }
     processionIndices.push(leaderIndex);
   }
-  console.debug(`  Bridge gaps: ${bridgeGaps.join(', ')}`);
-  console.debug(`No go indices: ${[... new Set(noGoIndices)].sort((a,b) => a- b).join(', ')}`);
-  console.debug(`   Procession: ${processionIndices.join(', ')}`);
+  LOGGER.debug(`  Bridge gaps: ${bridgeGaps.join(', ')}`);
+  LOGGER.debug(`No go indices: ${[... new Set(noGoIndices)].sort((a,b) => a- b).join(', ')}`);
+  LOGGER.debug(`   Procession: ${processionIndices.join(', ')}`);
   return processionIndices;
 }
 
@@ -602,6 +602,7 @@ class ControlButtons {
       url: './bridger/assets/images/retro_buttons_left.png',
       label: '',
       onClick: () => scaffoldAdjuster.moveLeft(),
+      interval: {delay: 0, repeat: 0}
     });
     this.#right = new hcjeLib.domTools.Button({
       parentElement: container,
@@ -609,9 +610,12 @@ class ControlButtons {
       url: './bridger/assets/images/retro_buttons_right.png',
       label: '',
       onClick: () => scaffoldAdjuster.moveRight(),
+      interval: {delay: 0, repeat: 0}
     });
     this.#left.classList.add('bridger-control--left');
-    this.#right.classList.add('bridger-control--right');  
+    this.#right.classList.add('bridger-control--right'); 
+
+    LOGGER.info(`Control button events: left: ${this.#left.eventType}; right: ${this.#right.eventType}`);
   }
 
   /** Set disabled state.
@@ -819,7 +823,7 @@ class DifficultyManager {
       maxIndicesToMove * movementInterval.repeat / 1000; */
     const maxTraversalTime = maxIndicesToMove * (timeToMoveOneGap + 1 / CLICKS_PER_S);
     const maxWalkerSpeed = config.walkerLag * config.rockWidth / maxTraversalTime;
-    console.debug(`Walker space ${config.walkerLag} rocks; speed ${config.scaffoldSpeed} px/s; max traversal time ${maxTraversalTime} s; max walker speed ${maxWalkerSpeed}`);
+    LOGGER.debug(`Walker space ${config.walkerLag} rocks; speed ${config.scaffoldSpeed} px/s; max traversal time ${maxTraversalTime.toFixed(2)} s; max walker speed ${maxWalkerSpeed.toFixed(2)}`);
     return maxWalkerSpeed;
   }
 
@@ -847,7 +851,7 @@ class DifficultyManager {
     }
     const factor = Math.min(1, minFactor + 0.02 * this.#processions);
     const walkSpeed = factor * this.calcMaxWalkSpeed(config);
-    console.debug(`Speed factor ${factor}; walker speed ${walkSpeed}`);
+    LOGGER.debug(`Speed factor ${factor}; walker speed ${walkSpeed.toFixed(2)}`);
     return walkSpeed;
   }
 
@@ -1171,6 +1175,20 @@ function factoryReset() {
       }
     });
 }
+
+/**
+ * Show debug log.
+ * @returns {Promise}
+ */
+function showDebugLog() {
+  return hcjeLib.domTools.createDialog({
+    title: 'Debug log',
+    className: 'bridger-debug-log',
+    markdown: `${hcjeLib.buildConstants.BUILD_DATA.buildDateIso}\n\n.${navigator.userAgent}\n${LOGGER.markdown}`,
+    buttonDefns: [{id:'OK', url: './bridger/assets/images/retro_buttons_ok.png'}]
+  });
+}
+
 /**
  * Show about dialog.
  * @returns {Promise}
@@ -1181,11 +1199,16 @@ function showAboutDialog() {
     url: './bridger/assets/images/retro_buttons_factory_reset.png',
     onClick: () => factoryReset()
   });
+  const debug = new hcjeLib.domTools.ButtonControl({
+    label: 'Debugging log',
+    url: './bridger/assets/images/retro_buttons_debug.png',
+    onClick: () => showDebugLog()
+  });
   return hcjeLib.utils.fetchText('./bridger/assets/data/about.md', 'Cannot find about information.')
     .then((aboutContent) => hcjeLib.domTools.createDialog({
       title: 'Bridge over Jupiter',
       markdown: aboutContent, 
-      children: [reset],
+      children: [reset, debug],
       buttonDefns: [{id:'OK', url: './bridger/assets/images/retro_buttons_ok.png'}]
     }));
 }

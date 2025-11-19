@@ -195,3 +195,11 @@ export function exitFullscreen() {
       .catch((err) => console.error('Failed to exit fullscreen mode:', err));
   }
 }
+
+/**
+ * Test if touch api supported.
+ * @returns {boolean}
+ */
+export function supportsTouch() {
+  return window.hasOwnProperty('ontouchstart');
+}

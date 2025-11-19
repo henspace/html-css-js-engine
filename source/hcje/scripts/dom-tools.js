@@ -392,7 +392,8 @@ const SIM_KBD_REPEAT_INTERVAL = 33;
 export const SIM_KBD_INTERVAL = {delay: 750, repeat: 33};
 
 /**
- * Class to handle button repeats.
+ * Class to handle button repeats. The handler also can be used to handle clicks but on button down rather than up.
+ * It will also use the touch api if available.
  */
 class ButtonRepeater {
   /** @type {function} */
@@ -403,6 +404,8 @@ class ButtonRepeater {
   #intervalId;
   /** @type {number} */
   #timeoutId;
+  /** Event type in use. @type {string} */
+  #eventType;
 
 
   /**
@@ -417,22 +420,45 @@ class ButtonRepeater {
     console.debug(`Button repeat  interval`, interval);
     this.#interval = interval;
     this.#callback = callback;
-    button.addEventListener('pointerdown', () => {console.debug('Pointer down');this.#start();});
-    button.addEventListener('pointerup', () => {console.debug('Pointer up');this.#end();});
-    button.addEventListener('pointercancel', () => {console.debug('Pointer cancel');this.#end();});
-    button.addEventListener('pointerleave', () => {console.debug('Pointer leave'); this.#end();});
-    button.addEventListener('touchmove', (evt) => {console.debug('Touch move'); evt.preventDefault();});
+    if (device.supportsTouch()) {
+      console.debug('Use touch events.');
+      this.#eventType = 'touch';
+      button.addEventListener('touchstart', (evt) => this.#start(evt));
+      button.addEventListener('touchend', (evt) => this.#end(evt));
+      button.addEventListener('touchmove', (evt) => evt.preventDefault());
+      button.addEventListener('touchcancel', (evt) =>this.#end(evt));
+    } else {
+      this.#eventType = 'pointer';
+      button.addEventListener('pointerdown', (evt) => this.#start(evt));
+      button.addEventListener('pointerup', (evt) => this.#end(evt));
+      button.addEventListener('pointercancel', (evt) => this.#end(evt));
+      button.addEventListener('pointerleave', (evt) => this.#end(evt));
+    }
+  }
+
+  /**
+   * Get the event type used by this button.
+   * @returns {string}
+   * @readonly
+   */
+  get eventType() {
+    return this.#eventType;
   }
 
   /**
    * Start the repetitions. This call introduces a delay before the repetition begins.
+   * @param {Event} evt - the triggering event.
    */
-  #start() {
+  #start(evt) {
+    console.debug(`Button repeat start: ${evt.type}`);
+    evt.preventDefault();
     this.#callback();
-    this.#timeoutId = setTimeout(() => {
-      this.#timeoutId = undefined;
-      this.#repeat();
-    }, this.#interval.delay);
+    if (this.#interval.delay) {
+      this.#timeoutId = setTimeout(() => {
+        this.#timeoutId = undefined;
+        this.#repeat();
+      }, this.#interval.delay);
+    }
   }
   /**
    * Send notification to callback at the repeat rate.
@@ -447,7 +473,9 @@ class ButtonRepeater {
    * they could have shared the same property. They have only be separated for clarity; see 
    * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/clearInterval}.
    */
-  #end() {
+  #end(evt) {
+    console.debug(`Button repeat end: ${evt.type}`);
+    evt.preventDefault();
     if (this.#timeoutId) {
       clearTimeout(this.#timeoutId);
     } else {
@@ -483,6 +511,8 @@ export class Button extends ElementWrapper {
   #labelOn;
   /** Base class name @type {string} */
   #baseClass;
+  /** Event type in use. @type {string} */
+  #eventType;
 
   /**
    * Create a button.
@@ -515,10 +545,13 @@ export class Button extends ElementWrapper {
     this._element.title = config.label ?? '';
 
     config.parentElement?.appendChild(this._element);
+  
     if (config.onClick && config.interval && !this.toggleButton) {
       this.#buttonRepeater = new ButtonRepeater(this, config.interval, config.onClick);
+      this.#eventType = this.#buttonRepeater.eventType;
     }
     else if (config.onClick || this.#toggleButton) {
+      this.#eventType = 'click';
       this.addEventListener('click', (ev) => {
         if (this.#toggleButton) {
           this.#buttonOn = !this.#buttonOn;
@@ -526,10 +559,21 @@ export class Button extends ElementWrapper {
         }
         config?.onClick(ev, this.#buttonOn);
       });
+    } else {
+      this.#eventType = 'none';
     }
 
     this.addEventListener('contextmenu', (ev) => ev.preventDefault());
     this.addEventListener('dragstart', (ev) => ev.preventDefault());
+  }
+
+  /**
+   * Get the event type used by this button.
+   * @returns {string}
+   * @readonly
+   */
+  get eventType() {
+    return this.#eventType;
   }
 
   /**

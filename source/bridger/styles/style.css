@@ -112,3 +112,7 @@ h1, h2, h3, h4, .bridger-title {
   display: block;
   margin: auto;
 }
+
+.bridger-debug-log .hcje-dialog-box__body {
+  user-select: text;
+}
