@@ -31,17 +31,21 @@
 /** Storage key prefix */
 const STORAGE_KEY_PREFIX = 'BridgeOverJupiter';
 
+/** Click rate. How fast user can click keys @type {number}*/
+const CLICKS_PER_S = 6;
+
 /** Game design width @type {number} */
-const GAME_WIDTH = 720;
+const GAME_WIDTH = 640;
 /** Game design width @type {number} */
-const GAME_HEIGHT = 450;
+const GAME_HEIGHT = 400;
 
 /** Drop initial speed @type {number} */
 const DROP_VY = 20;
 /** Drop acceleration @type {number} */
 const DROP_AY = 100;
 /** Scaffold speed @type {number} */
-const SCAFFOLD_SPEED_X = 800;
+const SCAFFOLD_SPEED_X = 1000;
+
 /** Spaceship speed @type {number} */
 const SPACESHIP_SPEED_X = 360;
 /** Bridge lead in. These tiles are never broken. @type {number} */
@@ -281,6 +285,8 @@ function createBridge(animator, gameArea, textureManager) {
  * @param {module:hcje/sprites~Animator} config.animator - animator for the sprites.
  * @param {module:hcje/sprites~Sprite[]} config.bridge - the array of rocks that form the bridge from left to right.
  * @param {number} [config.gaps = 2] - number of gaps in the bridge.
+ * @param {number} [config.minLand = 1] - minimum land between gaps
+ * @param {number} [config.maxLand = 4] - maximum land between gaps
  * @param {number} [config.safeIn = 2] - number of rocks at the left that are guaranteed to be unbroken.
  * @param {number} [config.safeOut = 1] - number of rocks at the right that are guaranteed to be unbroken.
  * @returns {Promise} fulfils to an array of the bridge positions where there are gaps in ascending order.
@@ -288,14 +294,27 @@ function createBridge(animator, gameArea, textureManager) {
 function breakBridge(config) {
   const promises = []
   const indexes = [];
-  const gaps = config?.gaps || 2;
-  const safeIn = config?.safeIn || 2;
-  const safeOut = config?.safeOut || 1;
-  const firstPossible = safeIn + (hcjeLib.utils.tossCoin() ? 1 : 0);
-  for (let n = firstPossible; n < config.bridge.length - safeOut; n += 2) {
-    indexes.push(n);
+  const gaps = config.gaps || 2;
+  const safeIn = config.safeIn || 2;
+  const safeOut = config.safeOut || 1;
+  let minLand = config.minLand || 1;
+  let maxLand = config.maxLand || 4;
+
+  const breakable = config.bridge.length - safeIn - safeOut;
+  const maxPossibleLand = (breakable - gaps) / (gaps - 1);
+
+  minLand = Math.min(minLand, maxPossibleLand); // min space required for the gaps.
+  maxLand = Math.min(maxLand, maxPossibleLand); // max space required for the gaps.
+ 
+  const maxSpread = gaps + (gaps - 1) * maxLand;
+
+  let gapIndex = hcjeLib.utils.getRandomIntInclusive(safeIn, config.bridge.length - safeOut - maxSpread);
+  for (let n = 0; n < gaps; n++) {
+    indexes.push(gapIndex);
+    gapIndex += hcjeLib.utils.getRandomIntInclusive(minLand, maxLand) + 1;
   }
-  hcjeLib.utils.shuffle(indexes);
+
+  console.debug(`Land ${minLand} to ${maxLand}: indexes ${indexes.join(',')}`);
   
   const gapIndexes = [];
   for (let gap = 0; gap < gaps; gap++) {
@@ -574,23 +593,22 @@ class ControlButtons {
 
   /** Construct buttons.
    * @param {ElementWrapper} container - button container.
+   * @param {module:bridgeOverJupiter~ScaffoldAdjuster} scaffoldAdjuster - scaffold adjuster to move with button clicks.
    */
-  constructor(container) {
+  constructor(container, scaffoldAdjuster) {
     this.#left = new hcjeLib.domTools.Button({
       parentElement: container,
       className: 'bridger-control',
       url: './bridger/assets/images/retro_buttons_left.png',
       label: '',
-      onClick: () => hcjeLib.device.Keyboard.simulateKeydown('ArrowLeft'),
-      interval: hcjeLib.domTools.SIM_KBD_INTERVAL,   
+      onClick: () => scaffoldAdjuster.moveLeft(),
     });
     this.#right = new hcjeLib.domTools.Button({
       parentElement: container,
       className: 'bridger-control',
       url: './bridger/assets/images/retro_buttons_right.png',
       label: '',
-      onClick: () => hcjeLib.device.Keyboard.simulateKeydown('ArrowRight'),
-      interval: hcjeLib.domTools.SIM_KBD_INTERVAL,   
+      onClick: () => scaffoldAdjuster.moveRight(),
     });
     this.#left.classList.add('bridger-control--left');
     this.#right.classList.add('bridger-control--right');  
@@ -618,6 +636,7 @@ class ControlButtons {
     this.#left.style.opacity = 1;
     this.#right.style.opacity = 1;
   }
+
 }
 
 /**
@@ -652,14 +671,14 @@ async function gameLoop(config) {
   const spaceship = createSpaceship(config.textureManager);
   spaceship.position = {x: -spaceship.dimensions.width, y: -spaceship.dimensions.height};
   animator.addTarget(spaceship);
-  config.controls.disabled = true;
   await dropInScaffold({
     animator, 
     scaffold,
     floorY: rockFloor
   });
-  config.controls.disabled = false;
   scaffold.adjuster = new ScaffoldAdjuster(scaffold, {bridge, speed: SCAFFOLD_SPEED_X });
+  new ControlButtons( document.getElementsByClassName('hcje-game-area-container')[0],
+    scaffold.adjuster).hide();
   const difficultyMgr = new DifficultyManager({
     bridgeLength: bridge.length, 
     bridgeSafeLeft: BRIDGE_SAFE_IN, 
@@ -674,6 +693,8 @@ async function gameLoop(config) {
       bridge, 
       gameBounds: config.gameArea.designBounds, 
       gaps: difficultyMgr.gapCount,
+      minLand: difficultyMgr.minimumLand,
+      maxLand: difficultyMgr.maximumLand,
       safeIn: BRIDGE_SAFE_IN,
       safeOut: BRIDGE_SAFE_OUT,
     });
@@ -715,7 +736,7 @@ async function gameLoop(config) {
           difficultyMgr.reset();
           const spacemenAcross = scoreboard.score;
           scoreboard.clear();
-          return showResultAndReplay(config.gameArea, config.controls, spacemenAcross);
+          return showResultAndReplay(config.gameArea, spacemenAcross);
         }
       }) 
       .then((difficulty) => {
@@ -792,10 +813,11 @@ class DifficultyManager {
    */ 
   calcMaxWalkSpeed(config) {
     const maxIndicesToMove = config.bridgeGaps[config.bridgeGaps.length - 1] - config.bridgeGaps[0]; 
-    const movementInterval = hcjeLib.domTools.SIM_KBD_INTERVAL;
+    //const movementInterval = hcjeLib.domTools.SIM_KBD_INTERVAL;
     const timeToMoveOneGap = config.rockWidth / config.scaffoldSpeed;
-    const maxTraversalTime = maxIndicesToMove * timeToMoveOneGap + movementInterval.delay / 1000 + 
-      maxIndicesToMove * movementInterval.repeat / 1000;
+    /* const maxTraversalTime = maxIndicesToMove * timeToMoveOneGap + movementInterval.delay / 1000 + 
+      maxIndicesToMove * movementInterval.repeat / 1000; */
+    const maxTraversalTime = maxIndicesToMove * (timeToMoveOneGap + 1 / CLICKS_PER_S);
     const maxWalkerSpeed = config.walkerLag * config.rockWidth / maxTraversalTime;
     console.debug(`Walker space ${config.walkerLag} rocks; speed ${config.scaffoldSpeed} px/s; max traversal time ${maxTraversalTime} s; max walker speed ${maxWalkerSpeed}`);
     return maxWalkerSpeed;
@@ -823,11 +845,27 @@ class DifficultyManager {
         minFactor = 0.65;
         break;
     }
-    minFactor = 1;
     const factor = Math.min(1, minFactor + 0.02 * this.#processions);
     const walkSpeed = factor * this.calcMaxWalkSpeed(config);
     console.debug(`Speed factor ${factor}; walker speed ${walkSpeed}`);
     return walkSpeed;
+  }
+
+  /**
+   * Get the minimum land when breaking a bridge.
+   * @returns {number}
+   * @readonly
+   */
+  get minimumLand() {
+    return this.#processions < 5 ? 2 : 1; 
+  }
+  /**
+   * Get the maximum land when breaking a bridge.
+   * @returns {number}
+   * @readonly
+   */
+  get maximumLand() {
+    return 4; 
   }
 
   /**
@@ -836,7 +874,7 @@ class DifficultyManager {
    * @readonly
    */
   get gapCount() {
-    return Math.min(this.#maxGaps, 2 + Math.floor(this.#processions / 2));
+    return hcjeLib.utils.getRandomIntInclusive(2, Math.min(this.#maxGaps, 2 + Math.floor(this.#processions / 2)));
   }
 
   /**
@@ -957,7 +995,7 @@ export class ScaffoldAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
   /** Target x position @type {number} */
   #targetX;
   /** velocity x @type {number} */
-  #vx;
+  vx;
  
 
   /**
@@ -976,16 +1014,16 @@ export class ScaffoldAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
   constructor(sprite, config) {
     super(sprite);
     this.bridge = config.bridge;
-    this.#vx = Math.abs(config.speed);
+    this.vx = Math.abs(config.speed);
     this.#index = 0;
     this.#lastX = 0;
     this.#overlap = 0.5 * (sprite.dimensions.width - config.bridge[0].dimensions.width);
     this.#keyboard = new hcjeLib.device.Keyboard();
     for (const key of config.leftKeys ?? ['a', 'A', 'ArrowLeft']) {
-      this.#keyboard.addDownListener(key, () => this.moveLeft());
+      this.#keyboard.addDownListener(key, {callback: () => this.moveLeft(), noRepeat: true});
     }
     for (const key of config.rightKeys ?? ['d', 'D', 'ArrowRight']) {
-      this.#keyboard.addDownListener(key, () => this.moveRight());
+      this.#keyboard.addDownListener(key, {callback: () => this.moveRight(), noRepeat: true});
     }
   }
 
@@ -996,10 +1034,10 @@ export class ScaffoldAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
       return;
     }
     const position = sprite.position;
-    if (this.#vx > 0 && position.x < this.#targetX) {
-      sprite.dynamics.vx = this.#vx;
-    } else if (this.#vx < 0 && position.x > this.#targetX) {
-      sprite.dynamics.vx = this.#vx;
+    if (this.vx > 0 && position.x < this.#targetX) {
+      sprite.dynamics.vx = this.vx;
+    } else if (this.vx < 0 && position.x > this.#targetX) {
+      sprite.dynamics.vx = this.vx;
     } else {
       sprite.dynamics.vx = 0;
       position.x = this.#targetX;
@@ -1013,7 +1051,7 @@ export class ScaffoldAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
    */ 
   #updateTargetX() {
     this.#targetX = this.bridge[this.#index].position.x - this.#overlap;
-    this.#vx = this.#targetX >= this.#lastX ? Math.abs(this.#vx) : -Math.abs(this.#vx);
+    this.vx = this.#targetX >= this.#lastX ? Math.abs(this.vx) : -Math.abs(this.vx);
   }
 
   /**
@@ -1154,12 +1192,11 @@ function showAboutDialog() {
 /**
  * Show play dialog with message. This is displayed on the screen along with a button to close.
  * @param {Element|ElementWrapper} parentElement - element containing the message.
- * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
+ * @param {string} title - dialog title.
  * @param {string} message - text to display. Supports Markdown.
  * @returns {Promise} fulfils to {@link module:bridgeOverJupiter~DifficultyEnumValue}
  */
-function showPlayDialog(parentElement, controls, message) {
-  controls.disabled = true;
+function showPlayDialog(parentElement, title, message) {
   const about = new hcjeLib.domTools.Button({
     className: 'bridger-dialog__about_button',
     label: 'About', 
@@ -1167,7 +1204,7 @@ function showPlayDialog(parentElement, controls, message) {
     onClick: () => showAboutDialog() 
   });
   return hcjeLib.domTools.createDialog({
-    title: '',
+    title,
     markdown: message,
     children: [about],
     buttonDefns: [
@@ -1177,7 +1214,6 @@ function showPlayDialog(parentElement, controls, message) {
     ]
   })
     .then((id) => {
-      controls.disabled = false;
       switch (id) {
         case 'SLOW': return Difficulty.SLOW;
         case 'FAST': return Difficulty.FAST;
@@ -1189,24 +1225,22 @@ function showPlayDialog(parentElement, controls, message) {
 /**
  * Show welcome page along with play selection buttons.
  * @param {Element|ElementWrapper} container - element containing the message.
- * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
  * @returns {Promise} fulfils to selected difficulty.
  */
-function showWelcomeAndPlay(container, controls) {
+function showWelcomeAndPlay(container) {
   return hcjeLib.utils.fetchText('./bridger/assets/data/welcome.md', 'Could not load text. Please check your internet connection.').
-    then((content) => showPlayDialog(container, controls, content));
+    then((content) => showPlayDialog(container, 'Bridge over Jupiter', content));
 }
 
 /** 
  * Show the completion/try again message along with play selection buttons.
  * @param {Element|ElementWrapper} container - element containing the message.
- * @param {module:bridgeOverJupiter~ControlButtons} controls - left and right controls.
  * @param {number} walkersAcross - result of game.
  * @returns {Promise} fulfils to selected difficulty.
  */
-function showResultAndReplay(container, controls, walkersAcross) {
+function showResultAndReplay(container, walkersAcross) {
   const message = `You managed to get ${walkersAcross} ${walkersAcross === 1 ? 'astronaut' : 'astronauts'} across. Better luck next time.`;
-  return showPlayDialog(container, controls, message);
+  return showPlayDialog(container, 'Game over!', message);
 }
 
 
@@ -1253,14 +1287,12 @@ async function startGame() {
   const title = new hcjeLib.domTools.createChild(gameArea, 'p', 'bridger-title');
   title.innerText = 'Bridge over Jupiter';
   const textureManager = await createTextureManager(gameArea, 'bridger/assets/images/sprites.json', 'bridger/assets/images/sprites.png');
-  const controls = new ControlButtons(document.getElementsByClassName('hcje-game-area-container')[0]);
-  controls.hide();
-  showWelcomeAndPlay(gameArea, controls)
+  showWelcomeAndPlay(gameArea)
     .then((difficulty) => {
       if (!/itch.io$/.test(window.location.hostname)) {
         hcjeLib.device.enterFullscreen(); // not needed on itch.
       }
-      gameLoop({gameArea, controls, difficulty, textureManager});
+      gameLoop({gameArea, difficulty, textureManager});
     });
 }
 

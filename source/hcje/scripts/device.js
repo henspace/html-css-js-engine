@@ -114,6 +114,11 @@ export function getScaleToCover(width, height, options) {
  */
 
 /**
+ * @typedef {Object} KeyEventListener
+ * @property {function()} callback - function to call on event
+ * @property {boolean} noRepeat - if true key repeats are ignored.
+ */
+/**
  * Keyboard handler.
  */
 export class Keyboard {
@@ -127,10 +132,13 @@ export class Keyboard {
   constructor() {
     this.#listeners = new Map();
     addEventListener('keydown', (evt) => {
-      this.#listeners.get(evt.key)?.();
+      const listener = this.#listeners.get(evt.key);
+      if (listener && !(listener.noRepeat && evt.repeat)) {
+        listener.callback()
+      }
     });
     addEventListener(Keyboard.#VIRTUAL_KEYDOWN_EVENT, (evt) => {
-      this.#listeners.get(evt.detail.key)?.();
+      this.#listeners.get(evt.detail.key)?.callback();
     });
   }
   /**
