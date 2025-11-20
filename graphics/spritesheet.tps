@@ -180,6 +180,17 @@
             <key type="filename">spritesheet-images/sprites_retro_spaceman_idle0.png</key>
             <key type="filename">spritesheet-images/sprites_retro_spaceman_idle1.png</key>
             <key type="filename">spritesheet-images/sprites_retro_spaceman_idle2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_fall0.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_fall1.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_fall2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk0.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk1.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk2.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk3.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk4.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk5.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk6.png</key>
+            <key type="filename">spritesheet-images/sprites_retro_spaceman_last_walk7.png</key>
             <key type="filename">spritesheet-images/sprites_retro_spaceman_walk0.png</key>
             <key type="filename">spritesheet-images/sprites_retro_spaceman_walk1.png</key>
             <key type="filename">spritesheet-images/sprites_retro_spaceman_walk2.png</key>
