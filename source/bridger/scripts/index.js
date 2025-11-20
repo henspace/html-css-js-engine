@@ -36,6 +36,7 @@ const STORAGE_KEY_PREFIX = 'BridgeOverJupiter';
 
 /** Click rate. How fast user can click keys @type {number}*/
 const CLICKS_PER_S = 6;
+const MAX_CLICKS_PER_S = 8;
 
 /** Game design width @type {number} */
 const GAME_WIDTH = 640;
@@ -48,6 +49,8 @@ const DROP_VY = 20;
 const DROP_AY = 100;
 /** Scaffold speed @type {number} */
 const SCAFFOLD_SPEED_X = 1000;
+/** Minimum exit speed @type {number} */
+const MIN_EXIT_SPEED = 100;
 
 /** Spaceship speed @type {number} */
 const SPACESHIP_SPEED_X = 360;
@@ -196,10 +199,11 @@ function createSpaceship(textureManager) {
 /**
  * Create a walker.
  * @param {module:hcje/sprites~TextureManager} textureManager - manager used to create sprites.
+ * @param {boolean} lastWalker - flag if this is the last walker in a procession
  * @returns {module:hcje/sprites~Sprite}
  */
-function createWalker(textureManager) {
-  const sprite = textureManager.createSprite(formSpriteName('sprites_spaceman.png'), [
+function createWalker(textureManager, lastWalker) {
+  const sprite = textureManager.createSprite(formSpriteName(`sprites_spaceman${lastWalker ? '_last' : ''}.png`), [
     {name:'walk', interval:(dynamics) => hcjeLib.sprites.Sprite.deriveWalk(dynamics, 2)},
     {
       name:'fall', interval: 100, 
@@ -311,7 +315,7 @@ function breakBridge(config) {
  
   const maxSpread = gaps + (gaps - 1) * maxLand;
 
-  let gapIndex = hcjeLib.utils.getRandomIntInclusive(safeIn, config.bridge.length - safeOut - maxSpread);
+  let gapIndex = safeIn + (hcjeLib.utils.tossCoin() ? 0 : 1);
   for (let n = 0; n < gaps; n++) {
     indexes.push(gapIndex);
     gapIndex += hcjeLib.utils.getRandomIntInclusive(minLand, maxLand) + 1;
@@ -459,7 +463,8 @@ function getProcessionIndices(count, bridgeGaps, options) {
  * @param {module:hcje/sprites~Sprite} config.scaffold - the scaffold that fills the gap.
  * @param {Scoreboard} config.scoreboard - element holding current score.
  * @param {module:hcje/sprites~TextureManager} config.textureManager - manager used to create sprites.
- * @param {number} config.walkSpeed - walk speed px/s.
+ * @param {module:bridgeOverJupiter~WalkSpeeds} config.walkSpeeds - walk speeds px/s.
+ * @param {module:bridgeOverJupiter~UnsafeWalkerCounter} config.unsafeCounter - counter for the number of unsafe walkers
  * @returns {Promise} Fulfils to ProcessionResult.
  */
 function startProcession(config) {
@@ -473,14 +478,14 @@ function startProcession(config) {
   let allWalkers = [];
 
   for (const index of config.indices) {
-    const walker = createWalker(config.textureManager);
+    const walker = createWalker(config.textureManager, allWalkers.length === config.indices.length - 1);
     allWalkers.push(walker);
     const walkerDims = walker.dimensions;
     walker.position = {
       x: -index * config.rockWidth - walkerDims.width, 
       y: config.floorY - walkerDims.height
     }
-    walker.dynamics.vx = config.walkSpeed;
+    walker.dynamics.vx = config.walkSpeeds.normal;
 
     config.animator.addTarget(walker);
     const adjuster = new WalkerAdjuster(walker, {
@@ -489,7 +494,10 @@ function startProcession(config) {
       gameBounds: config.gameBounds,
       onCompletion: (reason) => console.debug(`Walker completed: ${reason}`),
       rockWidth: config.rockWidth,
-      scaffold: config.scaffold
+      scaffold: config.scaffold,
+      walkSpeeds: config.walkSpeeds,
+      lastWalker: allWalkers.length === config.indices.length,
+      unsafeCounter: config.unsafeCounter
     });
     walker.adjuster = adjuster;
     const promise = new Promise((resolve) => {
@@ -651,6 +659,57 @@ function startMusic() {
   audio.gain = 0.5;
   audio.setMusic(SYNTH_DEFINITION);
 }
+
+/**
+ * Counter for walkers who are waiting to cross.
+ */
+class UnsafeWalkerCounter {
+  /** Count of walkers who are not yet safe @type {number} */
+  #unsafe;
+
+  /**
+   * Construct counter.
+   * @param {number} unsafe - number of unsafe walkers.
+   */
+  constructor(unsafe) {
+    this.#unsafe = unsafe;
+  }
+
+  /**
+   * Get number of unsafe walkers.
+   * @returns {number}
+   * @readonly
+   */ 
+  get unsafe() {
+    return this.#unsafe;
+  }
+
+  /**
+   * Convenience test for just one walker left.
+   * @returns {boolean}
+   */
+  isJustOneLeft() {
+    return this.#unsafe === 1;
+  }
+
+  /**
+   * All safe test.
+   * @returns {boolean}
+   */
+  areAllSafe() {
+    return this.#unsafe <= 0;
+  }
+
+  /**
+   * Decrement number of unsafe walkers.
+   */
+  decrement() {
+    this.#unsafe--;
+  }
+
+
+}
+
 /**
  * The main game loop
  * @param {module:bridgeOverJupiter~DifficultlyEnumValue} config.difficulty - the game difficulty.
@@ -706,7 +765,8 @@ async function gameLoop(config) {
       spread: difficultyMgr.walkerSpread,
       walkerLag
     });
-    const walkSpeed = difficultyMgr.calcWalkSpeed({
+    const unsafeCounter = new UnsafeWalkerCounter(processionIndices.length);
+    const walkSpeeds = difficultyMgr.calcWalkSpeeds({
       bridgeGaps,
       rockWidth: bridge[0].dimensions.width,
       scaffoldSpeed: SCAFFOLD_SPEED_X,
@@ -730,7 +790,8 @@ async function gameLoop(config) {
       scaffold,
       scoreboard,
       textureManager: config.textureManager,
-      walkSpeed 
+      walkSpeeds,
+      unsafeCounter,
     })
       .then((result) => {
         if (result.success) {
@@ -763,6 +824,14 @@ const Difficulty = {
   NORMAL: 1,
   FAST: 2,
 }
+
+/**
+ * @typedef {Object} WalkSpeeds
+ * @property {number} normal - normal speed for all walkers.
+ * @property {number} exit - once safe, the increased speed for walkers.
+ * @property {number} last - the speed of the last walker once on the first gap. This is higher because the 
+ * scaffold movement is reduced.
+ */
 
 /**
  * Class to manage the game difficultly.
@@ -808,23 +877,40 @@ class DifficultyManager {
 
   /** 
    * Calculate the maximum walker speed to allow scaffold to traverse gaps.
+   * @param {boolean} fullSpan - if true the calculation is base on the largest span, otherwise it is 
+   * @param {number[]} indicesToMove - max number of indices the scaffold needs to move.
    * @param {Object} config
-   * @param {number[]} config.bridgeGaps - indices, sorted left to right of gaps in bridge.
    * @param {number} config.rockWidth - width of a rock
    * @param {number} config.scaffoldSpeed - speed of the scaffold
    * @param {number} config.walkerLag - Amount a walker must lag a gap when leader is over one.
    * @returns {number}
    */ 
-  calcMaxWalkSpeed(config) {
-    const maxIndicesToMove = config.bridgeGaps[config.bridgeGaps.length - 1] - config.bridgeGaps[0]; 
-    //const movementInterval = hcjeLib.domTools.SIM_KBD_INTERVAL;
+  #calcMaxWalkSpeed(indicesToMove, config) {
     const timeToMoveOneGap = config.rockWidth / config.scaffoldSpeed;
-    /* const maxTraversalTime = maxIndicesToMove * timeToMoveOneGap + movementInterval.delay / 1000 + 
-      maxIndicesToMove * movementInterval.repeat / 1000; */
-    const maxTraversalTime = maxIndicesToMove * (timeToMoveOneGap + 1 / CLICKS_PER_S);
+    const maxTraversalTime = indicesToMove * (timeToMoveOneGap + 1 / CLICKS_PER_S);
     const maxWalkerSpeed = config.walkerLag * config.rockWidth / maxTraversalTime;
-    LOGGER.debug(`Walker space ${config.walkerLag} rocks; speed ${config.scaffoldSpeed} px/s; max traversal time ${maxTraversalTime.toFixed(2)} s; max walker speed ${maxWalkerSpeed.toFixed(2)}`);
+    LOGGER.debug(`Indices to move ${indicesToMove}; walker lag ${config.walkerLag} rocks`);
+    LOGGER.debug(`Speed ${config.scaffoldSpeed} px/s; max traversal time ${maxTraversalTime.toFixed(2)} s; max walker speed ${maxWalkerSpeed.toFixed(2)}`);
     return maxWalkerSpeed;
+  }
+
+  /**
+   * Calculate the number of indices (rocks) to move the scaffold.
+   * @param {number[]} bridgeGaps - indices, sorted left to right of gaps in bridge.
+   * @param {boolean} fullSpan - if true the movement is from first to last gap, otherwise it is the largest gap 
+   * spacing.
+   * @returns {number}
+   */
+  #calcIndicesMovement(bridgeGaps, fullSpan) {
+    if (fullSpan) {
+      return bridgeGaps[bridgeGaps.length - 1] - bridgeGaps[0]; 
+    } else {
+      let movement = 0;
+      for (let n = 1; n < bridgeGaps.length; n++) {
+        movement = Math.max(movement, bridgeGaps[n] - bridgeGaps[n - 1]);
+      }
+      return movement;
+    }
   }
 
   /**
@@ -834,9 +920,11 @@ class DifficultyManager {
    * @param {number} config.rockWidth - width of a rock
    * @param {number} config.scaffoldSpeed - speed of the scaffold
    * @param {number} config.walkerLag - Amount a walker must lag a gap when leader is over one.
-   * @returns {number}
+   * @returns {module:bridgeOverJupiter~WalkSpeeds}
    */
-  calcWalkSpeed(config) {
+  calcWalkSpeeds(config) {
+    const maxWalkerSpeed = this.#calcMaxWalkSpeed(this.#calcIndicesMovement(config.bridgeGaps, true), config);
+    const maxLastWalkerSpeed = this.#calcMaxWalkSpeed(this.#calcIndicesMovement(config.bridgeGaps, false), config);
     let minFactor;
     switch (this.difficulty) {
       case Difficulty.SLOW: 
@@ -849,10 +937,14 @@ class DifficultyManager {
         minFactor = 0.65;
         break;
     }
-    const factor = Math.min(1, minFactor + 0.02 * this.#processions);
-    const walkSpeed = factor * this.calcMaxWalkSpeed(config);
-    LOGGER.debug(`Speed factor ${factor.toFixed(2)}; walker speed ${walkSpeed.toFixed(2)}`);
-    return walkSpeed;
+    const factor = Math.min(MAX_CLICKS_PER_S / CLICKS_PER_S, minFactor + 0.05 * this.#processions);
+    const walkSpeed = factor * maxWalkerSpeed;
+    LOGGER.debug(`Speed factor ${factor.toFixed(2)}`);
+    return {
+      normal: factor * maxWalkerSpeed,
+      last: factor * maxLastWalkerSpeed,
+      exit: MIN_EXIT_SPEED
+    };
   }
 
   /**
@@ -911,8 +1003,14 @@ class WalkerAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
   #bridgeGaps;
   /** Complete flag @type {boolean} */
   #complete;
+  /** Flag for when walker has crossed the last gap. @type {boolean} */
+  #exiting;
   /** Flag for when falling. @type {boolean} */
   #falling;
+  /** Last gap index. @type {number} */
+  #lastGapIndex;
+  /** Last walker flag @type {boolean} */
+  #lastWalker;
   /** Callback function on completion @type {function(string)} */
   onCompletion;
   /** Right side that needs to be reached @type {number} */
@@ -921,31 +1019,46 @@ class WalkerAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
   #rockWidth;
   /** @type {module:hcje/sprites~Sprite} */
   #scaffold;
+  /** @type {module:bridgeOverJupiter~WalkSpeeds} */
+  #walkSpeeds;
+  /** @type {module:bridgeOverJupiter~UnsafeWalkerCounter} */
+  #unsafeCounter;
+
 
   /** 
    * Construct the walker handler.
    * @param {module:hcje/sprites~Sprite} sprite - the target walker sprite.
    * @param {Object} config
+   * @param {number} config.allowance - extra amount added to each side of the scaffold effectively increasing its
    * @param {number[]} config.bridgeGaps - indices in the bridge where there are gaps.
    * @param {function(string)} [config.onCompletion] - function that is called with the reason for completion. This is 
    * either 'FELL' or 'CROSSED'.
    * @param {module:hcje/utils~RectData} config.gameBounds - game bounds.
+   * @param {boolean} config.lastWalker - is this the last walker in a procession.
    * @param {number} config.rockWidth - the width of a bridge rock.
-   * @param {module:hcje/sprites~Sprite} scaffold - the scaffold that can support the walker over gaps.
-   * @param {number} config.allowance - extra amount added to each side of the scaffold effectively increasing its
+   * @param {module:hcje/sprites~Sprite} config.scaffold - the scaffold that can support the walker over gaps.
    *   width.
+   * @param {module:bridgeOverJupiter~WalkSpeeds} config.walkSpeeds - walk speeds px/s.
+   * @param {module:bridgeOverJupiter~UnsafeWalkerCounter} config.unsafeCounter - counter for walkers who are not safe.
    */
   constructor(sprite, config) {
     super(sprite);
     this.#allowance = config.allowance ?? 0;
     this.#bridgeGaps = config.bridgeGaps;
+    this.#exiting = false;
+    this.#lastGapIndex = this.#bridgeGaps[this.#bridgeGaps.length - 1];
     this.onCompletion = config.onCompletion;
     this.#right = config.gameBounds.x + config.gameBounds.width;
     this.#bottom = config.gameBounds.y + config.gameBounds.height;
     this.#rockWidth = config.rockWidth;
     this.#falling = false;
     this.#scaffold = config.scaffold;
+    this.#walkSpeeds = config.walkSpeeds;
+    this.#lastWalker = config.lastWalker;
+    this.#unsafeCounter = config.unsafeCounter;
+    console.debug(`Astronaut is last walker: ${this.#lastWalker}`);
   }
+
   /**
    * @borrows module:hcje/sprites~SpriteAdjuster#adjust
    */
@@ -978,6 +1091,15 @@ class WalkerAdjuster extends hcjeLib.sprites.BaseSpriteAdjuster {
         setTimeout(()=> hcjeLib.audio.getAudioManager().playAudioSfx(FALL_SFX_KEY), 250);
       }
     }
+    if (!this.#exiting && bridgeIndex === this.#lastGapIndex + 1) {
+      this.#exiting = true;
+      this.#unsafeCounter.decrement();
+      sprite.dynamics.vx = Math.max(sprite.dynamics.vx, this.#walkSpeeds.exit);
+    }
+    if (this.#lastWalker && this.#unsafeCounter.isJustOneLeft() && bridgeIndex > this.#bridgeGaps[0]) {
+      sprite.dynamics.vx = Math.max(sprite.dynamics.vx, this.#walkSpeeds.last);
+    }
+
   }
 }
 
@@ -1262,7 +1384,7 @@ function showWelcomeAndPlay(container) {
  * @returns {Promise} fulfils to selected difficulty.
  */
 function showResultAndReplay(container, walkersAcross) {
-  const message = `You managed to get ${walkersAcross} ${walkersAcross === 1 ? 'astronaut' : 'astronauts'} across. Better luck next time.`;
+  const message = `You managed to get ${walkersAcross} ${walkersAcross === 1 ? 'astronaut' : 'astronauts'} across. Can you save more next time?`;
   return showPlayDialog(container, 'Game over!', message);
 }
 
