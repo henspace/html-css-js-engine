@@ -457,7 +457,6 @@ function getProcessionIndices(count, bridgeGaps, options) {
     processionIndices.push(leaderIndex);
   }
   LOGGER.debug(`  Bridge gaps: ${bridgeGaps.join(', ')}`);
-  LOGGER.debug(`No go indices: ${[... new Set(noGoIndices)].sort((a,b) => a- b).join(', ')}`);
   LOGGER.debug(`   Procession: ${processionIndices.join(', ')}`);
   return processionIndices;
 }
@@ -818,11 +817,8 @@ async function gameLoop(config) {
         if (result.success) {
           difficultyMgr.incrementProcessions();
         } else {
-          scoreboard.saveIfNewBest();
           difficultyMgr.reset();
-          const spacemenAcross = scoreboard.score;
-          scoreboard.clear();
-          return showResultAndReplay(config.gameArea, spacemenAcross);
+          return showResultAndReplay(config.gameArea, scoreboard);
         }
       }) 
       .then((difficulty) => {
@@ -961,12 +957,14 @@ class DifficultyManager {
     const factor = Math.min(MAX_CLICKS_PER_S / CLICKS_PER_S, minFactor + 0.05 * this.#processions);
     const walkSpeed = factor * maxWalkerSpeed;
     LOGGER.debug(`Speed factor ${factor.toFixed(2)}`);
-    return {
+    const speeds = {
       normal: factor * maxWalkerSpeed,
       last: factor * maxLastWalkerSpeed,
       entry: ENTRY_SPEED,
       exit: MIN_EXIT_SPEED
     };
+    LOGGER.debug(`Speeds: normal: ${speeds.normal.toFixed(1)}, last: ${speeds.last.toFixed(1)}`);
+    return speeds;
   }
 
   /**
@@ -1272,10 +1270,8 @@ class Scoreboard extends hcjeLib.domTools.TextElement {
     super('div');
     this.prefix = prefix;
     this.suffix = suffix;
-    this.#score = 0;
-    this.#bestEverScore = hcjeLib.storage.getItem('BEST_SCORE') ?? 0;
     this.classList.add('bridger-score');
-    this.#updateText();
+    this.reset();
   }
   
   /**
@@ -1306,11 +1302,19 @@ class Scoreboard extends hcjeLib.domTools.TextElement {
   }
 
   /**
-   * Clear the score.
+   * Reset the scorebaord. Best ever score is read from storage in case the user selected a factory reset.
    */ 
-  clear() {
+  reset() {
     this.#score = 0;
+    this.#bestEverScore = hcjeLib.storage.getItem('BEST_SCORE') ?? 0;
     this.#updateText();
+  }
+
+  /**
+   * Test if score is a best score.
+   */
+  isNewBest() {
+    return this.#score > this.#bestEverScore;
   }
 
   /** 
@@ -1339,6 +1343,7 @@ function factoryReset() {
   })
     .then((id) => {
       if (id === 'OK') {
+        LOGGER.warn('Factory reset select. Best score removed.');
         hcjeLib.storage.clear(STORAGE_KEY_PREFIX);
       }
     });
@@ -1380,6 +1385,8 @@ function showAboutDialog() {
       buttonDefns: [{id:'OK', url: './bridger/assets/images/retro_buttons_ok.png'}]
     }));
 }
+
+
 /**
  * Show play dialog with message. This is displayed on the screen along with a button to close.
  * @param {Element|ElementWrapper} parentElement - element containing the message.
@@ -1426,12 +1433,23 @@ function showWelcomeAndPlay(container) {
 /** 
  * Show the completion/try again message along with play selection buttons.
  * @param {Element|ElementWrapper} container - element containing the message.
- * @param {number} walkersAcross - result of game.
+ * @param {module:bridgeOverJupiter~Scoreboard} scoreboard - the score.
  * @returns {Promise} fulfils to selected difficulty.
  */
-function showResultAndReplay(container, walkersAcross) {
+function showResultAndReplay(container, scoreboard) {
+  const walkersAcross = scoreboard.score;
+  let title = 'Game over!';
+  if (scoreboard.isNewBest()) {
+    title = 'NEW BEST!';
+    scoreboard.saveIfNewBest();
+  }
+
   const message = `You managed to get ${walkersAcross} ${walkersAcross === 1 ? 'astronaut' : 'astronauts'} across. Can you save more next time?`;
-  return showPlayDialog(container, 'Game over!', message);
+  return showPlayDialog(container, title, message)
+    .then((difficulty) => {
+      scoreboard.reset(); // in case factory reset selected
+      return difficulty; 
+    });
 }
 
 
