@@ -940,7 +940,7 @@ class DifficultyManager {
     let minFactor;
     switch (this.difficulty) {
       case Difficulty.SLOW: 
-        minFactor = 0.5;
+        minFactor = 0.3;
         break;
       case Difficulty.FAST: 
         minFactor = 0.8;
