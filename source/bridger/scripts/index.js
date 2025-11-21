@@ -954,7 +954,7 @@ class DifficultyManager {
         minFactor = 0.65;
         break;
     }
-    const factor = Math.min(MAX_CLICKS_PER_S / CLICKS_PER_S, minFactor + 0.05 * this.#processions);
+    const factor = Math.min(MAX_CLICKS_PER_S / CLICKS_PER_S, minFactor + 0.035 * this.#processions);
     const walkSpeed = factor * maxWalkerSpeed;
     LOGGER.debug(`Speed factor ${factor.toFixed(2)}`);
     const speeds = {
