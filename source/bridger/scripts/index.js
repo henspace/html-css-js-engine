@@ -294,35 +294,33 @@ function createBridge(animator, gameArea, textureManager) {
  * @param {module:hcje/sprites~Animator} config.animator - animator for the sprites.
  * @param {module:hcje/sprites~Sprite[]} config.bridge - the array of rocks that form the bridge from left to right.
  * @param {number} [config.gaps = 2] - number of gaps in the bridge.
- * @param {number} config.minLand - minimum land between gaps
- * @param {number} config.maxLand] - maximum land between gaps
+ * @param {number} [config.minBreakSpan = 2] - minimum span from first to last gap.
+ * @param {number} [config.minLand = 0] - minimum land between gaps
+ * @param {number} [config.maxLand = 3] - maximum land between gaps
  * @param {number} [config.safeIn = 2] - number of rocks at the left that are guaranteed to be unbroken.
  * @param {number} [config.safeOut = 1] - number of rocks at the right that are guaranteed to be unbroken.
  * @returns {Promise} fulfils to an array of the bridge positions where there are gaps in ascending order.
  */
 function breakBridge(config) {
   const promises = []
-  const indexes = [];
   const gaps = config.gaps || 2;
   const safeIn = config.safeIn || 2;
   const safeOut = config.safeOut || 1;
-  let minLand = config.minLand;
-  let maxLand = config.maxLand;
+  let minLand = config.minLand ?? 0;
+  let maxLand = config.maxLand ?? 3;
+  let minBreakSpan = config.minBreakSpan || 2;
 
   const breakable = config.bridge.length - safeIn - safeOut;
   const maxPossibleLand = Math.floor((breakable - gaps) / (gaps - 1));
 
   minLand = Math.min(minLand, maxPossibleLand); // min space required for the gaps.
   maxLand = Math.min(maxLand, maxPossibleLand); // max space required for the gaps.
- 
-  const maxSpread = gaps + (gaps - 1) * maxLand;
-  let gapIndex = safeIn;
-  if (maxSpread < breakable) {
-    gapIndex += hcjeLib.utils.getRandomIntExclusive(0, breakable - maxSpread);
-  }
 
+  const maxSpread = gaps + (gaps - 1) * maxLand;
+  let gapIndex = 0;
+  const breakPattern = [];
   for (let n = 0; n < gaps; n++) {
-    indexes.push(gapIndex);
+    breakPattern.push(gapIndex);
     const land = hcjeLib.utils.getRandomIntInclusive(minLand, maxLand);
     gapIndex += land + 1;
     if (land === maxLand) {
@@ -330,11 +328,21 @@ function breakBridge(config) {
     }
   }
 
-  LOGGER.debug(`Land ${minLand} to ${maxLand}: indexes ${indexes.join(',')}`);
+  let breakSpan = breakPattern[breakPattern.length - 1] - breakPattern[0]; 
+  if (breakSpan < minBreakSpan) {
+    console.debug(`Break span < ${minBreakSpan} so add extra gap.`);
+    breakPattern.push(breakPattern[0] + minBreakSpan);
+    breakSpan = minBreakSpan;
+  } 
+
+  const maxOffset = breakable - breakSpan;
+  const offset = maxOffset <= 0 ? 0 : hcjeLib.utils.getRandomIntExclusive(0, maxOffset);
+ 
+  LOGGER.debug(`Land ${minLand} to ${maxLand}: pattern ${breakPattern.join(',')}`);
   
   const gapIndexes = [];
-  for (let gap = 0; gap < gaps; gap++) {
-    const index = indexes[gap];
+  for (let gap = 0; gap < breakPattern.length; gap++) {
+    const index = breakPattern[gap] + safeIn + offset;
     gapIndexes.push(index);
     const brokenRock = config.bridge[index];
     brokenRock.dynamics.vy = DROP_VY;
@@ -767,6 +775,7 @@ async function gameLoop(config) {
       bridge, 
       gameBounds: config.gameArea.designBounds, 
       gaps: difficultyMgr.gapCount,
+      minBreakSpan: difficultyMgr.minimumBreakSpan,
       minLand: difficultyMgr.minimumLand,
       maxLand: difficultyMgr.maximumLand,
       safeIn: BRIDGE_SAFE_IN,
@@ -961,12 +970,21 @@ class DifficultyManager {
   }
 
   /**
+   * Get the minimum break span. This is the movement between first gap index and the last.
+   * If very small, the walker speed may be too faset.
+   * @returns {number}
+   * @readonly
+   */
+  get minimumBreakSpan() {
+    return 4; 
+  }
+  /**
    * Get the minimum land when breaking a bridge.
    * @returns {number}
    * @readonly
    */
   get minimumLand() {
-    return this.#gaps < 3 ? 1 : 0; // @ToDo 3; 
+    return this.#gaps < 3 ? 1 : 0; 
   }
   /**
    * Get the maximum land when breaking a bridge.
@@ -974,7 +992,7 @@ class DifficultyManager {
    * @readonly
    */
   get maximumLand() {
-    return 3; // @ToDo this.#gaps === 2 ? 7 : 4; 
+    return 3;  
   }
 
   /**
