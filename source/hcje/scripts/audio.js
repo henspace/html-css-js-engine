@@ -1415,7 +1415,7 @@ export const Instrument = {
     waveform: 'sine',
   },
   SNARE: {
-    adsr: [0.001, 0.002, 0.1, 0.01],
+    adsr: [0.01, 0.01, 0.1, 0.01],
     allowMerge: false,
     maxGain: 1,
     sustainTime: 0.05,
