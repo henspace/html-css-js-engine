@@ -24,7 +24,7 @@
  * @module hcje/audio
  * @description
  * Module containing utilities for managing audio. This includes a simple synthesiser for simple music and effects
- * which do not require a backing 
+ * which merely require a text definition of the sound and no supporting media file.
  */
 
 import * as utils from './utils.js';
@@ -32,49 +32,53 @@ import * as utils from './utils.js';
 /**
  * Definition of sound based on a media file. 
  * @typedef {Object} AudioDefinition
- * @property {string} title - identification for music. This is used as its look up key.
- * @property {string} url - url to sound file.
- * @property {boolean} loop - should the tracks loop. This is ignored if used as a sound effect.
- * @property {number} fadeSeconds - only used for music; ignored for effects. Allows soft start and stop.
+ * @property {string} title - Identification for music. This is used as its look up key.
+ * @property {string} url - The url to the media file.
+ * @property {boolean} loop - Flag determining whether the tracks loop. This is ignored when as a sound effect.
+ * @property {number} fadeSeconds - Soft stop and start fade time. This is only used for music and ignored for sound
+ * effects.
  */
 
 
 /**
- * Definition of synthesised sound or music to play.
+ * Definition of synthesised sound effect or music to play.
  * @typedef {Object} SynthAudioDefinition
- * @property {string} title - identification for music. This is just used in messages.
- * @property {number} bpm - beats per minute.
- * @property {boolean} loop - should the tracks loop. This is ignored if used as a sound effect.
+ * @property {string} title - Identification for music. This is used in messages and the look-up key for sound effects.
+ * @property {number} bpm - Beats per minute.
  * @property {number} fadeSeconds - only used for music; ignored for effects. Allows soft start and stop.
- * @property {Array<module:hcje/audio~SynthTrack>} tracks - tracks to play. 
+ * @property {boolean} loop - Flag determining whether the tracks loop. This is ignored when as a sound effect.
+ * @property {Array<module:hcje/audio~SynthTrack>} tracks - The individual tracks that are used to generate the music
+ * or sound effect.. 
  */
 
 /**
- * Details of an individual track in synthesised sounds..
+ * Details of an individual track in synthesised sounds.
  * @typedef {Object} SynthTrack 
- * @property {number} detune - value to detune the oscillator.
- * @property {module:hcje/audio~SynthInstrument} - instrument.
- * @property {number} octave - the octave for the notes. There are seven available octaves from 0 to 7 with octave
+ * @property {number} detune - Value by which to detune the oscillator. 
+ *   See [OscillatorNode detune property]{@link https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/detune}.
+ * @property {module:hcje/audio~SynthInstrument} instrument - The instrument for the track.
+ * @property {number} octave - The octave for the notes. There are eight available octaves from 0 to 7 with octave
  * 4 tuned to middle A.
- * @property {SynthNoteSequence} notes - notes to decode; if the string is just an integer value, the notes are derived
- * from the previous track and detuned by the value.
+ * @property {module:hcje/audio~SynthNoteSequence} notes - The notes to decode. If set to just the = character, 
+ * the notes and instruments are copied from the previous track. Only the detune property is used to adjust the copy.
  */
 
 /**
  * The music score for synthesised sounds.
- * Each note in the Notes sequence is defined as follows. Notes can be separated with spaces or pipes '|' but this is
- * not necessary and is typically only used to make the bars more readable. Characters that do not match a note
- * expression are ignored.
- * Note that characters shown in square brackets are optional. The square brackets do not form part of the notation.
- * + [O]N[M][F][.][@]
+ * Each note in the sequence is defined as follows. Characters that do not match a note expression are ignored, so
+ * spaces and | characters can be inserted as required to clarify bars.
+ * Note that characters shown in square brackets are optional; the square brackets do not form part of the notation.
+ * + [O]N[M][F][.][A]
  *     + O: octave modifier: + or -: shifts the octave for the note up or down one octave from the track octave set
- *     by the [SynthTrack]{@link module:hcje/audiSynthTrack} octave property.
- *     + N: note: A, B, C, D, E, F, G or ~ for a rest.
+ *     by the [SynthTrack]{@link module:hcje/audio~SynthTrack} octave property. More than one symbol can be included, so
+ *     the sequence +++ would shift a base octave up three.
+ *     + N: note: A, B, C, D, E, F, G or ~ for a rest. These must be capital letters.
  *     + M: modifier: # or b for sharps and flats.
- *     + F: fraction of note; e.g. note duration is 1/F. Defaults to a quarter note, 4.
+ *     + F: fraction of note; e.g. note duration is 1/F. Defaults to a quarter note, 4. The smallest fraction is 1/8th.
  *     + .: whether the note duration is dotted.
- *     + @: creates an arpeggio using up to 2 extra notes to create a triad. Note that the note duration needs to be 
- *     long enough to fit in the extra notes. An example would be "C2@".
+ *     + A: arpeggio modifier @ or $. This creates an arpeggio using up to 2 extra notes to create a triad. The @
+ *       character uses a major triad and a $ character a minor triad. Note that the note duration needs to be 
+ *       long enough to fit in the extra notes. An example would be "C2@".
  * @typedef {string} SynthNoteSequence
  */
 
@@ -88,17 +92,18 @@ import * as utils from './utils.js';
  *
  * @typedef {Array<number>} SynthEnvelope
  */
+
 /**
  * Information for a synthesised instrument.
  * @typedef {Object} SynthInstrument
- * @property {string} waveform - see [OscillatorNode: type property]{@link https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/type} 
- * @property {module:hcje/audio~SynthEnvelope} - adsr - ADSR envelope.
- * @property {number} sustainTime - duration in seconds of the sustain in the ADSR envelope.
- * @property {boolean} allowMerge - if true, a note that is played before the previous note starts to release, will just
- * continue at the previous sustain level if the note is the the same frequency as the previous.
- * @property {number} maxGain - maximum gain at end of attack. 
- * @property {number} sweepFactor - the end frequency of a note is calculated as the starting frequency times
- * the sweepFactor to create a sweep effect.
+ * @property {string} waveform - See [OscillatorNode: type property]{@link https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/type} 
+ * @property {module:hcje/audio~SynthEnvelope} adsr - ADSR envelope.
+ * @property {number} sustainTime - Duration in seconds of the sustain in the ADSR envelope.
+ * @property {boolean} allowMerge - Merger notes. If true, a note that is played before the previous note starts to
+ *   release, will just continue at the previous sustain level if the note is the the same frequency as the previous.
+ * @property {number} maxGain - Maximum gain at end of attack. 
+ * @property {number} sweepFactor - Sweep the frequency to an end frequency calculated as the starting frequency times
+ * the sweepFactor.
  */
 
 /**
@@ -112,9 +117,9 @@ import * as utils from './utils.js';
 
 
 /**
- * Class which provides a connection for all outputs. Only a single instance is 
- * normally created.
- * @private
+ * Class which provides a connection for all outputs and controls for all music and sound effects. The class is not
+ * exported by the module and can only be instantiated by calling the module's 
+ * [getAudioManager]{@link module:hcje/audio.getAudioManager} method.
  */
 class AudioManager {
   /** Audio player factory @type {module:hcje/audio~AudioPlayerFactory} */
@@ -169,11 +174,10 @@ class AudioManager {
   }
   
   /**
-   * Create a AudioSfxPlayer. It is stored in a map of 
-   * sound effects. It is only stored once ready to play, so it may not 
-   * be available in the map immediately. If the definition includes a **loop** property, it is set to false as sound
-   * effects are not allowed to loop.
-   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the sound
+   * Create a {@link module:hcje/audio~AudioSfxPlayer}. It is stored in a map of sound effects. It is only stored once
+   * ready to play, so it may not be available in the map immediately. If the definition includes a **loop** property, 
+   * it is set to false as sound effects are not allowed to loop.
+   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - Details of the sound
    *   to add
    * @returns {Promise} fulfils to true on success. 
    */
@@ -191,7 +195,7 @@ class AudioManager {
   /**
    * Play audio effect.
    * The title is used as a lookup into the map of existing sound effects.
-   * @param {string} title - title of the sound effect.
+   * @param {string} title - Title of the sound effect.
    */
   playAudioSfx(title) {
     try {
@@ -684,13 +688,14 @@ class OscillatorNodeFactory {
  * [AudioScheduledSourceNode]{@link https://developer.mozilla.org/en-US/docs/Web/API/AudioScheduledSourceNode}
  * interface.
  * @implements {AudioScheduledSourceNode} 
+ * @private
  */
 class WhiteNoiseSource extends BiquadFilterNode {
   /** @type {AudioScheduledSourceNode} */
   #source;
   /** 
    * Create WhiteNoiseSource
-   * @param {AudioBufferSourceNode} source - the white noise source.
+   * @param {AudioBufferSourceNode} source - The white noise source.
    * @param {Object} options - See {@link https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode} 
    */
   constructor(source, options) {
@@ -702,14 +707,14 @@ class WhiteNoiseSource extends BiquadFilterNode {
 
   /**
    * Start the source.
-   * @param {number} [when] - when to start.
+   * @param {number} [when] - When to start.
    */ 
   start(when) {
     this.#source.start(when);
   }
   /**
    * Stop the source.
-   * @param {number} [when] - when to stop.
+   * @param {number} [when] - When to stop.
    */ 
   stop(when) {
     this.#source.stop(when);
@@ -939,7 +944,7 @@ class AudioPlayerFactory {
         }
       }
     }
-    return {detune, instrument: track.instrument, freqs: freqData};
+    return freqData.length > 0 ? {detune, instrument: track.instrument, freqs: freqData} : null;
   }
   
   /**
@@ -960,13 +965,10 @@ class AudioPlayerFactory {
     for (let index = 0; index < definition.tracks.length; index++) {
       const track = definition.tracks[index];
       let decodedTrack;
-      let detunePreviousBy;
-      if (/^\d+$/.test(track.notes)) {
-        detunePreviousBy = Number.parseInt(track.notes);
-      }
-      if (index > 0 && detunePreviousBy !== undefined) {
+      if (index > 0 && track.notes === '=') {
+        console.debug(`Track ${index} is copy of previous detuned by ${track.detune} cents.`);
         decodedTrack = {
-          detune: detunePreviousBy,
+          detune: track.detune,
           freqs: decodedTracks[index - 1].freqs,
           instrument: decodedTracks[index - 1].instrument
         }
@@ -1194,13 +1196,16 @@ class MediaFilePlayer {
  */
 class MusicPlayer {
   /**
-   * @typedef {number} MusicCommandEnum
+   * @typedef {number} MusicCommandEnumValue
    * @private
    */
 
   /** 
    * Possible commands sent to a music player
-   * @enum {module:hcje/audio~MusicCommandEnum}
+   * @enum {module:hcje/audio~MusicCommandEnumValue}
+   * @property {module:hcje/audio~MusicCommandEnumValue} NONE - No command.
+   * @property {module:hcje/audio~MusicCommandEnumValue} START - Start playing.
+   * @property {module:hcje/audio~MusicCommandEnumValue} STOP - Stop playing.
    */
   static MusicCommand = {
     NONE: 0, 
@@ -1228,8 +1233,8 @@ class MusicPlayer {
 
   /**
    * Create a music player
-   * @param {string} title - name of music just used for identification in messages.
-   * @param {number} [fadeSeconds = 1] - time in seconds to fade in and out when stopping or starting.
+   * @param {string} title - Name of music just used for identification in messages.
+   * @param {number} [fadeSeconds = 1] - Time in seconds to fade in and out when stopping or starting.
    * @returns {module:hcje/audio~MusicPlayer}
    */ 
   constructor(title, fadeSeconds = 1) {
@@ -1255,7 +1260,7 @@ class MusicPlayer {
   }
   /**
    * Add player to the music player
-   * @param {module:hcje/audio~AudioPlayer} audioPlayer
+   * @param {module:hcje/audio~AudioPlayer} audioPlayer - Player to use for playback.
    */ 
   setPlayer(audioPlayer) {
     if (this.#audioPlayer) {
@@ -1267,7 +1272,7 @@ class MusicPlayer {
   
   /**
    * Set gain to value.
-   * @param {number} value.
+   * @param {number} value - Gain value. 1 is 100%.
    * @private
    */
   #setGain(value) {
@@ -1350,7 +1355,7 @@ class MusicPlayer {
   }
 
   /**
-   * Action cached command. Clears the cached command.
+   * Action cached command. The cached command is then removed.
    */
   actionCachedCommand() {
     if (!this.#audioPlayer.isReady()) {
@@ -1386,10 +1391,17 @@ class MusicPlayer {
 
 
 /**
- * Standard instrument definitions.
+ * Enumeration of some standard instrument definitions. They're not particularly accurate but can serve as a starting
+ * point.
+ * @readonly
  * @enum {module:hcje/audio~SynthInstrument}
+ * @property {module:hcje/audio~SynthInstrument} CYMBAL - Simple cymbal.
+ * @property {module:hcje/audio~SynthInstrument} DRUM - Approximation of drum for backbeat.
+ * @property {module:hcje/audio~SynthInstrument} PIANO - Approximation of a piano sound.
+ * @property {module:hcje/audio~SynthInstrument} SNARE - Approximation of a snare.
  */ 
 export const Instrument = {
+  /** Simple cymbal sound */
   CYMBAL: {
     adsr: [0.01, 0.01, 0.3, 0.3],
     allowMerge: false,
@@ -1398,6 +1410,7 @@ export const Instrument = {
     sweepFactor: 2,
     waveform: 'noise',
   },
+  /** Drum sound typically for backbeat. */
   DRUM: {
     adsr: [0.01, 0.05, 0.1, 0.2],
     allowMerge: false,
@@ -1406,6 +1419,7 @@ export const Instrument = {
     sweepFactor: 0.8,
     waveform: 'sine',
   },
+  /** Approximation to a piano. */
   PIANO: {
     adsr: [0.01, 0.25, 0.1, 0.1],
     allowMerge: false,
@@ -1414,6 +1428,7 @@ export const Instrument = {
     sweepFactor: 1,
     waveform: 'sine',
   },
+  /** Approximation to a snare. */
   SNARE: {
     adsr: [0.01, 0.01, 0.1, 0.01],
     allowMerge: false,
@@ -1430,7 +1445,8 @@ export const Instrument = {
 let audioMgr = new AudioManager();
 
 /**
- * Get the audio manager. The first call intialises the module's internal audio manager.
+ * Get the internal audio manager. The first call intialises the module's internal audio manager. The returned audio manager
+ * is a singleton.
  * @returns {module:hcje/audio~AudioManager}
  */
 export function getAudioManager() {

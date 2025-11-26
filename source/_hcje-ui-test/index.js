@@ -168,8 +168,8 @@ class MelodyMaker {
 
   /**
    * Create a random phrase.
-   * @param {string} [constrainStart] - if undefined, a random note is used.
-   * @param {string} [constrainEnd] - if undefined, this is set to the start note.
+   * @param {string} [constrainStart] - If undefined, a random note is used.
+   * @param {string} [constrainEnd] - If undefined, this is set to the start note.
    * @returns {Array<string>}
    */
   randomPhrase(constrainStart, constrainEnd) {
@@ -193,7 +193,7 @@ class MelodyMaker {
 
   /**
    * Get the arpeggio for the phrase.
-   * @param {number} index of phrase: 0 = A, 1 = B , 2 = C.
+   * @param {number} index - Index of phrase: 0 = A, 1 = B , 2 = C.
    * @returns {boolean}
    */
   isArpeggio(index) {
@@ -202,8 +202,8 @@ class MelodyMaker {
 
   /**
    * Set the arpeggio state for the phrase,
-   * @param {number} index of phrase: 0 = A, 1 = B , 2 = C.
-   * @param {boolean} state - true to set arpeggio on.
+   * @param {number} index - Index of phrase: 0 = A, 1 = B , 2 = C.
+   * @param {boolean} state - True to set arpeggio on.
    */ 
   setArpeggio(index, state) {
     this.#arpeggios[index] = state;
@@ -219,7 +219,7 @@ class MelodyMaker {
 
   /**
    * Set the arpeggio length in quavers. This is clamped to between 2 and 4 inclusive.
-   * @param {number} length - length of quaver.
+   * @param {number} length - Length of quaver.
    */
   set arpeggioLength(length) {
     this.#arpeggioLength = hcje.utils.clamp(Math.floor(length), 2, 4);
@@ -236,7 +236,7 @@ class MelodyMaker {
 
   /**
    * Set the structure index/
-   * @param {number} index - the index. It is clamped to a valid number.
+   * @param {number} index - The index. It is clamped to a valid number.
    */
   set structureIndex(index) {
     this.#structureIndex = hcje.utils.clamp(Math.floor(index), 0, MelodyMaker.#structures.length - 1);
@@ -251,7 +251,7 @@ class MelodyMaker {
   }
 
   /**
-   * Get structure pattern fo index.
+   * Get structure pattern for index.
    * @param {number} index
    * @returns {string}
    */
@@ -501,24 +501,31 @@ function synthToCode(synthDef) {
   lines.push(`  fadeSeconds: ${synthDef.fadeSeconds},`);
   lines.push(`  loop: ${synthDef.loop},`);
   lines.push(`  tracks:[`);
-  for (const track of synthDef.tracks) {
+  for (let n = 0; n < synthDef.tracks.length; n++) {
+    const track = synthDef.tracks[n];
+    const detunePrevious = track.notes === '=';
     if (track.notes) {
-      const predefined = instrumentToPredefined(track.instrument);
       lines.push(`    {`);
-      if (predefined) {
-        lines.push(`      instrument: hcje.audio.Instrument.${predefined},`);
-      } else {
-        lines.push(`      instrument: {`);
-        lines.push(`        adsr: [${track.instrument.adsr.join(', ')}],`);
-        lines.push(`        allowMerge: ${track.instrument.allowMerge},`);
-        lines.push(`        maxGain: ${track.instrument.maxGain},`);
-        lines.push(`        sustainTime: ${track.instrument.sustainTime},`);
-        lines.push(`        sweepFactor: ${track.instrument.sweepFactor},`);
-        lines.push(`        waveform: '${track.instrument.waveform}',`);
-        lines.push(`      },`);
+      if (!detunePrevious) {
+        const predefined = instrumentToPredefined(track.instrument);
+        if (predefined) {
+          lines.push(`      instrument: hcje.audio.Instrument.${predefined},`);
+        } else {
+          lines.push(`      instrument: {`);
+          lines.push(`        adsr: [${track.instrument.adsr.join(', ')}],`);
+          lines.push(`        allowMerge: ${track.instrument.allowMerge},`);
+          lines.push(`        maxGain: ${track.instrument.maxGain},`);
+          lines.push(`        sustainTime: ${track.instrument.sustainTime},`);
+          lines.push(`        sweepFactor: ${track.instrument.sweepFactor},`);
+          lines.push(`        waveform: '${track.instrument.waveform}',`);
+          lines.push(`      },`);
+        }
+        lines.push(`      octave: ${track.octave}`);
+      }
+      if (track.detune) {
+        lines.push(`      detune: ${track.detune},`);
       }
       lines.push(`      notes: '${track.notes}',`);
-      lines.push(`      octave: ${track.octave}`);
       lines.push(`    },`);
     }
   }
@@ -552,6 +559,13 @@ function editTrack(trackIndex, track) {
     onChange: (octave) => track.octave = octave
   });
 
+  const detune = new hcje.domTools.InputControl({
+    label: 'Detune cents',
+    initialValue: track.detune,
+    placeholder: 'detune value',
+    constrain: 'INT',
+    onChange: (value) => track.detune = Number.parseInt(value)
+  });
   const attack = new hcje.domTools.InputControl({
     label: 'Attack ms',
     initialValue: track.instrument.adsr[0] * 1000,
@@ -627,7 +641,7 @@ function editTrack(trackIndex, track) {
     title: `Edit track ${trackIndex}`,
     buttonDefns: [{id:'OK', label: 'OK'}],
     children: [
-      waveform, octave, attack, decay, sustain, release, sustainTime, maxGain, sweepFactor, allowMerge, notes
+      waveform, octave, detune, attack, decay, sustain, release, sustainTime, maxGain, sweepFactor, allowMerge, notes
     ]
   });
 
@@ -646,21 +660,25 @@ function addSynthesiserTest() {
     fadeSeconds: 0.1, 
     tracks: [
       {
+        detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.PIANO),
         octave: 4,
-        notes: 'CDEFGAB+C'
+        notes: 'CDEFGAB+C',
       },
       {
+        detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.CYMBAL), 
         octave: 7,
         notes: 'G'
       },
       {
+        detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.SNARE),
         octave: 6,
         notes: '~G'
       },
       {
+        detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.DRUM),
         octave: 2,
         notes: 'C~C~'
@@ -898,8 +916,8 @@ addToggleButtonTest();
 addTest({label:'Dialog txt', executor: testDialog, data: {text: '# Text\nSimple text *not emphasised*.'}});
 addTest({label:'Dialog md', executor: testDialog, data: {markdown: MARKDOWN_DATA}});
 addTest({label:'Controls', executor: testControls});
-await addMusicTest('1', {title: 'Song 1', url: './hcje-ui-test/assets/BeepBox-Song.mp3', fadeSeconds: 1});
-await addMusicTest('2', {title: 'Song 2', url: './hcje-ui-test/assets/BeepBox-Song2.mp3', fadeSeconds: 1});
+await addMusicTest('1', {title: 'Song 1', url: './_hcje-ui-test/assets/BeepBox-Song.mp3', fadeSeconds: 1});
+await addMusicTest('2', {title: 'Song 2', url: './_hcje-ui-test/assets/BeepBox-Song2.mp3', fadeSeconds: 1});
 await addMusicTest('Synth1', {
   title: 'Synth1',
   bpm: 120,
@@ -934,7 +952,7 @@ await addMusicTest('Synth1', {
 
 addTest({
   label: 'SFX', 
-  setup: ()=>AUDIO.addAudioSfx({url: './hcje-ui-test/assets/jump.mp3', title: 'JUMP'}),
+  setup: ()=>AUDIO.addAudioSfx({url: './_hcje-ui-test/assets/jump.mp3', title: 'JUMP'}),
   executor: ()=> AUDIO.playAudioSfx('JUMP')
 });
 addTest({
