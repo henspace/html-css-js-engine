@@ -21,9 +21,11 @@
  */
 
 /**
- * @module tools/server/requestListener
+ * @module hcjeTools/server/requestListener
  * @description
- * Listener for use with {@link module:tools/server/server}
+ * Listener for use with the [HCJE server]{@link module:hcjeTools/server/server}.
+ * This module does not need to be used directly. It is used soley by the 
+ * [server.js]{@link module:hcjeTools/server/server} script.
  */
 
 import * as fsPromise from 'node:fs/promises';
@@ -181,45 +183,38 @@ function getResponseDetail(root, requestedUrl) {
     });
 }
 
+
 /**
- * RequestListener for use by http server.
- * @see {@link https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener}
+ * Function added to the [request]{@link https://nodejs.org/api/http.html#event-request} when a server is created.
+ * @typedef {function} RequestListener
+ * @param {ClientRequest} request - The [ClientRequest]{@link https://nodejs.org/api/http.html#class-httpclientrequest}
+ * @param {ServerResponse} response - The [ServerResponse]{@link https://nodejs.org/api/http.html#class-httpserverresponse}
  */
-export class RequestListener {
-  /** Path to directory from which files are served. @type {string} */
-  #root;
 
-  /**
-   * Construct a requestListener for the http server.
-   * @param {string} root - path from where files are served
-   */
-  constructor(root) {
-    if (!root) {
-      throw new Error('No root folder provided');
-    }
-    this.#root = root;
+/**
+ * Create a listener function for use with the http server.
+ * @param {string} root - Path from where files are served
+ * @returns {module:hcjeTools/server/requestListener~RequestListener}
+ * @see {@link https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener}
+ * @throws {Error} Thrown if root not defined.
+ */
+export function createRequestListener(root) {
+  if (!root) {
+    throw new Error('No root folder provided');
   }
-
-  /**
-   * Get a listener function for use with the http server.
-   * @returns {function(ClientRequest, ServerResponse)}
-   * @see {@link https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener}
-   */
-  get listener() {
-    return (req, res) => {
-      const requestedUrl = url.parse(req.url);
-      const filename = path.basename(requestedUrl.pathname);
-      console.log(
-        `Request. path="${requestedUrl.pathname}", filename="${filename}"`
-      );
-      getResponseDetail(this.#root, requestedUrl).then((detail) => {
-        detail.headers.forEach((header) => {
-          res.setHeader(header.name, header.value);
-        });
-        res.writeHead(detail.status);
-        res.end(detail.content);
+  return (req, res) => {
+    const requestedUrl = url.parse(req.url);
+    const filename = path.basename(requestedUrl.pathname);
+    console.log(
+      `Request. path="${requestedUrl.pathname}", filename="${filename}"`
+    );
+    getResponseDetail(root, requestedUrl).then((detail) => {
+      detail.headers.forEach((header) => {
+        res.setHeader(header.name, header.value);
       });
-    };
-  }
+      res.writeHead(detail.status);
+      res.end(detail.content);
+    });
+  };
 }
 

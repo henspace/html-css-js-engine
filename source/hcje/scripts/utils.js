@@ -55,8 +55,9 @@
 
 /**
  * Safely parse an integer.
- * @param {string} str - string to parse.
- * @param {number} [defaultValue = 0] - value to return on failure. Note this should be an integer but it is not validated.
+ * @param {string} str - String to parse.
+ * @param {number} [defaultValue = 0] - Value to return on failure. Note this should be an integer, but it is not
+ * validated.
  */
 export function parseInt(str, defaultValue = 0) {
   const result = Number.parseInt(str);
@@ -65,8 +66,8 @@ export function parseInt(str, defaultValue = 0) {
 
 /**
  * Get random number between min (inclusive) and max (exclusive).
- * @param {number} min
- * @param {number} max
+ * @param {number} min - Minimum value inclusive.
+ * @param {number} max - Maximum value exclusive.
  * @returns {number}
  */
 export function getRandomNumberBetween(min, max) {
@@ -76,8 +77,8 @@ export function getRandomNumberBetween(min, max) {
 /** 
  * Get random integer in range.
  * If max <= min, returns min.
- * @param {number} min - inclusive
- * @param {number} max - exclusive
+ * @param {number} min - Minimum value inclusive
+ * @param {number} max - Maximum value exclusive
  */
 export function getRandomIntExclusive(min, max) {
   if (max <= min) {
@@ -91,8 +92,8 @@ export function getRandomIntExclusive(min, max) {
 /** 
  * Get random integer in range.
  * If max <= min, returns min.
- * @param {number} min - inclusive
- * @param {number} max - inclusive
+ * @param {number} min - Minimum value inclusive.
+ * @param {number} max - Maximum value inclusive.
  */
 export function getRandomIntInclusive(min, max) {
   if (max <= min) {
@@ -105,10 +106,10 @@ export function getRandomIntInclusive(min, max) {
 
 /**
  * Get dice roll.
- * @param {number} sides - number of sides on the dice.
+ * @param {number} [sides = 6] - Number of sides on the dice.
  * @returns {number}
  */
-export function rollDice(sides = 9) {
+export function rollDice(sides = 6) {
   return getRandomIntInclusive(1, sides);
 }
 
@@ -122,8 +123,8 @@ export function tossCoin() {
 
 /** 
  * Get a random entry from an array or string.
- * @param {Array<*>} arr
- * @returns {*} undefined if arr undefined or empty.
+ * @param {Array<*>} arr - Array from which to get entry.
+ * @returns {*} Entry; undefined if arr undefined or empty.
  */
 export function getRandomMember(arr) {
   if (!arr || arr.length < 1) {
@@ -134,9 +135,10 @@ export function getRandomMember(arr) {
 }
 
 
-/** Get greatest common divisor.
- * @param {number} a
- * @param {number} b
+/** 
+ * Get greatest common divisor.
+ * @param {number} a - First number.
+ * @param {number} b - Second number.
  * @returns {number}
  */
 export function greatestCommonDivisor(valueA, valueB) {
@@ -151,8 +153,8 @@ export function greatestCommonDivisor(valueA, valueB) {
 
 /**
  * Calculate the lowest common multiple of two numbers.
- * @param {number} valueA
- * @param {number} valueB
+ * @param {number} valueA - First number.
+ * @param {number} valueB - Second number.
  * @returns {number}
  */ 
 export function lowestCommonMultiple(valueA, valueB) {
@@ -161,7 +163,7 @@ export function lowestCommonMultiple(valueA, valueB) {
 
 /**
  * Get lowest common multiple of an array of values.
- * @param {Array<number>} values
+ * @param {Array<number>} values - Array of numbers.
  * @returns {number}
  */ 
 export function lowestCommonMultipleOfArray(values) {
@@ -169,9 +171,11 @@ export function lowestCommonMultipleOfArray(values) {
 }
 
 /**
- * Jitter value
- * @param {number} value
- * @param {number} variation - result is a random number of value * (1 +/- variation)
+ * Get a random number based on a value and variation. For a value of **N** and variation of **V** the result
+ * will be a random number between N&nbsp;*&nbsp;(1&nbsp;-&nbsp;V) and N&nbsp;*&nbsp;(1&nbsp;+&nbsp;V).
+ * @param {number} value - Number to adjust.
+ * @param {number} variation - Variation to apply to the value. This is a proportion of the value, not an absolute
+ *   value.
  * @returns {number}
  */
 export function jitter(value, variation) {
@@ -185,9 +189,9 @@ export function jitter(value, variation) {
 
 /**
  * Clamp a value between range: inclusive.
- * @param {number} value
- * @param {number} min - minimum value
- * @param {number} max - maximum value
+ * @param {number} value - Number to clamp.
+ * @param {number} min - Minimum value inclusive.
+ * @param {number} max - Maximum value inclusive.
  * @returns {number}
  */
 export function clamp(value, min, max) {
@@ -196,7 +200,7 @@ export function clamp(value, min, max) {
 
 /**
  * Sleep for time.
- * @param {number} ms
+ * @param {number} ms - Period to sleep in milliseconds.
  * @returns {Promise}
  */
 export function sleep(ms) {
@@ -207,25 +211,26 @@ export function sleep(ms) {
 
 
 /**
- * Create a Waiter. This object allow the program to wait until the caller 
- * @returns {module:utils~waiter}
+ * Create a [Waiter]{@link module:hcje/utils~Waiter} object. This object allow the program to wait until the
+ * application calls its **end** method.
+ * @returns {module:utils~Waiter}
  */
 export function createWaiter() {
   /** Function called to resolve Promise. @type {function()} */
   let resolver;
 
   /**
-   * Object allowing for programs to wait for an event. Call  the wait method to start the waiter. This will return a
-   * Promise that will not be fulfilled until the Waiter's end method is called. Sucessive calls to wait will be
-   * rejected.
+   * Object to allow the program to wait for an unspecified event. Call the wait method will start the the waiter.
+   * This will return a Promise that will not be fulfilled until the waiter's **end** method is called. Successive
+   * calls to wait will be rejected.
    * @interface
    * @alias module:utils~Waiter
    */ 
   const waiter = {
     /**
-     * Wait until end is called.
+     * Wait until the end method is called.
      * A subsequent call to wait will reject.
-     * @returns {Promise}
+     * @returns {Promise} Fulfils to the value passed to the **end** method.
      */
     wait: () => {
       return new Promise((resolve, reject) => {
@@ -240,7 +245,7 @@ export function createWaiter() {
 
     /**
      * End wait. This will cause the original Promise to fulfil to the provided value.
-     * @param {*} value
+     * @param {*} value - Fulfillment value.
      */
     end: (value) => {
       if (!resolver) {
@@ -253,7 +258,7 @@ export function createWaiter() {
     },
 
     /**
-     * Test whether waiter is waiting.
+     * Test whether the waiter is waiting.
      * @returns {boolean}
      */ 
     isWaiting: () => !!resolver,
@@ -265,11 +270,11 @@ export function createWaiter() {
 
 /**
  * Shuffle array. This uses Sattolo's algorithm to ensure every item is
- * always in a new position.
- * See {@link https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shufflehttps://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle}
- * and {@link https://rosettacode.org/wiki/Sattolo_cycle}
- * @param {Array<*>} arr
- * @returns {Array<*>} Note original array is changed.
+ * always in a new position. The original array **IS** modified.
+ * See [Fisher Yates shuffle]{@link https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shufflehttps://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle}
+ * and [Sattolo cycle]{@link https://rosettacode.org/wiki/Sattolo_cycle}
+ * @param {Array<*>} arr - The array to shuffle.
+ * @returns {Array<*>}
  */
 export function shuffle(arr) {
   for (let i = arr.length-1; i > 0; i--) {
@@ -282,7 +287,7 @@ export function shuffle(arr) {
 }
 
 /**
- * Content types keys for arrays .
+ * Content types used to determine the appropriate response header's content type base on the file type.
  * @type {Object<string, HeaderInfo[]> }
  * @private
  */
@@ -317,12 +322,12 @@ const ContentType = {
 /**
  * Call to fetch to get text.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch}
- * @param {string | URL | Request} url
- * @param {boolean} asJson - if true pass the result as JSON.
- * @param {string | Object} fallbackResult - result if error
- * @returns {Promise} fulfils to text or json. On error, fulfils to
+ * @param {string | URL | Request} url - Url to fetch.
+ * @param {boolean} asJson - If true pass the result as JSON.
+ * @param {string | Object} fallbackResult - Result to return if error.
+ * @returns {Promise} Fulfils to text or json. On error, fulfils to
  *  fallbackResult. If fallbackResult is undefined, an error is thrown.
- * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
+ * @throws {Error} Thrown if error occurs and fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchTextOrJson(url, asJson, fallbackResult) {
   return fetch(url)
@@ -345,11 +350,11 @@ export function fetchTextOrJson(url, asJson, fallbackResult) {
 
 /**
  * Call to fetch to get text.
- * @param {string | URL | Request} url
- * @param {string} fallbackResult - result if error
- * @returns {Promise} fulfils to text. On error, fulfils to
+ * @param {string | URL | Request} url - Url to fetch.
+ * @param {string} fallbackResult - Result if error
+ * @returns {Promise} Fulfils to text. On error, fulfils to
  *  fallbackResult or throws error.
- * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
+ * @throws {Error} Thrown if error occurs and fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchText(url, fallbackResult) {
   return fetchTextOrJson(url, false, fallbackResult);
@@ -358,11 +363,11 @@ export function fetchText(url, fallbackResult) {
 
 /**
  * Call to fetch to get json.
- * @param {string | URL | Request} url
- * @param {Object} fallbackResult - result if error
- * @returns {Promise} fulfils to Object. On error, fulfils to
+ * @param {string | URL | Request} url - Url to fetch.
+ * @param {Object} fallbackResult - Result if error
+ * @returns {Promise} Fulfils to Object. On error, fulfils to
  *  fallbackResult or throws error.
- * @throws {Error} if fallbackResult is undefined. Null is a valid fallbackResult
+ * @throws {Error} Thrown if error occurs and fallbackResult is undefined. Null is a valid fallbackResult
  */
 export function fetchJson(url, fallbackResult) {
   return fetchTextOrJson(url, true, fallbackResult);
@@ -370,14 +375,14 @@ export function fetchJson(url, fallbackResult) {
 
 
 /**
- * Call to fetch to get text.
+ * Call to fetch to get an array buffer from a media file.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch}
- * @param {string | URL | Request} url
- * @param {Object} headers - the [Headers]{@link https://developer.mozilla.org/en-US/docs/Web/API/Headers} to add to
+ * @param {string | URL | Request} url - Url to fetch.
+ * @param {Object} headers - The [Headers]{@link https://developer.mozilla.org/en-US/docs/Web/API/Headers} to add to
  * the request.
- * @param {RequestInit} options - if null, the content type is derived from the url.
+ * @param {RequestInit} options - If null, the content type is derived from the url.
  *  See [RequestInit]{@link https://developer.mozilla.org/en-US/docs/Web/API/RequestInit}.
- * @returns {Promise} fulfils to the ArrayBuffer. 
+ * @returns {Promise} Fulfils to the ArrayBuffer. 
  * @throws {Error}
  */
 export function fetchArrayBuffer(url, options) {

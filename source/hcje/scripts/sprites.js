@@ -24,21 +24,24 @@
  * @module hcje/sprites
  * @description
  * Module providing handling for sprite sheets created by
- * [TexturePacker]{@link https://www.codeandweb.com/texturepacker}.
+ * [TexturePacker]{@link https://www.codeandweb.com/texturepacker}. The sprite sheet must have been exported using the 
+ * JSON (Hash) format and sprite rotation within the sheet is **NOT** supported.
  */
 
 import * as utils from './utils.js';
 import * as domTools from './dom-tools.js';
+
 /**
  * Frame name generator for sprite names in a texture.
  * @callback frameNameGenerator
- * @param {string} baseName - the string from which the final name is created.
- * @param {string} state - the state of the sprite. E.g. idle, walking etc.
- * @param {number} index - the 0 based frame index.
- * @returns {string} the frame name.
+ * @param {string} baseName - The string from which the final name is created.
+ * @param {string} state - The state of the sprite. E.g. idle, walking etc.
+ * @param {number} index - The 0 based frame index.
+ * @returns {string} The frame name.
  */ 
 
 /**
+ * Data describing position and dimensions of a frame.
  * @typedef {Object} FrameData
  * @property {number} x - left position.
  * @property {number} y - top position.
@@ -51,9 +54,15 @@ import * as domTools from './dom-tools.js';
 /** Type of animation cycle.
  * @typedef {number} CycleTypeEnumValue
  */
+
 /**
  * Type of animation cycles.
  * @enum {CycleTypeEnumValue}
+ * @property {CycleTypeEnumValue} NONE - No cycling of the animation.
+ * @property {CycleTypeEnumValue} LOOP - When the last frame is reached, jump back to the first frame and continue.
+ * @property {CycleTypeEnumValue} OSCILLATE - When the last frame is reached, animate back down the frames to the
+ *   first frame and continue.
+ * @property {CycleTypeEnumValue} STOP - Stop animating when the last frame is reached.
  */
 export const CycleType = {
   NONE: 0, 
@@ -63,33 +72,33 @@ export const CycleType = {
 };
 
 /**
- * Automatic calculation of interval function. This adjusts the interval based on the current dynamics.
+ * Automatic calculation of the animation interval. This adjusts the interval based on the current dynamics and is 
+ * typically used to adjust a sprite's animation interval based on its walking speed.
  * @callback deriveInterval
- * @param {module:hcje/sprites~Dynamics} dynamics - the current dynamics.
- * @returns {number} required interval in ms.
+ * @param {module:hcje/sprites.Dynamics} dynamics - The current dynamics.
+ * @returns {number} Required interval in ms.
  */
 
 /**
  * Configuration for an animation state.
  * @typedef {Object} AnimationStateConfig
- * @param {module:hcje/sprites~FrameData[]} frames
- * @property {number|module:hcje/sprites~deriveInterval} interval - animation interval in milliseconds or function to
+ * @param {module:hcje/sprites~FrameData[]} frames - Data for the animation frames.
+ * @property {number|module:hcje/sprites~deriveInterval} interval - The animation interval in milliseconds or function to
  *   derive it.
- * @property {CycleTypeEnumValue} cycleType - type of loop. Defaults **CycleType.LOOP**.
+ * @property {CycleTypeEnumValue} cycleType - Type of loop. Defaults **CycleType.LOOP**.
  */
 
 /**
- * Sprite renderer.
+ * Interface for objects that can render a [Sprite]{@link module:hcje/sprites.Sprite}. Note the sprites cannot render
+ * themselves; they rely on a SpriteRenderer.
  * @interface SpriteRenderer
  */
 /**
  * Render the sprite.
  * @function module:hcje/sprites~SpriteRenderer#render
- * @param {module:hcje/sprites~FrameData} frameData - details of the current frame to render.
- * @param {module:hcje/utils~PositionData} [position] - position details for the current sprite to render. If not
- * provided, the rendered sprite will be positioned at [0, 0] at an angle of 0 radians.
- * @param {number} [opacity = 1] - opacity value 0 to 1.
+ * @param {module:hcje/sprites.Sprite} sprite - The sprite to render.
  */
+
 /**
  * Function that is called by the sprite to indicate that the sprite is being killed and all resources should be
  * released.
@@ -103,11 +112,12 @@ export const CycleType = {
 export class DomTextSpriteRenderer extends domTools.TextElement {
   /**
    * Construct renderer.
-   * @param {Element} container - DOM element that holds the sprite. The sprite element is automatically appended to
-   * the container.
-   * @param {string} txt - the text content for the sprite.
-   * @pararm {Object} [options]
-   * @param {boolean} options.markdown - true if the txt is markdown.
+   * @param {Element|module:hcje/domTools.ElementWrapper} container - DOM element that holds the sprite. The sprite
+   * element is automatically appended to the container.
+   * @param {string} txt - The text content for the sprite.
+   * @param {Object} [options]
+   * @param {boolean} options.markdown - True if the txt property is markdown.
+   * @extends module:hcje/domTools.TextElement
    */
   constructor(container, txt, options) {
     super();
@@ -122,7 +132,7 @@ export class DomTextSpriteRenderer extends domTools.TextElement {
   }
 
   /**
-   * Render the sprite.
+   * @inheritdoc
    */
   render(sprite) {
     const frameData = sprite.frameData;
@@ -148,7 +158,7 @@ export class DomTextSpriteRenderer extends domTools.TextElement {
   }
 
   /**
-   * Release resources used by the renderer. This involves removal of the sprite element.
+   * @inheritdoc
    */
   kill() {
     this.remove();
@@ -158,12 +168,13 @@ export class DomTextSpriteRenderer extends domTools.TextElement {
 
 /**
  * Create a text sprite.
- * @param {Element|ElementWrapper} container - the sprite is appended to the container.
- * @param {string} txt - the contents of the sprite.
- * @param {Object} options - configuration options.
- * @param {boolean} options.markdown - should markdown be used.
+ * @param {Element|ElementWrapper} container - The sprite is appended to the container.
+ * @param {string} txt - The contents of the sprite.
+ * @param {Object} options - Configuration options.
+ * @param {boolean} options.markdown - If true, the txt property is parsed as markdown.
  * @param {module:hcje/utils~Dimensions} dimensions - Sprite size. Width must be provided. Use 0 for the height if you
- *  want this to size automatically.
+ *   want this to size automatically based on the text to be rendered.
+ * @returns {module:hcje/sprites.Sprite}
  */
 export function createTextSprite(container, txt, options) {
   const sprite = new Sprite('Text');
@@ -188,15 +199,17 @@ export function createTextSprite(container, txt, options) {
  * @implements {module:hcje/sprites~SpriteRenderer}
  */
 export class DomImageSpriteRenderer extends domTools.ElementWrapper {
-  /** Texture used for the sprite. @type {HTMLIMageElement} */
+  /** Texture used for the sprite.
+   * @type {HTMLIMageElement} */
   #texture;
 
 
   /**
    * Construct renderer.
-   * @param {Element} container - DOM element that holds the sprite. The sprite element is automatically appended to
-   * the container/
-   * @param {HTMLImageElement} - the texture from which the sprite's image is taken.
+   * @param {Element|module:hcje/domTools.ElementWrapper} container - DOM element that holds the sprite. The sprite
+   * element is automatically appended to the container.
+   * @param {HTMLImageElement} texture - The texture from which the sprite's image is taken.
+   * @extends module:hcje/domTools.ElementWrapper
    */
   constructor(container, texture) {
     super('div');
@@ -208,7 +221,7 @@ export class DomImageSpriteRenderer extends domTools.ElementWrapper {
   }
 
   /**
-   * Render the sprite.
+   * @inheritdoc
    */
   render(sprite) {
     const frameData = sprite.frameData;
@@ -233,7 +246,7 @@ export class DomImageSpriteRenderer extends domTools.ElementWrapper {
   }
 
   /**
-   * Release resources used by the renderer. This involves removal of the sprite element.
+   * @inheritdoc
    */
   kill() {
     this.remove();
@@ -245,43 +258,54 @@ export class DomImageSpriteRenderer extends domTools.ElementWrapper {
  * @implements module:hcje/sprites~AnimationTarget
  */
 export class Sprite {
-  /** @type {module:hcje/sprites~SpriteAdjuster} */
+  /** @type {module:hcje/sprites.BaseSpriteAdjuster} */
   #adjuster;
-  /** Flip in x direction when velocity changes. @type {boolean} */
+  /** Flip in x direction when velocity is negative. 
+   * @type {boolean} */
   autoFlipX;
-  /** Flip in y direction when velocity changes. @type {boolean} */
+  /** Flip in y direction when velocity is negative. 
+   * @type {boolean} */
   autoFlipY;
-  /** dynamics @type {module:hcje/sprites~Dynamics} */
+  /** @type {module:hcje/sprites.Dynamics} */
   dynamics;
-  /** Flipped in x direction @type {boolean} */
+  /** Flipped in x direction.
+   * @type {boolean} */
   #flipX;
-  /** Flipped in yx direction @type {boolean} */
+  /** Flipped in yx direction. 
+   * @type {boolean} */
   #flipY;
-  /** Frame increment value @type {number} */
+  /** Frame increment value.
+   * @type {number} */
   #frameInc;
-  /** Current frames @type {module:hcje/sprites~FrameData[]} */
+  /** Current frames.
+   * @type {module:hcje/sprites~FrameData[]} */
   #frames;
-  /** Frame index @type {number} */
+  /** @type {number} */
   #frameIndex;
   /** @type {number} */
   #height;
-  /** Id used for debugging purposes @type {string} */
+  /** Id used for debugging purposes.
+   * @type {string} */
   logId;
-  /** Animation interval @type {number|module:hcje/sprites~deriveInterval} */
+  /** Animation interval.
+   * @type {number|module:hcje/sprites~deriveInterval} */
   #interval;
-  /** Opacity of sprite 0 to 1. @type {number} */
+  /** Opacity of sprite 0 to 1.
+   * @type {number} */
   opacity;
-  /** Position data for sprite @type {module:hcje/utils~PositionData} */
+  /** Position data for sprite.
+   * @type {module:hcje/utils~PositionData} */
   #position;
-  /** Current state @type {string}*/
+  /** Current state.
+   * @type {string}*/
   #state;
   /** @type {Map<string,module:hcje/sprites~AnimationStateConfig>} */
   #stateData;
-  /** Killed flag @type {boolean} */
+  /** @type {boolean} */
   #killed;
-  /** Cycle type @type {module:hcje/sprites~CycleTypeEnumValue} */
+  /** @type {module:hcje/sprites~CycleTypeEnumValue} */
   #cycleType;
-  /** Texture @type(HTMLImageElement} */
+  /** @type(HTMLImageElement} */
   #texture;
   /** @type {number} */
   #width;
@@ -289,7 +313,7 @@ export class Sprite {
 
   /**
    * Construct a sprite.
-   * @param {string} logId - id used for logging purposes only.
+   * @param {string} logId - ID used for logging purposes only.
    */
   constructor(logId) {
     this.logId = logId;
@@ -301,8 +325,11 @@ export class Sprite {
   }
 
   /**
-   * Get the adjuster.
-   * @returns {module:hcje/sprites~SpriteAdjuster}
+   * Adjuster used by the sprite. 
+   * When changing the property, if there is a current adjuster, it is automatically marked as complete with an
+   * undefined reason; however, its **onCompletion* function will not be called. If you need the function to be called, 
+   * call the current adjuster's **markComplete** method first before changing this property.
+   * @type {module:hcje/sprites.BaseSpriteAdjuster}
    */
   get adjuster() {
     return this.#adjuster;
@@ -311,8 +338,9 @@ export class Sprite {
   /**
    * Set the adjuster. If there is a current adjuster, it is automatically marked as complete with an undefined 
    * reason; however, its **onCompletion* function will not be called. If you need the function to be called, 
-   * call the adjusters **markComplete** method first.
-   * @param {module:hcje/sprites~SpriteAdjuster} adjuster - new adjuster to use.
+   * call the adjuster's **markComplete** method first.
+   * @param {module:hcje/sprites.BaseSpriteAdjuster} adjuster - New adjuster to use.
+   * @ignore
    */
   set adjuster(adjuster) {
     if (this.#adjuster) {
@@ -326,15 +354,17 @@ export class Sprite {
    * Interval derivation function to assist with calculation of automatic walk speeds. Typically used for 
    * {@link module:hcje/sprites~deriveInterval} callbacks. E.g. `(dynamics) => Sprite.deriveWalk(dynamics, DPF)` where
    * DPF is the number of pixels the frame animation would move per frame.
+   * @param {module:hcje/sprites.Dynamics} dynamics - Sprite's current dynamics value.
+   * @param {number} distPerFrame - The number of pixels the animation frames are drawn to move.
    */ 
   static deriveWalk(dynamics, distPerFrame) {
     return 1000 * distPerFrame / Math.abs(dynamics.vx);
   }
 
   /**
-   * Set state frames.
-   * @param {string} stateName - key name for this animation.
-   * @param {module:hcje/sprites~AnimationStateConfig} stateConfig - configuration.
+   * Set the frames for a specified state.
+   * @param {string} stateName - Key name for this animation.
+   * @param {module:hcje/sprites~AnimationStateConfig} stateConfig - State configuration.
    */
   setStateFrames(stateName, stateConfig) { 
     if (stateConfig.frames?.length > 0) {
@@ -348,8 +378,8 @@ export class Sprite {
   }
 
   /** 
-   * Get the size.
-   * @returns {module:hcje/utils~Dimensions}
+   * Dimensions of the sprite.
+   * @type {module:hcje/utils~Dimensions}
    */
   get dimensions() {
     return {width: this.#width, height: this.#height};
@@ -357,7 +387,8 @@ export class Sprite {
 
   /**
    * Set the dimensions.
-   * @param {module:hcje/utils~Dimensions} dims
+   * @type {module:hcje/utils~Dimensions}
+   * @ignore
    */ 
   set dimensions(dims) {
     this.#width = dims.width;
@@ -365,8 +396,8 @@ export class Sprite {
   }
 
   /**
-   * Get the bounding rectangle for the sprite.
-   * @returns {module:hcje/utils~RectData}
+   * Bounding rectangle for the sprite.
+   * @type {module:hcje/utils~RectData}
    * @readonly
    */
   get bounds() {
@@ -374,8 +405,9 @@ export class Sprite {
   }
 
   /** 
-   * Get the current state.
-   * @returns {string}
+   * The current state property. When setting, the state must exist in the existing map of states, otherwise the 
+   * attempt to set is ignored. It is not possible to set an illegal state.
+   * @type {string}
    */
   get state() {
     return this.#state;
@@ -384,7 +416,8 @@ export class Sprite {
   /**
    * Set the current state.
    * If it does not existing in the map of states, it is ignored.
-   * @param {string}
+   * @param {string} state - The new state.
+   * @ignore
    */
   set state(state) {
     console.debug(`Set ${this.logId} state to ${state}.`); 
@@ -413,8 +446,8 @@ export class Sprite {
   }
 
   /**
-   * Get the current frame data.
-   * @returns {module:hcje/sprites~FrameData} 
+   * The current frame data.
+   * @type {module:hcje/sprites~FrameData} 
    * @readonly
    */
   get frameData() {
@@ -423,6 +456,7 @@ export class Sprite {
 
   /**
    * Update the displayed frame.
+   * @private
    */
   #updateFrame() {
     const frameData = this.#frames[this.#frameIndex];
@@ -433,8 +467,9 @@ export class Sprite {
 
   /**
    * Handle dynamics. Do not call if **dynamics** property has not been set.
-   * @param {DOMHighResTimeStamp} timeStamp - time stamp for frame.
-   * @param {number} deltaSeconds - elapsed time since last update.
+   * @param {DOMHighResTimeStamp} timeStamp - Time stamp for frame.
+   * @param {number} deltaSeconds - Elapsed time since last update.
+   * @private
    */
   #handleDynamics(timeStamp, deltaT) {
     this.dynamics.adjustSprite(timeStamp, deltaT, this);
@@ -443,7 +478,7 @@ export class Sprite {
   }
 
   /**
-   * Update implementation.
+   * @inheritdoc
    */
   update(timeStamp, deltaT) {
     if (this.dynamics) {
@@ -482,8 +517,8 @@ export class Sprite {
   }
 
   /**
-   * Get the current sprite position.
-   * @returns {module:hcje/utils~PositionData}
+   * The current sprite position. Changes are instantaneous and can later be modified by the dynamics.
+   * @type {module:hcje/utils~PositionData}
    */
   get position() {
     return this.#position;
@@ -491,7 +526,8 @@ export class Sprite {
 
   /**
    * Set the position. Note this is instantaneous and can later be modified by the dynamics.
-   * @param {module:hcje/utils~PositionData} position, 
+   * @type {module:hcje/utils~PositionData}
+   * @ignore
    */
   set position(position) {
     this.#position = position;
@@ -502,8 +538,8 @@ export class Sprite {
   }
 
   /**
-   * Terminate the sprite.
    * This just calls the renderer's kill method to allow any resources to be released.
+   * @inheritdoc
    */
   kill() {
     this.renderer?.kill();
@@ -514,35 +550,44 @@ export class Sprite {
 
 
 /**
- * Limiter for a [Dynamics]{@link module:hcje/sprites~Dynamics} class.
+ * Limiter for a [Dynamics]{@link module:hcje/sprites.Dynamics} class.
+ * During the animation cycle a [Sprite]{@link module:hcje/sprites.Sprite} calls the 
+ * [limit]{@link module:hcje/sprites~DynamicsLimiter#limit} method to modify the current dynamics if necessary.
  * @interface DynamicsLimiter
  */
 
 /**
- * Function to limit the **Dynamics** instance.
+ * Function to limit the **Dynamics** instance. The limiter might be adjusting the dynamics to apply constraints such
+ * as boundarys within which to bounce, or even more complex dynamics adjustments beyond just simple velocity and 
+ * acceleration. Note that the limit method is called **after** the standard application of velocity and acceleration.
  * @function module:hcje/sprites~DynamicsLimiter#limit
- * @param {module:hcje/sprites~Sprite} target - the target object to limit.
- * @param {module:hcje/sprites~Dynamics} dynamics - the associated dynamics.
+ * @param {module:hcje/sprites.Sprite} target - The target object to limit.
+ * @param {module:hcje/sprites.Dynamics} dynamics - The associated dynamics.
  */
 
 /**
- * Bouncer class.
+ * Bouncer class which adjusts the [Dynamics]{@link module:hcje/sprites.Dynamics] of a [Sprite]{@link module:hcje/sprites.Sprite]
+ * so that it bounces within predefined bounds.
  * @implements {module:hcje/sprites~DynamicsLimiter}
  */
 export class Bouncer {
-  /* Boundary bottom @type {number} */
+  /* Boundary bottom.
+   * @type {number} */
   #bottom;
-  /* Boundary left @type {number} */
+  /* Boundary left.
+   * @type {number} */
   #left;
-  /* Boundary right @type {number} */
+  /* Boundary right.
+   * @type {number} */
   #right;
-  /* Boundary top @type {number} */
+  /* Boundary top.
+   * @type {number} */
   #top;
 
   /**
-   * Construct bouncer with the bounds.
-   * @param {module:hcje/utils~Dimensions} actorDims - dimensions of the object being moved. 
-   * @param {module:hcje/utils~RectData} boundary - movement boundary.
+   * Construct bouncer with the specified boundary.
+   * @param {module:hcje/utils~Dimensions} actorDims - Dimensions of the object being moved. 
+   * @param {module:hcje/utils~RectData} boundary - Movement boundary. The object will bounce within the boundary.
    */
   constructor(actorDims, boundary) {
     this.#left = boundary.x;
@@ -553,7 +598,7 @@ export class Bouncer {
 
   /**
    * Implement limits.
-   * @borrows {@link module:hcje/sprites~DynamicsLimiter#limit}
+   * @inheritdoc
    */
   limit(target, dynamics) {
     if (target.position.x < this.#left) {
@@ -576,29 +621,36 @@ export class Bouncer {
 }
 
 /**
- * Dynamics class. This handles velocity and acceleration calculations for sprites.
+ * Dynamics class. This handles velocity and acceleration calculations for a [Sprite]{@link module:hcje/sprites.Sprite}.
  */
 export class Dynamics {
   static #twoPI = 2 * Math.PI;
-  /** Acceleration angular @type {number} */
+  /** Acceleration angular.
+   * @type {number} */
   aAngle;
-  /** Acceleration x @type {number} */
+  /** Acceleration x.
+   * @type {number} */
   ax;
-  /** Accleration y @type {number} */
+  /** Accleration y.
+   * @type {number} */
   ay;
-  /** Motion limiter @type {module:hcje/sprites~DynamicsLimiter} */  
+  /** Motion limiter.
+   * @type {module:hcje/sprites~DynamicsLimiter} */  
   limiter;
-  /** Velocity angular @type {number} */
+  /** Velocity angular.
+   * @type {number} */
   vAngle;
-  /** Velocity x @type {number} */
+  /** Velocity x.
+   * @type {number} */
   vx;
-  /** Velocity y @type {number} */
+  /** Velocity y.
+   * @type {number} */
   vy;
 
   /**
    * Construct the instance setting all motion to zero.
-   * @param {module:hcje/sprites~Sprite} sprite - sprite that is controlled.
-   * @param {module:hcje/sprites~DynamicsLimiter} [limiter]
+   * @param {module:hcje/sprites.Sprite} sprite - Sprite that is controlled.
+   * @param {module:hcje/sprites~DynamicsLimiter} [limiter] - Limiter to constrain dynamics.
    */ 
   constructor(limiter) {
     this.limiter = limiter;
@@ -611,8 +663,10 @@ export class Dynamics {
   }
 
   /**
-   * Update position of the sprite.
-   * @borrows module:hcje.sprites~BaseSpriteAdjuster#adjust
+   * Update velocities and reposition the sprite accordingly.
+   * @param {DOMHighResTimeStamp} timeStamp - Current timestamp in milliseconds.
+   * @param {number} deltaT - Elapsed time in **seconds** since last call.
+   * @param {module:hcje/sprites.Sprite} sprite - The sprite being adjusted.
    */
   adjustSprite(timeStamp, deltaT, sprite) {
     let position = sprite.position;
@@ -639,15 +693,17 @@ export class Dynamics {
 
 
 /**
- * Sprite factory.
+ * Factory for creating sprites which are rendered using images from a texture image.
  * @interface ImageSpriteFactory
  */
 
 /**
  * Create a rendered sprite.
  * @function module:hcje/sprites~ImageSpriteFactory#createSprite
- * @param {string} logId - id used for debugging.
- * @param {HTMLImageElement} texture - image used for the texture.
+ * @param {string} logId - ID used for debugging.
+ * @param {HTMLImageElement} texture - Image used for the texture from which the individual sprite images are
+ *   extracted.
+ * @returns {module:hcje/sprites.Sprite}
  */
 
 
@@ -656,19 +712,19 @@ export class Dynamics {
  * @implements module:hcje/sprites~ImageSpriteFactory
  */
 export class DomImageSpriteFactory {
-  /** Container @type {Element} */
+  /** @type {Element|module:hcje/domTools.ElementWrapper} */
   parentElement;
 
   /**
    * Construct the factory.
-   * @param {Element|ElementWrapper} container - the container for sprites.
+   * @param {Element|module:hcje/domTools.ElementWrapper} container - The container for sprites.
    */
   constructor(parentElement) {
     this.parentElement = parentElement;
   }
 
   /**
-   * @borrows {module:hcje/sprites~ImageSpriteFactory#createSprite}
+   * @inheritdoc
    */
   createSprite(logId, texture) {
     const sprite = new Sprite(logId);
@@ -681,18 +737,19 @@ export class DomImageSpriteFactory {
  * Class to handle the management of textures.
  */
 export class TextureManager {
-  /** Data to access sprites in the texture. @type {Object} */
+  /** Data to access sprites in the texture.
+   * @type {Object} */
   #data;
-  /** Sprite factory @type {module:hcje/sprites~ImageSpriteFactory} */
+  /** @type {module:hcje/sprites~ImageSpriteFactory} */
   spriteFactory;
-  /** Texture @type {HTMLImageElement} */
+  /** @type {HTMLImageElement} */
   #texture;
 
   /**
    * Construct the texture manager.
-   * @param {Object} data - texture data from the JSON file created by the file created by TexturePacker JSON (Hash)
-   * export.
-   * @param {HTMLImageElement} texture - the sprite sheet texture.
+   * @param {Object} data - Texture data from the JSON file created by the file created by TexturePacker JSON (Hash)
+   * export. Rotation of sprites in the texture is not permitted.
+   * @param {HTMLImageElement} texture - The sprite sheet texture.
    */
   constructor(data, texture, spriteFactory) {
     this.#data = data;
@@ -703,18 +760,19 @@ export class TextureManager {
    * Default frame name generator. This simply adds the state and index, unpadded, at the end of the name but in front of any
    * extension. The state is prefixed with an underscore, so for a base name of "spaceman.png", state of "idle" and
    * index of 5, the result would be "spaceman_idle5.png".
-   * @borrow {module:hcje/sprites~frameNameGenerator}
+   * @inheritdoc
    */
   createFrameName(baseName, state, frameIndex) {
     return baseName.replace(/^(?<prefix>.*)(?<suffix>\.[^.]*)$/, `\$<prefix>_${state}${frameIndex}\$<suffix>`);
   }
 
   /** 
-   * Convert a texture packer entry to **RectData**.
-   * @param {Object} tpEntry - sprite entry from a Texture Packer data file created using the JSON hash export.
+   * Convert a texture packer entry to a rectangle.
+   * @param {Object} tpEntry - Sprite entry from a Texture Packer data file created using the JSON hash export.
    * @returns {module:hcje/utils~RectData}
+   * @private
    */ 
-  createRectData(tpEntry) {
+  #createRectData(tpEntry) {
     return {
       x: tpEntry.frame.x,
       y: tpEntry.frame.y,
@@ -725,16 +783,16 @@ export class TextureManager {
 
   /**
    * Create a sprite.
-   * @param {string} baseName - the base name for the sprite.
-   * @param {Object[]} stateConfigs - states that the state can be in. If stateConfigs is empty, then a single frame
+   * @param {string} baseName - The base name for the sprite.
+   * @param {Object[]} stateConfigs - States that the sprite can be in. If stateConfigs is empty, then a single frame
    * is returned using the baseName. Its state name is set to 'anon'.
-   * @param {string} stateConfigs[].name - name of the state.
-   * @param {number} stateConfigs[].interval - update interval in ms.
-   * @param {module:hcje/sprites~CycleTypeEnumValue} stateConfigs[].cycleType - type of animation cycle
-   * @param {module:hcje/sprites~frameNameGenerator} [nameGen] - the frame name generator. If not provided, the frame
-   * index is simply appended to the base name in front
-   * @returns {module:hcje/sprites~Sprite}
-   * @throws {Error} if **spriteFactory** property not set.
+   * @param {string} stateConfigs[].name - Name of the state.
+   * @param {number} stateConfigs[].interval - Update interval in ms.
+   * @param {module:hcje/sprites~CycleTypeEnumValue} stateConfigs[].cycleType - Yype of animation cycle
+   * @param {module:hcje/sprites~frameNameGenerator} [nameGen] - The frame name generator. If not provided, the frame
+   * index is simply appended to the base name in front of the extension.
+   * @returns {module:hcje/sprites.Sprite}
+   * @throws {Error} Error thrown if **spriteFactory** property not set.
    */
   createSprite(baseName, stateConfigs, frameNameGenerator) {
     if (!this.spriteFactory) {
@@ -747,7 +805,7 @@ export class TextureManager {
     if (!stateConfigs || stateConfigs.length === 0) {
       sprite.setStateFrames('anon', {
         cycleType: CycleType.NONE,
-        frames: [this.createRectData(this.#data.frames[baseName])],
+        frames: [this.#createRectData(this.#data.frames[baseName])],
         interval: 0
       });
       return sprite;
@@ -764,13 +822,13 @@ export class TextureManager {
         if (!frameInfo) {
           break;
         } else {
-          frameData.push(this.createRectData(frameInfo));  
+          frameData.push(this.#createRectData(frameInfo));  
         }
       }
       if (frameData.length === 0) {
         frameInfo = this.#data.frames[baseName];
         if (frameInfo) {
-          frameData.push(this.createRectData(frameInfo));  
+          frameData.push(this.#createRectData(frameInfo));  
         }
       }
       sprite.setStateFrames(stateConfig.name, {
@@ -785,8 +843,8 @@ export class TextureManager {
 
 /**
  * Load an image.
- * @param {string} source - source url for the image.
- * @returns {Promise} fulfils to HTMLImageElement.
+ * @param {string} source - Source url for the image.
+ * @returns {Promise} Fulfils to HTMLImageElement once the image has been loaded.
  */
 function loadImage(source) {
   const image = new Image();
@@ -799,10 +857,10 @@ function loadImage(source) {
 
 /**
  * Load the sprite sheet.
- * @param {string} dataUrl - url used to retrieve the spritesheet data file.
- * @param {string} imagesUrl - url used to retrieve the associated spritesheet.
- * @param {module:hcje/domTools~BusyIndicator} [busyIndicator] -indicator to show loading.
- * @returns {Promise} fulfils to {module:hcje/sprites~TextureManager} undefined on error.
+ * @param {string} dataUrl - Url used to retrieve the spritesheet data file.
+ * @param {string} imagesUrl - Url used to retrieve the associated spritesheet.
+ * @param {module:hcje/domTools~BusyIndicator} [busyIndicator] -Indicator to show loading.
+ * @returns {Promise} Fulfils to {module:hcje/sprites~TextureManager}; undefined on error.
  */
 export function loadSpriteSheet(dataUrl, textureUrl, busyIndicator) {
   busyIndicator?.start();
@@ -824,23 +882,20 @@ export function loadSpriteSheet(dataUrl, textureUrl, busyIndicator) {
 }
 
 /**
- * Interface for all sprites that can be updated by an [Animator]{@link module:hcje/sprites~Animator}/
+ * Interface for objects that can be updated by an [Animator]{@link module:hcje/sprites~Animator}.
  * @interface AnimationTarget
  */
 
 /**
  * Update function called by the **Animator**.
  * @function module:hcje/sprites~AnimationTarget#update
- * @param {DOMHighResTimeStamp} timestamp - milliseconds
- * @param {number} deltaSeconds - elapsed time in seconds since previous update called.
- * @param {module:hcje/utils~Sprite} sprite - the sprite to be updated.
+ * @param {DOMHighResTimeStamp} timestamp - Timestamp in milliseconds
+ * @param {number} deltaSeconds - Elapsed time in seconds since previous update called.
  */
 
 /**
- * Update function called by the **Animator**.
- * @function module:hcje/sprites~AnimationTarget#update
- * @param {DOMHighResTimeStamp} timestamp - milliseconds
- * @param {number} deltaSeconds - elapsed time in seconds since previous update called.
+ * Kill the target.
+ * @function module:hcje/sprites~AnimationTarget#kill
  */
 
 /**
@@ -851,28 +906,31 @@ export function loadSpriteSheet(dataUrl, textureUrl, busyIndicator) {
 
 /**
  * @callback onAdjustmentComplete
- * @param {boolean} success - true if the adjustment was regarded as completed successfully.
- * @param {*} [reason] - argument containing information about the reason for completion. This reflects the value
+ * @param {boolean} success - True if the adjustment was regarded as completed successfully.
+ * @param {*} [reason] - Argument containing information about the reason for completion. This reflects the value
  *   passed to the markComplete method. It could be undefined depending on the implementation.
  */
 
 /**
- * Base **BaseSpriteAdjuster**. This does nothing and is expected to be overridden.
+ * Base adjuster. An adjuster is an object that can manipulate a [Sprite]{@link module:hcje/sprites.Sprite}.The 
+ * base adjuster does nothing and is expected to be overridden.
  */
 export class BaseSpriteAdjuster {
-  /** Completion flag @type {boolean} */
+  /** Completion flag.
+   * @type {boolean} */
   #complete = false;
   /** @type {module:hcje/sprites~onAdjustmentComplete} */
   onCompletion;
   /**
-   * @type {module:hcje/sprites~Sprite}
+   * The underlying sprite.
+   * @type {module:hcje/sprites.Sprite}
    * @protected
    */
   _sprite;
 
   /**
    * Construct base adjuster.
-   * @param {module:hcje/sprites~Sprite} sprite - the target sprite.
+   * @param {module:hcje/sprites.Sprite} sprite - The target sprite.
    */
   constructor(sprite) {
     this._sprite = sprite;
@@ -899,8 +957,8 @@ export class BaseSpriteAdjuster {
 
   /**
    * Perform the adjustment. This method will be called in the animation cycle.
-   * @param {DOMHighResTimeStamp} timeStamp -current time stamp in ms.
-   * @param {number} deltaT - change in time in seconds.
+   * @param {DOMHighResTimeStamp} timeStamp - Current time stamp in ms.
+   * @param {number} deltaT - Change in time in seconds.
    */
   adjust(timeStamp, deltaT) {
   }
@@ -908,6 +966,8 @@ export class BaseSpriteAdjuster {
 
 /**
  * Adjuster that completes when the sprite is out of bounds.
+ * When the target is fully out of the boundary, the adjuster is marked as complete and the target sprite is set
+ * to be stationary.
  */
 export class TerminateOutOfBounds extends BaseSpriteAdjuster {
   #bottom;
@@ -918,9 +978,10 @@ export class TerminateOutOfBounds extends BaseSpriteAdjuster {
 
   /**
    * Construct the adjuster
-   * @param {module:hcje/sprites~Sprite} sprite - the target sprite.
-   * @param {module:hcje/utils~RectData} bounds - game area bounds.
-   * @param {boolean} [kill = false] - if true, the sprite is killed on completion.
+   * @param {module:hcje/sprites.Sprite} sprite - The target sprite.
+   * @param {module:hcje/utils~RectData} bounds - Game area bounds.
+   * @param {boolean} [kill = false] - If true, the sprite is killed on completion.
+   * @extends module:hcje/sprites.BaseSpriteAdjuster
    */
   constructor(sprite, bounds, kill = false) {
     super(sprite);
@@ -931,7 +992,9 @@ export class TerminateOutOfBounds extends BaseSpriteAdjuster {
     this.#kill = kill;
   }
 
-  /** @borrow module:hcje/sprites~BaseSpriteAdjuster#adjust */
+  /** 
+   * @inheritdoc
+   */
   adjust(timeStamp, deltaT) {
     const bounds = this._sprite.bounds;
     if (bounds.x + bounds.width < this.#left ||
@@ -961,9 +1024,10 @@ export class ReachTargetXY extends BaseSpriteAdjuster {
   #targetY;
   /**
    * Construct the adjuster
-   * @param {module:hcje/sprites~Sprite} sprite - the target sprite.
-   * @param {number} targetX - destination.
-   * @param {number} targetY - destination.
+   * @param {module:hcje/sprites.Sprite} sprite - The target sprite.
+   * @param {number} targetX - Destination x position.
+   * @param {number} targetY - Destination y position.
+   * @extends module:hcje/sprites.BaseSpriteAdjuster
    */
   constructor(sprite, targetX, targetY) {
     super(sprite);
@@ -973,10 +1037,10 @@ export class ReachTargetXY extends BaseSpriteAdjuster {
 
   /**
    * Check if point reached.
-   * @param {number} velocity - approach velocity.
-   * @param {number} value - current value.
-   * @param {number} target - target value.
-   * @returns {boolean} true if reached.
+   * @param {number} velocity - Approach velocity.
+   * @param {number} value - Current value.
+   * @param {number} target - Target value.
+   * @returns {boolean} True if reached.
    */
   targetReached(velocity, value, target) {
     if (velocity < 0) {
@@ -985,7 +1049,9 @@ export class ReachTargetXY extends BaseSpriteAdjuster {
       return value >= target;
     }
   }
-  /** @borrow module:hcje/sprites~BaseSpriteAdjuster#adjust */
+  /** 
+   * @inheritdoc
+   */
   adjust(timeStamp, deltaT) {
     const position = this._sprite.position;
     if (this.targetReached(this._sprite.dynamics.vx, position.x, this.#targetX)) {
@@ -1006,11 +1072,13 @@ export class ReachTargetXY extends BaseSpriteAdjuster {
 
 
 /**
- * Animator class.
+ * Animator class for animating objects that implement the [AnimationTarget]{@link module:hcje/sprites~AnimationTarget}
+ * interface.
  * When activated, the Animator requests animation frames and calls update on its children.
  */
 export class Animator {
-  /** Active property. Set true to start requesting animation frames. @type {boolean} */
+  /** Active property. Set true to start requesting animation frames. 
+   * @type {boolean} */
   #active;
 
   /** Animated children with adjusters. This is a map which uses the **AnimationTarget** as the key.
@@ -1018,10 +1086,12 @@ export class Animator {
    */
   #children;
 
-  /** Previous time stamp @type {DOMHighResTimeStamp} */
+  /** Previous time stamp.
+   * @type {DOMHighResTimeStamp} */
   #lastTimeStamp;
 
-  /** Flag to indicate that the animation is paused. @type {boolean} */
+  /** Flag to indicate that the animation is paused.
+   * @type {boolean} */
   #paused;
 
   /**
@@ -1034,8 +1104,10 @@ export class Animator {
   }
 
   /**
-   * Get the current active state.
-   * @returns {boolean}
+   * The current active state. When true, animation frames will start to be requested and children updated. Note
+   * if the animation has been paused even if the active property is set true. The paused state overrides the active 
+   * state.
+   * @type {boolean}
    */
   get active() {
     return this.#active;
@@ -1044,8 +1116,8 @@ export class Animator {
   /**
    * Set the current active state.
    * When set true, animationFrames will start to be requested and children updated.
-   * When you have finished using the animator, ensure that it is set to inactive or call **discard**.
-   * @param {boolean} state
+   * @type {boolean}
+   * @ignore
    */
   set active(state) {
     if (!this.#active && state) {
@@ -1058,7 +1130,7 @@ export class Animator {
   }
 
   /**
-   * Pause the animator. This will pause the animation. The active property is unchanged. The allows the **pause** 
+   * Pause the animator. The active property is unchanged. The allows the **pause** 
    * and **resume** methods to be safely called without modifying the **active** state of the animator.
    */
   pause() {
@@ -1067,7 +1139,7 @@ export class Animator {
   }
 
   /**
-   * Resume the animator. This will resume animations. Note the animations may still not actually start if the animator
+   * Resume (unpause) the animator. This will resume animations. Note the animations may still not actually start if the animator
    * is not active. If the animator is not paused, the call is ignored.
    */
   resume() {
@@ -1080,9 +1152,10 @@ export class Animator {
   }
 
   /**
-   * Perform the animation cycle and update all children. If timestamp is not set, the children are not updated, and
+   * Perform the animation cycle and update all children. If the timestamp is not set, the children are not updated,
    * but the animation cycle is initiated.
-   * @param {DOMHighResTimeStamp} timeStamp - end time of the previous frame.
+   * @param {DOMHighResTimeStamp} timeStamp - End time of the previous frame.
+   * @private
    */
   #animate(timeStamp) {
     if (!this.active || this.#paused) {
@@ -1102,9 +1175,9 @@ export class Animator {
   }
 
   /**
-   * Add target.
-   * @param {module:hcje/sprites~AnimationTarget} target
-   * @throws {Error} if child does not implement the {@link module:hcje/sprites~AnimationTarget}.
+   * Add target for animation.
+   * @param {module:hcje/sprites~AnimationTarget} target - Animation target to update.
+   * @throws {Error} Thrown if the child does not implement the {@link module:hcje/sprites~AnimationTarget} interface.
    */
   addTarget(target) {
     if (!target.update) {
@@ -1114,8 +1187,8 @@ export class Animator {
   }
  
   /**
-   * Destroy the target. This kills the sprite and removes it from the animator.
-   * @param {module:hcje/sprites~AnimationTarget} target
+   * Destroy the target. This kills the target and removes it from the animator.
+   * @param {module:hcje/sprites~AnimationTarget} target - Animation target to kill.
    */
   killTarget(target) {
     const child = this.#children.get(target);
@@ -1126,7 +1199,7 @@ export class Animator {
   }
 
   /**
-   * Clear the animator. This destroys all children and deactivates the animator.
+   * Clear the animator. This kills all children and deactivates the animator.
    */
   clear() {
     this.#active = false;

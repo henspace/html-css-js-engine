@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: testing/runner.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/custom-theme.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: testing/runner.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+/**
+ * @license MIT
+ * Copyright © 2025 Steve Butler (henspace.com)
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the “Software”),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM,OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/**
+ * @module hcjeTools/testing/runner
+ * @description
+ * Script for running tests. This is intended to be run as a Node.js script.
+ *
+ * Usage:
+ *
+ * + runner configFileOrDir
+ *     + configFileOrDir: either the path to a folder to be tested or a JSON file of a 
+ *        [TestConfig]{@link module:hcjeTools/testing/runner~TestConfig} object.
+ *
+ * ## Testing a module
+ *
+ * In order to be tested, a module requires a test module to be created and the test module's name must end with **.test.js**.
+ *
+ * As a minimum, the test module must export an array named **tests** containing the 
+ *   [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition} objects.
+ *
+ * It can also export the following optional functions:
+ *
+ * + beforeModuleTests(): called at the start of the module test.
+ * + beforeEachTest(): called before each individual test described by its 
+ *    [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition} 
+ * + afterEachTest(): called after each individual test described by its 
+ *    [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition} 
+ * + afterModuleTests(): called at the end of the module test.
+ *
+ * Note that each [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition} is run synchronously to ensure
+ * tests are run in the order described in the **tests** object.
+ *
+ * The runner script will look for all test modules, **\*.test.js**, in the **source** folder and its subfolders and
+ * run every test described by the exported **tests** objects. 
+ *
+ * ### Example
+ *
+ * Here is an example file which would run a single test on the parseInt function.
+ * ```
+ * import * as utils from './utils.js';
+ * 
+ * export const tests = [
+ *  {
+ *    description: 'parseInt normal',
+ *    run: () => utils.parseInt('4.5'),
+ *    expected: 4,
+ *    compare: '===',
+ *  }
+ * ];
+ * ```
+ */
+
+/**
+ * @typedef {Object} TestDefinition
+ * @property {string} description - Description of the test used in results.
+ * @property {module:hcjeTools/testing/runner~runTest} run - The test function to run. This should return the result or a Promise that
+ * fulfils to the result;
+ * @property {*} expected - The expected result. If this is an Error object, an exception is expected and 
+ * the exception error message is checked against the incoming message.
+ * @property {module:hcjeTools/testing/runner~check} check - Function to run to check the result.
+ * @property {module:hcjeTools/testing/runner~compare|string} compare - Function to run to compare the result. If a string is provided
+ * it is used as a lookup into the standard comparisons:
+ * + "equivalent": both the expected and result values are converted using `JSON.stringify` and then a simple equality test used.
+ * + "exception": an exception is expected to be thrown. A "match" test described below is then used.
+ * + "match": the expected result should be a RegExp. The result is coerced into a string and then tested using the 
+ *   expected result RegExp. 
+ * + "==": a simple equality test is used.
+ * + "===": a strict equality test is used.
+ * + "=Ndp": a simple comparison where the result and expected values are fixed to N decimal places before using a 
+ *   strict equality test. For convenience, there can be one to three equals signs at the beginning of the string but
+ *   this will not affect the result as both the result and expect values must be numeric and a strict comparison is
+ *   always used.
+ */
+
+/**
+ * Function used for running tests.
+ * @callback module:hcjeTools/testing/runner~runTest
+ * @returns {*|Promise} Either the result itself or a Promise that fulfils to the result. 
+ */
+
+/**
+ * Function used for checking the results from {@link module:hcjeTools/testing/runner~runTest}.
+ * Unlike the [Compare]{@link module:hcjeTools/testing/runner~compare} function, this is used for checking the result
+ * itself as opposed to comparing against a specified expected result. This is particularly useful where data used when
+ * running the test are required for evaluating whether the test was successful. In this case, the result returned from 
+ * the [RunTest]{@link module:hcjeTools/testing/runner~runTest} function can return an object containing both the normal
+ * result and the data required for evaluation. As this object will be passed to the check function, the function will
+ * be able to determine whether the run was successful.
+ * @callback module:hcjeTools/testing/runner~check
+ * @param {*} result - The result to check.
+ * @throws {Error} Thrown if the result fails the checks.
+ */
+
+/**
+ * Function used for comparing the results from {@link module:hcjeTools/testing/runner~runTest} against an expected result.
+ * @callback module:hcjeTools/testing/runner~compare
+ * @param {*} result - The actual result
+ * @param {*} expected - The expected result
+ * @throws {Error} Thrown if the result does not compare correctly against the expected value.
+ */
+
+/**
+ * Encapsulation of the result of running a test.
+ * @typedef {Object} TestResult
+ * @property {string} description - Test description
+ * @property {*} result - The actual result returned by the test. This will be undefined if the test failed.
+ * @property {Error} error - Error if test failed. This will be undefined if the test passed.
+ */ 
+
+import * as fsPromises from 'node:fs/promises';
+import * as path from 'node:path';
+import * as url from "url";
+import * as testUtils from "./utils.js";
+
+const SCRIPT_PATH = url.fileURLToPath(new URL('.', import.meta.url));
+
+/* ANSI colors see https://blog.logrocket.com/using-console-colors-node-js/ */
+const DEFAULT_COLOR = `\x1b[0m`;
+const BLACK = `\x1b[30m`;
+const RED = `\x1b[31m`;
+const GREEN = `\x1b[32m`;
+const YELLOW = `\x1b[33m`;
+const BLUE = `\x1b[34m`;
+const WHITE = `\x1b[37m`;
+const BG_BLACK = `\x1b[40m`;
+const BG_RED = `\x1b[41m`;
+const BG_GREEN = `\x1b[42m`;
+const BG_WHITE = `\x1b[47m`;
+const WHITE_ON_RED = `${WHITE}${BG_RED}`;
+const BLACK_ON_WHITE = `${BLACK}${BG_WHITE}`;
+
+
+/**
+ * Configuration options for testing.
+ * @typedef {Object} TestConfig
+ * @property {boolean} noTimeStamp - If true, the results file will not include a time stamp in the filename.
+ * @property {string} source - The folder containing the modules to be tested. Testing includes all subfolders.
+ * @property {string} resultsFile - The file to which to write the results. If it includes a directory, that will be 
+ *   created if necessary.
+ */
+
+/**
+ * Module that is to be tested.
+ * @typedef {Object} TestModule
+ * @property {function():Promise} beforeModuleTests - Function to run before any tests in the module run.
+ * @property {function():Promise} beforeEachTest - Function to run before each test.
+ * @property {function():Promise} afterEachTest - Function to run after each test.
+ * @property {function():Promise} afterModuleTests - Function to run after all tests in the module have run.
+ * @property {Array&lt;module:hcjeTools/testing/runner~TestDefinition>} tests - Tests that are to be run
+ */ 
+
+/**
+ * Show usage.
+ * @param {string} message - The message to display along with usage information.
+ * @private
+ */
+function showUsageAndExit(message) {
+  console.error(message);
+  console.error('\nUsage: run_test configFileOrSource');
+  process.exit(1);
+}
+
+
+/**
+ * Await function if it exists.
+ * @param {function} [fn] Async function to await.
+ * @private
+ */
+async function runIfExists(fn) {
+  if (fn) {
+    await fn();
+  }
+}
+
+/**
+ * Run tests. The tests in the module are run synchronously so that each test can rely on the results of running 
+ * the previous test.
+ * @param {string} moduleName - Name of the module.
+ * @param {module:hcjeTools/testing/runner~TestModule} testModule - Imported module under test.
+ * @returns {Promise} Fulfils to array of module:hcjeTools/testing/runner~TestResult>
+ * @private
+ */
+async function runTestDefinitions(moduleName, module) {
+  return new Promise((resolve) => {
+    const allResults = [];
+    (async () => {
+      await runIfExists(module.beforeModuleTests);
+      for (const testDefn of module.tests) {
+        await runIfExists(module.beforeEachTest);
+        const result = await testUtils.it(moduleName, testDefn);
+        await runIfExists(module.afterEachTest);
+        allResults.push(result);
+      }
+      await runIfExists(module.afterModuleTests);
+      resolve(allResults);
+    })();
+  });
+}
+
+
+/**
+ * Process scripts in directory
+ * @param {string} sourceDir - Path to the directory to test. This is scanned recursively.
+ * @returns {Promise} Fulfils to array of [TestResult]{@link module:hcjeTools/testing/runner~TestResult}s
+ * @private
+ */ 
+function runTests(sourceDir) {
+  let results = [];
+  return fsPromises.readdir(sourceDir, {
+      encoding: 'utf-8',
+      withFileTypes: true,
+      recursive: false
+    })
+    .then((result) => {
+      const promises = [];
+      for (const dirent of result) {
+        const direntPath = path.join(sourceDir, dirent.name);
+        if (dirent.isFile() &amp;&amp; /\.test\.js$/.test(dirent.name)) {
+          const importName = path.relative(SCRIPT_PATH, direntPath).replaceAll('\\', '/');
+          const promise = import(importName)
+            .then((module) => runTestDefinitions(dirent.name, module))
+            .then((result) => results = [...results, ...result]);
+          promises.push(promise);
+        } else if (dirent.isDirectory()) {
+            const promise = runTests(direntPath)
+              .then((result) => results = [...results, ...result]);
+            promises.push(promise);
+        }
+      }
+      return Promise.all(promises).then(()=> results);
+    }) 
+}
+
+
+/**
+ * Read and parse json file.
+ * @param {string} filePath - The path to the file.
+ * @returns {Promise} Fulfils to parsed json.
+ * @private
+ */
+function loadJson(filePath) {
+  return fsPromises.readFile(filePath, {encoding: 'utf-8'})
+    .then((json) => {
+      return JSON.parse(json);
+    });
+}
+
+/**
+ * Write the results to the console.
+ * @param {module:hcjeTools/testing/runner~TestResult} testResults - The test results.
+ */
+function writeResultsToConsole(testResults) {
+  let passes = 0;
+  let fails = 0;
+  console.log('\n\n============\nTest Results\n============\n');
+  for (const testResult of testResults) {
+    if (testResult.error) {
+      fails++;
+      if (testResult.error.stack) {
+        console.log(`${YELLOW}\nStacktrace:\n===========\n`, testResult.error.stack,`${DEFAULT_COLOR}`);
+      } else {
+       console.log(`${WHITE_ON_RED}FAIL: ${testResult.description}: ${testResult.error}${DEFAULT_COLOR}`);
+      }
+    } else {
+      passes++;
+      console.log(`${GREEN}PASS: ${testResult.description}; Result: ${testResult.result}${DEFAULT_COLOR}`);
+    } 
+  }
+  console.log(`\n\n${GREEN}${passes + fails} tests; ${passes} passed; ${WHITE_ON_RED}${fails} failed.${DEFAULT_COLOR}`);
+
+}
+/**
+ * Create a Markdown file of the results.
+ * @param {module:hcjeTools/testing/runner~TestResult} testResults - The test results.
+ * @param {string} resultsFolder - Folder to which the results file is written. Results are written to the file
+ *   test-results-timestamp.md
+ * @param {boolean} [noTimeStamp] - If true the file is written without the timestamp in the filename.
+ * @returns {Promise}
+ */
+function writeResultsToFile(testResults, resultsFolder, noTimeStamp) {
+  const fileName = noTimeStamp ? 'test-results.md' : `test-results-${new Date().toISOString().replace(/[.:]/g, '_')}.md`;
+  return fsPromises.mkdir(resultsFolder, {recursive: true})
+    .then(() => {
+      let codeBlockStart = "\n```\n";
+      let codeBlockEnd = "\n```\n";
+      let testDivision = '\n---\n';
+      let passes = 0;
+      let fails = 0;
+      let markdownPass = '';
+      let markdownFail = '';
+      for (const testResult of testResults) {
+        if (testResult.error) {
+          fails++;
+          markdownFail += `### FAIL: ${testResult.description}\n\n`
+          if (testResult.error.stack) {
+            markdownFail += `#### Stacktrace\n${codeBlockStart}${testResult.error.stack}${codeBlockEnd}\n`;
+          } else {
+            markdownFail += `${testResult.error}\n\n`;
+          }
+        } else {
+          passes++;
+          markdownPass += `+ PASS: ${testResult.description}\n`;
+        } 
+      }
+      const markdown =  '# Test Results\n\n' + 
+                  '## Summary\n\n' +
+                  `+ ${passes + fails} total tests\n` +
+                  `+ ${passes} passed\n` + 
+                  `+ ${fails} failed\n\n` +
+                  '## Passed tests\n\n' + 
+                  markdownPass + 
+                  '## Failed tests\n\n' + 
+                  markdownFail;
+      return fsPromises.writeFile(path.join(resultsFolder, fileName), markdown, {encoding: 'utf8'});
+    })
+
+}
+
+/**
+ * Get the configuration options from either a source directory or configuration file.
+ * @param {string} sourceOrConfig - Either the path to the folder to test or a configuration file.
+ * @returns {Promise} Fulfils to [TestConfig]{@link module:hcjeTools/testing/runner~TestConfig}
+ * @private
+ */ 
+function getConfig(dir) {
+  return fsPromises.lstat(dir)
+    .then((stats) => {
+      if (stats.isDirectory()) {
+        return {
+          source: dir
+        }
+      } else {
+        return loadJson(dir);
+      }
+    })
+}
+
+// Execute tests
+if (process.argv.length &lt; 3) {
+  showUsageAndExit('Incorrect arguments.');
+} 
+let options;
+await getConfig(process.argv[2])
+  .then((result) => options = result)
+  .then(() => runTests(options.source))
+  .then((testResults) => {
+    writeResultsToConsole(testResults);
+    if (options.resultsFolder) {
+      return writeResultsToFile(testResults, options.resultsFolder, options.noTimeStamp);
+    }
+  })
+
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-hcjeTools_build_build.html">hcjeTools/build/build</a></li><li><a href="module-hcjeTools_server_requestListener.html">hcjeTools/server/requestListener</a></li><li><a href="module-hcjeTools_server_server.html">hcjeTools/server/server</a></li><li><a href="module-hcjeTools_testing_runner.html">hcjeTools/testing/runner</a></li><li><a href="module-hcjeTools_testing_utils.html">hcjeTools/testing/utils</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Dec 05 2025 14:57:18 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

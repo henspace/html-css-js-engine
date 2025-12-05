@@ -32,10 +32,11 @@ import * as device from './device.js';
 
 
 /** 
- * Markdown replacements. @type {Array<{re: RegExp, rep: string}> 
+ * Markdown replacements.
+ * @type {Array<{re: RegExp, rep: string}>}
  * @see {@link module:hcje/domTools~parseMarkdown}
  * @private
- **/ 
+ */ 
 const MARKDOWN_REPS = [
   /* special character replacements */ 
   {re: /\r/g, rep: ''},
@@ -108,9 +109,9 @@ export function parseMarkdown(markdown) {
 /**
  * Create an element as a child of another. This is just a convenience method to simplify the creation of an element,
  * the addition of a class name, and attachment to a parent element.
- * @param {module:hcje/domTools~ElementWrapper|Element} parentElement
- * @param {string} tagName
- * @param {string} className
+ * @param {module:hcje/domTools~ElementWrapper|Element} parentElement - Parent to which to attach element as child.
+ * @param {string} tagName - DOM tag name.
+ * @param {string} className - Class name to add to element.
  * @returns {Element}
  */
 export function createChild(parentElement, tagName, className) {
@@ -125,9 +126,9 @@ export function createChild(parentElement, tagName, className) {
 /**
  * Create a divider, which is essentially a labelled horizontal rule.
  * @param {Object} config
- * @param {Element} parentElement - parent to which the rule should be added as a child.
- * @param {string} label - the label to apply.
- * @param {string} alignment - label position: left, center, right.
+ * @param {Element} parentElement - Parent to which the rule should be added as a child.
+ * @param {string} label - The label to apply.
+ * @param {string} alignment - The label position: 'left', 'center' or 'right'.
  * @returns {HTMLDivElement}
  */
 export function createDivider(config) {
@@ -150,45 +151,52 @@ export function createDivider(config) {
 
 /**
  * @callback ButtonListener
- * @param {Event} event - triggering event
- * @param {boolean} isDown - true if toggle button is in down state.
+ * @param {Event} event - Triggering event
+ * @param {boolean} isDown - True if toggle button is in down state.
  */
 
 /**
  * @typedef {Object} ButtonConfig
- * @property {Element} parentElement
- * @property {string} url - path to the image used on the button.
- * @property {string} [urlOn] - if provided, this is a toggle button
- * @property {boolean} [on] - should the button start in the on position. Only applicable to a toggle button.
- * @property {string} label - button label.
- * @property {string} labelOn - label for toggle buttons if on.
- * @property {string} className - additional class name applied to the button's container.
- * @property {module:hcje/domTools~ButtonListener} onClick - listener called on the click event.
- * @property {number} repeatInterval - set the button to repeat with the specified interval in ms. If the button is
- * set as a toggle button, this is ignored.
+ * @property {Element} parentElement - The buttons's parent element.
+ * @property {string} url - Path to the image used on the button.
+ * @property {string} [urlOn] - Path to the image used on the button if in it's on or  down state. If provided, this is
+ *   treated as a toggle button
+ * @property {boolean} [on] - Should the button start in the on position. Only applicable to a toggle button.
+ * @property {string} label - The button label.
+ * @property {string} labelOn - The label for toggle buttons if on.
+ * @property {string} className - Additional class name applied to the button's container.
+ * @property {module:hcje/domTools~ButtonListener} onClick - Listener called on the click event.
+ * @property {number} repeatInterval - Set the button to repeat with the specified interval in ms. If the button is
+ * set as a toggle button, this is ignored. Note that if a repeat interval is provided, a 
+ * button repeater is used for handling events. Instead of just using 
+ * the **click** event, the repeater will use [Pointer events]{@link https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events}
+ * or [Touch events]{@link https://developer.mozilla.org/en-US/docs/Web/API/Touch_events}. If these events are
+ * preferred over the simple **click** event, you can provide an empty object for **repeatInterval** property or set
+ * its delay property to zero.
  */
 
 /**
  * Wrapper for an [HTMLElement]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement} which allow objects
- * inherited from this class to be used inplace of an
- * [Element]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element} in some limited applications.
- * @implements module:hcje/domTools~ElementSubset
+ * inherited from this class to be used in place of an
+ * [HTMLElement]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement} in some limited applications.
  */ 
 export class ElementWrapper {
-  /** The base element @type{HTMLlement} */ 
+  /** The base element.
+   * @type{HTMLElement} */ 
   #element;
 
   /**
-   * Construct the base element
-   * @param {string|HTMLElement} elementType - tag name or the actual element to be wrapped.
+   * Construct the wrapper. If a tag name is provided, a new element is created, otherwise the provided element is 
+   * wrapped.
+   * @param {string|HTMLElement} elementType - Tag name or the actual element to be wrapped.
    */ 
   constructor(elementType) {
     this.#element = elementType instanceof Element ? elementType : document.createElement(elementType);
   }
 
   /**
-   * Get the wrapped element. This is protected and is only intended for use by the domTools module.
-   * @returns {Element}
+   * The wrapped element. This is protected and is only intended for use by the domTools module.
+   * @type {Element}
    * @protected
    * @readonly
    */ 
@@ -197,8 +205,8 @@ export class ElementWrapper {
   }
 
   /**
-   * Get the parent element.
-   * @returns {string}
+   * The parent element.
+   * @type {string}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Node/parentElement}
    * @readonly
    */
@@ -207,8 +215,8 @@ export class ElementWrapper {
   }
 
   /**
-   * Get the class name.
-   * @returns {string}
+   * The class name.
+   * @type {string}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/className}
    */ 
   get className() {
@@ -217,25 +225,27 @@ export class ElementWrapper {
 
   /**
    * Set the class name.
-   * @param {string} value - new class name.
+   * @type {string}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/className}
+   * @ignore
    */ 
   set className(value) {
     this.#element.className = value;
   }
 
   /**
-   * Get the classList.
-   * @returns {DOMTokenList}
+   * The classList.
+   * @type {DOMTokenList}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/classList}
+   * @readonly
    */ 
   get classList() {
     return this.#element.classList;
   }
 
   /**
-   * Get the offset height.
-   * @returns {number}
+   * Element's offset height.
+   * @type {number}
    * @readonly
    */
   get offsetHeight() {
@@ -243,8 +253,8 @@ export class ElementWrapper {
   }
 
   /**
-   * Get the offset width.
-   * @returns {number}
+   * Element's offset width.
+   * @type {number}
    * @readonly
    */
   get offsetWidth() {
@@ -252,8 +262,8 @@ export class ElementWrapper {
   }
 
   /** 
-   * Get the style.
-   * @returns {CSSStyleProperties} 
+   * Element's style.
+   * @type {CSSStyleProperties} 
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style}
    * @readonly
    */
@@ -263,9 +273,9 @@ export class ElementWrapper {
 
   /**
    * Add event listener.
-   * @param {string} eventType - event type to listen to
-   * @param {function|Object} listener - handler of the event
-   * @param {Object|boolean} optionsOrUseCapture - additonal options
+   * @param {string} eventType - Event type to listen to
+   * @param {function|Object} listener - Handler of the event
+   * @param {Object|boolean} optionsOrUseCapture - Additional options
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener}
    */ 
   addEventListener(eventType, listener, optionsOrUseCapture) {
@@ -274,7 +284,7 @@ export class ElementWrapper {
 
   /**
    * Append child.
-   * @param {Element|ElementWrapper} child - element to append
+   * @param {Element|ElementWrapper} child - Element to append
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild}
    */
   appendChild(child) {
@@ -285,7 +295,8 @@ export class ElementWrapper {
    * Append to a parent element. Note, if it is already a child, this call is ignored.
    * This method is provided to allow callers to adust hierarchies without needing access to the protected
    * wrapped element. Note that the method will silently return if parentElement is not provided.
-   * @param {module:hcje/domTools~ElementSubset} parentElement
+   * @param {module:hcje/domTools~ElementWrapper|HTMLElement} parentElement - The element to which the wrapped element
+   *   should be appended.
    */
   appendTo(parentElement) {
     if (!parentElement) {
@@ -328,9 +339,10 @@ export class ElementWrapper {
   }
 
   /**
-   * Convert item to underlying element. 
-   * @param {Element|ElementWrapper} item - the object to return as an Element.
+   * Get a wrapper's to underlying element. 
+   * @param {Element|ElementWrapper} item - The object to return as an Element.
    * @returns {Element}
+   * @protected
    */ 
   static _toElement(item) {
     return item instanceof ElementWrapper ? item._element : item;
@@ -340,12 +352,13 @@ export class ElementWrapper {
 
 
 /**
- * Simple text element.
+ * Simple text element wrapper which supports Markdown.
  */
 export class TextElement extends ElementWrapper {
 
   /** 
    * Construct the TextElement class.
+   * @extends module:hcje/domTools.ElementWrapper
    */
   constructor() {
     super('div');
@@ -353,47 +366,62 @@ export class TextElement extends ElementWrapper {
   }
 
   /**
-   * Get the innerText property of the underlying element.
-   * @returns {string}
+   * The innerText property of the underlying element.
+   * @type {string}
    */
   get innerText() {
     return this._element.innerText;
   }
 
   /**
-   * Set innerText property of underlying element.
-   * @param {string} txt - text to write.
+   * The innerText property of underlying element.
+   * @type {string}
+   * @ignore
    */ 
   set innerText(txt) {
     this._element.innerText = txt;
   }
 
   /**
-   * Set markdown. This converts the text from markdown to HTML and then updates the innerHtml.
-   * @param {string} markdown - the text to format and write.   */
+   * Set markdown. This converts the text from Markdown to HTML and then updates the innerHtml of the underlying
+   * element.
+   * @param {string} markdown - The text to format and write.
+   */
   setMarkdown(markdown) {
     this._element.innerHTML = parseMarkdown(markdown);
   }
 }
 
-/** Standard keyboard repeat delay in milliseconds @type {number} */
+/** Standard keyboard repeat delay in milliseconds.
+ * @type {number}
+ * @private
+ */
 const SIM_KBD_REPEAT_DELAY = 44;
-/** Standard key board repeat interva in milliseconds @type {number} */
+
+/** Standard key board repeat interval in milliseconds.
+ * @type {number}
+ * @private
+ */
 const SIM_KBD_REPEAT_INTERVAL = 33;
 
 /** 
  * Interval for button repeats.
  * @typedef {Object} ButtonRepeatInterval
- * @property {number} delay - delay for first repeat.
- * @property {number} repeat - interval between subsequent repeats.
+ * @property {number} delay - Delay for first repeat in ms.
+ * @property {number} repeat - Interval between subsequent repeats in ms.
  */
 
-/** Simulated keyboard interval @type {module:hcje/domTools~ButtonRepeatInterval} */
+/** 
+ * Simulated keyboard interval 
+ * @type {module:hcje/domTools~ButtonRepeatInterval}
+ */
 export const SIM_KBD_INTERVAL = {delay: 750, repeat: 33};
 
 /**
- * Class to handle button repeats. The handler also can be used to handle clicks but on button down rather than up.
- * It will also use the touch api if available.
+ * Class to handle button repeats. The handler also can be used to simulate clicks but on button down rather than up.
+ * The button will use either [Pointer events]{@link https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events}
+ * or [Touch events]{@link https://developer.mozilla.org/en-US/docs/Web/API/Touch_events} depending on availability.
+ * @private
  */
 class ButtonRepeater {
   /** @type {function} */
@@ -404,17 +432,16 @@ class ButtonRepeater {
   #intervalId;
   /** @type {number} */
   #timeoutId;
-  /** Event type in use. @type {string} */
+  /** Event type in use.
+   * @type {string} */
   #eventType;
 
 
   /**
    * Constuct the repeater.
-   * @param {module:hcje/domTools~button} button - the button dispatching the event.
-   * @param {Object} interval
-   * @param {number} interval.delay - the delay for the first event.
-   * @param {number} interval.repeat - the time between subsequent events.
-   * @param {function()} callback - the function to call when the button is held down.
+   * @param {module:hcje/domTools~button} button - The button dispatching the event.
+   * @param {module:hcje/domTools~ButtonRepeatInterval} interval - Intervals, delay and repeat, used for repetitions.
+   * @param {function()} callback - The function to call when the button is held down.
    */
   constructor(button, interval, callback) {
     console.debug(`Button repeat  interval`, interval);
@@ -437,8 +464,8 @@ class ButtonRepeater {
   }
 
   /**
-   * Get the event type used by this button.
-   * @returns {string}
+   * The event type used by this button.
+   * @type {string}
    * @readonly
    */
   get eventType() {
@@ -446,8 +473,10 @@ class ButtonRepeater {
   }
 
   /**
-   * Start the repetitions. This call introduces a delay before the repetition begins.
-   * @param {Event} evt - the triggering event.
+   * Start the repetitions. This call introduces a delay before the repetition begins. Note that if the delay is not
+   * set, no repetitions will occur.
+   * @param {Event} evt - The triggering event.
+   * @private
    */
   #start(evt) {
     console.debug(`Button repeat start: ${evt.type}`);
@@ -460,8 +489,10 @@ class ButtonRepeater {
       }, this.#interval.delay);
     }
   }
+
   /**
    * Send notification to callback at the repeat rate.
+   * @private
    */
   #repeat() {
     this.#callback();
@@ -472,6 +503,7 @@ class ButtonRepeater {
    * End the repetition. This handles the timeout and interval ids separately, although as the id share the same pool,
    * they could have shared the same property. They have only be separated for clarity; see 
    * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/clearInterval}.
+   * @private
    */
   #end(evt) {
     console.debug(`Button repeat end: ${evt.type}`);
@@ -485,39 +517,51 @@ class ButtonRepeater {
 }
 
 /**
- * Button which wraps a standard HTMLButtonElement and provides additional control over the presentation, especially
- * when used as a toggle button.
+ * Button class which wraps a standard HTMLButtonElement and provides additional control over the presentation, 
+ * especially when used as a toggle button.
  */
 export class Button extends ElementWrapper {
-  /** Button element @type {HTMLButtonElement} */
+  /** Button element.
+   * @type {HTMLButtonElement} */
   #button;
-  /** Repeater for buttons that repeat their actions like keys. @type {ButtonRepeater} */
+  /** Repeater for buttons that repeat their actions like keys.
+   * @type {ButtonRepeater} */
   #buttonRepeater;
-  /** Is the button a toggle button @type {boolean} */
+  /** Is the button a toggle button.
+   * @type {boolean} */
   #toggleButton;
-  /** Button on state. Always false if not a toggle button. */
+  /** Button on state. Always false if not a toggle button. 
+   * @type {boolean} */
   #buttonOn;
-  /** Icon element @type {Element} */
+  /** Icon element.
+   * @type {Element} */
   #icon;
-  /** Text element for button face @type {Element} */
+  /** Text element for button face.
+   * @type {Element} */
   #buttonText;
-  /** Url for icon button @type {string} */
+  /** Url for icon button.
+   * @type {string} */
   #url;
-  /** Url for icon button when down @type {string} */
+  /** Url for icon button when down.
+   * @type {string} */
   #urlOn;
-  /** Label for text button @type {string} */
+  /** Label for text button.
+   * @type {string} */
   #label;
-  /** Label for text button when down @type {string} */
+  /** Label for text button when down.
+   * @type {string} */
   #labelOn;
-  /** Base class name @type {string} */
+  /** Base class name.
+   * @type {string} */
   #baseClass;
-  /** Event type in use. @type {string} */
+  /** Event type in use. 
+   * @type {string} */
   #eventType;
 
   /**
-   * Create a button.
-   * @param {module:hcje/domTools~ButtonConfig} config
-   * returns {HtmlInputElement}
+   * Construct a button.
+   * @param {module:hcje/domTools~ButtonConfig} config - Button configuration.
+   * @extends module:hcje/domTools.ElementWrapper
    */ 
   constructor(config) {
     super('button');
@@ -568,8 +612,8 @@ export class Button extends ElementWrapper {
   }
 
   /**
-   * Get the event type used by this button.
-   * @returns {string}
+   * The event type used by this button.
+   * @type {string}
    * @readonly
    */
   get eventType() {
@@ -624,15 +668,16 @@ export class Button extends ElementWrapper {
   }
 
   /**
-   * GSet disabled state.
-   * @returns {boolean}
+   * Disabled state.
+   * @type {boolean}
    */
   get disabled() {
     return this._element.disabled;
   }
   /**
    * Set disabled state.
-   * @param {boolean} disabled
+   * @type {boolean}
+   * @ignore
    */
   set disabled(disabledState) {
     this._element.disabled = disabledState;
@@ -641,22 +686,25 @@ export class Button extends ElementWrapper {
 
 
 /**
- * Base control. A control in this context is some eElement and an associated label held within a containing 
+ * Base control. A control in this context is some Element and an associated label held within a containing 
  * [HTMLDivElement]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLDivElement}. The basic structure
  * is shown below. Controls are expected to return a value by overriding the
  * {@link module:hcje/domTools~BaseControl#getValue} method.
- * Creates the control hierachy of 
+ * Creates the control hierachy of
+ *
  * + Container div
- * ++ Label div
- * ++ Control element
+ *    + Label div
+ *    + Control element
  */
 class BaseControl extends ElementWrapper {
   /**
    * Construct the base control.
-   * @param {string} className
+   * @param {string} className - Class name to add to the outer containing element.
    * @param {string} config
-   * @param {string} config.label
-   * @param {module:hcje/domTools~ElementSubset} config.parentElement
+   * @param {string} config.label - Label for the control.
+   * @param {module:hcje/domTools~ElementWrapper|HTMLElement} config.parentElement - Element to which the control is 
+   *   appended.
+   * @extends module:hcje/domTools.ElementWrapper
    */
   constructor(className, config) {
     super('div');
@@ -670,7 +718,7 @@ class BaseControl extends ElementWrapper {
   /**
    * Add a control element. Although multiple control elements can be added, only one is expected.
    * This method adds it after the label.
-   * @param {Element | module:hcje/domTools~ElementWrapper} controlElement
+   * @param {Element | module:hcje/domTools~ElementWrapper} controlElement - Control to add.
    * @protected
    */
   _appendControlElement(controlElement) {
@@ -680,7 +728,7 @@ class BaseControl extends ElementWrapper {
   /**
    * Add a control element. Although multiple control elements can be added, only one is expected.
    * This adds it before the label.
-   * @param {Element | module:hcje/domTools~ElementWrapper} controlElement
+   * @param {Element | module:hcje/domTools~ElementWrapper} controlElement - Control to add.
    * @protected
    */
   _prependControlElement(controlElement) {
@@ -700,7 +748,8 @@ class BaseControl extends ElementWrapper {
  * Button control. This is effectively just a [Button]{@link module:hcje/domTools~Button} with an associated label.
  */
 export class ButtonControl extends BaseControl {
-  /** The button @type {module:hcje/domTools~Button} */
+  /** The button.
+   * @type {module:hcje/domTools~Button} */
   #button;
 
   /**
@@ -711,7 +760,8 @@ export class ButtonControl extends BaseControl {
    *     + span hcje-control-label
    *     + input classNames hcje-button
    *
-   * @param {module:hcje/domTools~ButtonConfig} config
+   * @param {module:hcje/domTools~ButtonConfig} config - Button configuration.
+   * @extends module:hcje/domTools.BaseControl
    */
   constructor(config) {
     super('hcje-button-control', config);
@@ -740,16 +790,26 @@ export class ButtonControl extends BaseControl {
 }
 
 /**
+ * Callback function for a checkbox.
+ * @callback module:hcje/domTools.CheckboxControl~onChangeCallback
+ * @param {boolean} checked - True if the current state is checked.
+ */
+
+/**
  * Checkbox control. Simple implementation of a checkbox.
  */
 export class CheckboxControl extends BaseControl {
-  /** Checkbox element @type {Element} */
+  /** Checkbox element.
+   * @type {Element} */
   #box;
-  /** State of button @type {boolean} */
+  /** State of button. 
+   * @type {boolean} */
   #checked;
-  /** Function called on change @type {function(boolean)} */
+  /** Function called on change.
+   * @type {module:hcje/domTools.CheckboxControl~onChangeCallback} */
   #onChange;
-  /** Class name when checked @type{string} */
+  /** Class name when checked.
+   * @type{string} */
   #checkedClassName;
 
 
@@ -757,11 +817,11 @@ export class CheckboxControl extends BaseControl {
   /**
    * Construct the checkbox
    * @param {Object} config
-   * @param {string} config.label
-   * @param {boolean} config.initialValue - true if checked
-   * @param {boolean} config.tick - true if a tick should be used in place of a cross.
-   * @param {function(newState:boolean)} onChange - function called if state changes.
-   *
+   * @param {string} config.label - Checkbox label
+   * @param {boolean} config.initialValue - True if initial state is checked
+   * @param {boolean} config.tick - True if a tick should be used in place of the default cross.
+   * @param {module:hcje/domTools.CheckboxControl~onChangeCallback} onChange - Function called if state changes.
+   * @extends module:hcje/domTools.BaseControl
    */
   constructor(config) {
     super('hcje-checkbox-control', config);
@@ -781,7 +841,7 @@ export class CheckboxControl extends BaseControl {
 
   /**
    * Set state.
-   * @param {boolean} checkedState
+   * @param {boolean} checkedState - The new state.
    * @private
    */
   #setState(checkedState) {
@@ -797,7 +857,7 @@ export class CheckboxControl extends BaseControl {
   
   /**
    * Get checked state.
-   * @returns {boolean} true if checked.
+   * @returns {boolean} True if currently checked.
    */ 
   getValue() {
     return this.#checked;
@@ -806,17 +866,23 @@ export class CheckboxControl extends BaseControl {
 
 /**
  * Constraint function for input controls. This is called on the **input** event and should return 
- * the constrained value. Typically, if the currentInput fails the constraint requirements, the
- * lastValidInput is returned.
+ * the constrained value. Typically, if the current input fails the constraint requirements, the
+ * lastValidInput should be returned.
  *
  * @callback ConstrainInput
- * @param {string} lastValidInput - the last value which satisified the constraint.
- * @param {string} currentInput - the current value.
- * @returns {string} the constrained value.
+ * @param {string} lastValidInput - The last value which satisified the constraint.
+ * @param {string} currentInput - The current value input before application of the constraint.
+ * @returns {string} The constrained value.
  */ 
 
 /**
- * Input control
+ * Callback function for a InputControl.
+ * @callback module:hcje/domTools.InputControl~onChangeCallback
+ * @param {string} value - Current value
+ */
+
+/**
+ * Input control. This provides a text input field.
  */
 export class InputControl extends BaseControl {
   #input;
@@ -824,19 +890,21 @@ export class InputControl extends BaseControl {
 
   /**
    * Construct the input control.
-   * For details on the configuration options, see 
-   * [{@link https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/text}
+   * For more details on the configuration options, see 
+   * [input text type]{@link https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/text}.
    * @param {Object} config
-   * @param {Element} config.parentElement - element to attach to.
-   * @param {string} config.label - label for spinner control
-   * @param {number} [config.initialValue = 0] - initial value.
-   * @param {number} maxLength - maximum length of the input
-   * @param {number} minLength - minimum length of the input
-   * @param {string} placeholder - hint for input.
-   * @param {function(value:string)} onChange - function to call on change.
-   * @param {module:hcje/domTools~ConstrainInput|string} constrain - function to call on input. 
-   * If a string is provided, it should be the name of an in-built function: FLOAT or INT. (case insensitive)
-   * If an initial value and constraint are provided, the initial value is passed via the constaint function before use.
+   * @param {Element} config.parentElement - Element to attach to.
+   * @param {string} config.label - Label for the control
+   * @param {number} [config.initialValue = 0] - Initial value.
+   * @param {number} config.maxLength - Maximum length of the input
+   * @param {number} config.minLength - Minimum length of the input
+   * @param {string} config.placeholder - Hint for input.
+   * @param {module:hcje/domTools.InputControl~onChangeCallback} config.onChange - Function to call on change.
+   * @param {module:hcje/domTools~ConstrainInput|string} config.constrain - Function to call on input. 
+   * If a string is provided, it should be the name of an in-built function: FLOAT, +FLOAT, INT or +INT. These in-built
+   * functions are case insensitive. Those preceded by + character constrain the input to positive values.
+   * If an initial value and constraint are provided, the initial value is parsed by the constrain function before use.
+   * @extends module:hcje/domTools.BaseControl
    */ 
   constructor(config) {
     super('hcje-input-control', config);
@@ -865,10 +933,11 @@ export class InputControl extends BaseControl {
   }
 
   /**
-   * Regex constraint
-   * @param {RegExp} regex - regex to test input against.
-   * @param {string} lastValidInput - last valid input.
-   * @param {string} currentInput - current input.
+   * Regex constraint. This tests the current input against a regular expression and returns the current input if the 
+   * test passes or the lastValidInput if it fails.
+   * @param {RegExp} regex - Regex to test input against.
+   * @param {string} lastValidInput - Last valid input.
+   * @param {string} currentInput - Current input.
    * @returns {string}
    */
   constrainToRegex(regex, lastValidInput, currentInput) {
@@ -881,11 +950,12 @@ export class InputControl extends BaseControl {
    * Get a suitable constraint function based on the constraint value.
    * If a string is provided, it needs to be either INT or FLOAT to use an in-build function.
    * Otherwise it is assumed to be a constraint function itself and is returned as is.
-   * @param {module:hcje/domTools~ConstrainInput|RegExp|string} constrain - function to call on input. If a **RegExp**
-   * is provided, input is constrained to match the regular expression. If a string is provided, it should match an
-   * inbuilt function of 'FLOAT', '+FLOAT', 'INT', or '+INT'. If not a regular expression or string, 
+   * @param {module:hcje/domTools~ConstrainInput|RegExp|string} constrain - The function to call on input. If a 
+   * **RegExp** is provided, input is constrained to match the regular expression. If a string is provided, it should
+   * match an in-built function of 'FLOAT', '+FLOAT', 'INT', or '+INT'. If not a regular expression or string, 
    * it should be constrain function which will be returned as is.
    * @returns {module:hcje/domTools~ConstrainInput}
+   * @private
    */ 
   #getConstraintFunction(constrain) {
     if (constrain instanceof RegExp) {
@@ -919,26 +989,47 @@ export class InputControl extends BaseControl {
 }
 
 /**
+ * Callback function for a SpinnerControl.
+ * @callback module:hcje/domTools.SpinnerControl~onChangeCallback
+ * @param {number} value - Current value. This is the numerical value, not the formatted value.
+ */
+/**
+ * Formatting function for a SpinnerControl.
+ * @callback module:hcje/domTools.SpinnerControl~format
+ * @param {number} value - Current value. This is the numerical value, no the formatted value.
+ * @returns {string} Formatted version of the numerical value.
+ */
+
+/**
  * Spinner control.
  */
 export class SpinnerControl extends BaseControl {
-  /** Change in value per click @type {number} */
+  /** Change in value per click.
+   * @type {number} */
   #step;
-  /** Minimum value @type {number} */
+  /** Minimum value.
+   * @type {number} */
   #minValue;
-  /** Maximum value @type {number} */
+  /** Maximum value.
+   * @type {number} */
   #maxValue;
-  /** Underlying spinner value @type {number} */
+  /** Underlying spinner value.
+   * @type {number} */
   #value;
-  /** Element containing the value @type {Element} */
+  /** Element containing the value.
+   * @type {Element} */
   #valueElement;
-  /** Down button @type {Element} */
+  /** Down button.
+   * @type {Element} */
   #downButton;
-  /** Up button @type {Element} */
+  /** Up button.
+   * @type {Element} */
   #upButton;
-  /** Function called on change @type {function(number)} */
+  /** Function called on change.
+   * @type {module:hcje/domTools.SpinnerControl~onChangeCallback} */
   #onChange;
-  /** Function called to format displayed value @type {function(number):string} */
+  /** Function called to format displayed value.
+   * @type {module:hcje/domTools.SpinnerControl~format} */
   #format;
 
   /**
@@ -955,19 +1046,20 @@ export class SpinnerControl extends BaseControl {
    *
    * @param {Object} config
    * @param {Element} config.parentElement - element to attach to.
-   * @param {string} config.label - label for spinner control
-   * @param {number} [config.initialValue = 0] - initial value.
-   * @param {string} config.downImage - url to down button image
-   * @param {string} config.upImage - url to up button image
-   * @param {string} [config.downLabel = 'Reduce'] - label for down button.
-   * @param {string} [config.upLabel = 'Increase'] - label for up button.
-   * @param {number} [config.step = 1] - change in value per click
-   * @param {number} [config.minValue = 0] minimum value
-   * @param {number} [config.maxValue = 100] maximum value
-   * @param {function(number): string} format - takes the value and returns formated value. This is called before
-   *   onChange
-   * @param {function(number)} onChange - called with new value after changes.
-   * @returns {module:hcje/domTools~SpinnerControl}
+   * @param {string} config.label - Label for spinner control
+   * @param {number} [config.initialValue = 0] - Initial value.
+   * @param {string} config.downImage - Url to down button image
+   * @param {string} config.upImage - Url to up button image
+   * @param {string} [config.downLabel = 'Reduce'] - Label for down button.
+   * @param {string} [config.upLabel = 'Increase'] - Label for up button.
+   * @param {number} [config.step = 1] - Change in value per click
+   * @param {number} [config.minValue = 0] Minimum value
+   * @param {number} [config.maxValue = 100] Maximum value
+   * @param {module:hcje/domTools.SpinnerControl~format} format - Formatting function. This takes the value and returns formated value.
+   * This is called before **onChange**.
+   * @param {module:hcje/domTools.SpinnerControl~onChangeCallback} onChange - called with new value after changes. Note it is provided with the spinner's
+   * numerical value, **not** its formatted value.
+   * @extends module:hcje/domTools.BaseControl
    */
   constructor(config) {
     super('hcje-spinner-control', config);
@@ -1006,7 +1098,7 @@ export class SpinnerControl extends BaseControl {
 
   /** 
    * Function to set value.
-   * @param {number} newValue
+   * @param {number} newValue - The new value for the spinner.
    * @private
    */
   #setValue(newValue) {
@@ -1019,7 +1111,8 @@ export class SpinnerControl extends BaseControl {
 
   /**
    * Function to set value and inform owner of change.
-   * @param {number} newValue
+   * @param {number} newValue - The new value for the spinner.
+   * @private
    */
   #setValueAndNotify(newValue) {
     this.#setValue(newValue);
@@ -1036,19 +1129,24 @@ export class SpinnerControl extends BaseControl {
 }
 
 /**
- * Encapsulation of DOM menu bar.
+ * Encapsulation of a DOM menu bar.
  */
 export class MenuBar {
-  /** The menubar element @type {HTMLElement} */
+  /** The menubar element.
+   * @type {HTMLElement} */
   #menuBar;
 
-  /** The element that opens the menu. @type {module:hcje/domTools~ElementSubset} */
+  /** The element that opens the menu.
+   * @type {module:hcje/domTools~ElementWrapper|HTMLElement} */
   #opener;
-  /** The element that opens the menu. @type {module:hcje/domTools~ElementSubset} */
+  /** The element that opens the menu.
+   * @type {module:hcje/domTools~ElementWrapper|HTMLElement} */
   #closer;
-  /** Function called when menu opened. @type {function()} */
+  /** Function called when menu opened.
+   * @type {function()} */
   onOpen;
-  /** Function called when menu opened. @type {function()} */
+  /** Function called when menu opened.
+   * @type {function()} */
   onClose;
 
 
@@ -1072,14 +1170,12 @@ export class MenuBar {
  * be controlled by CSS.
  * 
  * @param {Object} config
- * @param {Element} [config.parentElement = document.body] - the menu element is added to the parent
- * @param {module:hcje/domTools~ElementWrapper|Element} config.opener - element used to open and close the menu bar.
- * @param {module:hcje/domTools~ElementWrapper|Element} config.closer - element used to close the menu bar
- * @param {module:hcje/domTools~ElementWrapper|Element} config.children - buttons to add to menu
- * @param {function()} [config.onOpen] - called when menu opened via the opener 
- * @param {function()} [config.onClose] - called when menu closed via the closer
- *  caller to enable or disable buttons.
- * @returns {module:hcje/domTools~MenuBar} 
+ * @param {Element} [config.parentElement = document.body] - The menu element is added to the parent
+ * @param {module:hcje/domTools~ElementWrapper|Element} config.opener - Element used to open and close the menu bar.
+ * @param {module:hcje/domTools~ElementWrapper|Element} config.closer - Element used to close the menu bar
+ * @param {module:hcje/domTools~ElementWrapper|Element} config.children - Buttons to add to menu
+ * @param {function()} [config.onOpen] - Function called when menu opened via the opener. 
+ * @param {function()} [config.onClose] - Function called when menu closed via the closer.
  */
   constructor(config) {
     this.#menuBar = document.createElement('div');
@@ -1132,7 +1228,7 @@ export class MenuBar {
   }
   
   /** Set the menu state.
-   * @param {boolean} open - true if open.
+   * @param {boolean} open - True if open.
    * @private
    */ 
   #setMenuOpen(open) {
@@ -1153,7 +1249,7 @@ export class MenuBar {
   /**
    * Set the enabled state of the menu. If the state is false, all buttons are
    * disabled and the menu is closed.
-   * @param {boolean} enabled
+   * @param {boolean} enabled - Required state.
    */
   setEnabledState(enabled) {
     const openers = document.getElementsByClassName('hcje-menu-opener');
@@ -1192,10 +1288,11 @@ export class MenuBar {
 
 
 /**
+ * Definition of a button for use as a button that closes the dialog and returns an id.
  * @typedef {Object} DialogButtonDefn
- * @property {string} id - id of the button used as the dialog's return value
- * @property {string} url - path to the image used on the button
- * @property {string} label label of the button.
+ * @property {string} id - Id of the button used as the dialog's return value
+ * @property {string} url - Path to the image used on the button
+ * @property {string} label - Label of the button.
  */
 
 /**
@@ -1212,14 +1309,14 @@ export class MenuBar {
  * If any button is pressed, the dialog closes and the id of the button
  * provided by the return.
  * @param {Object} config
- * @param {string} config.title - title written in the dialog's title bar.
- * @param {string} [config.className] - additional class to apply.
- * @param {string} [config.markdown] - the body. If set, overrides the text option.
- * @param {string} [config.text] - body text.
+ * @param {string} config.title - Title written in the dialog's title bar.
+ * @param {string} [config.className] - Additional class to apply.
+ * @param {string} [config.markdown] - The body content provided as markdown. If set, overrides the text option.
+ * @param {string} [config.text] - The body content provided as plain text.
  * @param {Array<module:hcje/domTools~ElementWrapper|Element>} [config.children] - add as children to dialog.
- * @param {Array<module:hcje/domTools~DialogButtonDefn>} config.buttonDefns - buttons placed at the bottom of the dialog 
- * and close it. If no label is provided, the ID is used. 
- * @returns {Promise} fulfils to id of button that closed the dialog.
+ * @param {Array<module:hcje/domTools~DialogButtonDefn>} config.buttonDefns - Buttons placed at the bottom of the dialog 
+ * to close it. If no label is provided, the button's id is used. 
+ * @returns {Promise} Fulfils to the id of button that closed the dialog.
  */
 export function createDialog(config) {
   const DIALOG_CLASS_NAME = 'hcje-dialog-box';
@@ -1296,19 +1393,26 @@ export function createDialog(config) {
 * This area is a div which is centred on screen and then scaled to ensure it fits the screen or parent element.
 */
 export class GameArea extends ElementWrapper {
-  /** Design width @type {number} */
+  /** Design width.
+   * @type {number} */
   #width;
-  /** Design height @type {number} */
+  /** Design height.
+   * @type {number} */
   #height;
-  /** Element in which game area should fit. @type {Element} */
+  /** Element in which game area should fit.
+   * @type {Element} */
   #fitWithin;
-  /** Was the fitWithin element created @type {boolean} */
+  /** Was the fitWithin element created.
+   * @type {boolean} */
   #internalContainer;
-  /** Margin around the game area @type {number} */
+  /** Margin around the game area.
+   * @type {number} */
   #margin;
-  /** Max permitted scale @type {number} */
+  /** Max permitted scale.
+   * @type {number} */
   #maxScale;
-  /** Should the game area be positioned at the top rather than the centre. */
+  /** Should the game area be positioned at the top rather than the centre.
+   * @type {boolean} */
   #atTop;
 
 
@@ -1316,15 +1420,16 @@ export class GameArea extends ElementWrapper {
    * Create a game area. The game area is created with a class of 'hcje-game-area'. This is absolutely positioned
    * and centered.
    * @param {Object} config
-   * @param {number} config.width - design width
-   * @param {number} config.height - design height
-   * @param {Element} [config.fitWithin] - element into which the game area should fit. If omitted a div that covers
+   * @param {number} config.width - Design width
+   * @param {number} config.height - Design height
+   * @param {Element} [config.fitWithin] - Element into which the game area should fit. If omitted a div that covers
    * the full size of the window is created.
-   * @param {number} [config.margin = 0] - margin required around the game area.
-   * @param {number} [maxScale] - maximum allowed scale. Defaults to unlimited.
-   * @param {boolean} [fixedScale = false] - prevents automatically rescaling if window resizes.
-   * @param {boolean} [atTop = false} - the game area is normally centered but it can be set to the top but still
+   * @param {number} [config.margin = 0] - Margin required around the game area.
+   * @param {number} [maxScale] - Maximum allowed scale. Defaults to unlimited.
+   * @param {boolean} [fixedScale = false] - If true, prevents automatically rescaling if window resizes.
+   * @param {boolean} [atTop = false] - The game area is normally centered but it can be set to the top but still
    * centered horizonally.
+   * @extends module:hcje/domTools.ElementWrapper
    */
   constructor(config) {
     super('div');
@@ -1377,7 +1482,7 @@ export class GameArea extends ElementWrapper {
   
   /**
    * Get the design bounds.
-   * @returns {module:utils~RectData}
+   * @type {module:hcje/utils~RectData}
    * @readonly
    */
   get designBounds() { 
@@ -1386,7 +1491,7 @@ export class GameArea extends ElementWrapper {
   
   /**
    * Get the design dimensions.
-   * @returns {module:utils~Dimensions}
+   * @type {module:hcje/utils~Dimensions}
    * @readonly
    */
   get designDims() { 
@@ -1395,7 +1500,7 @@ export class GameArea extends ElementWrapper {
 
   /**
    * Get the scaled dimensions.
-   * @returns {module:utils~Dimensions}
+   * @type {module:hcje/utils~Dimensions}
    * @readonly
    */
   get scaledDims() {
@@ -1403,7 +1508,7 @@ export class GameArea extends ElementWrapper {
   }
 
   /**
-   * @borrows module:hcje/domTools~ElementWrapper#remove
+   * @inheritdoc
    */
   remove() {
     super.remove();
@@ -1426,51 +1531,58 @@ export class GameArea extends ElementWrapper {
  */
 
 /**
- * End the busy indicator. If there is an associated timeout, this is cleared. Once **end** has been called
- * the instance has no further use as a **BusyIndicator**.
+ * End the busy indicator. If there is an associated timeout, this is cleared. Once called
+ * the instance has no further use and any references should be discarded.
  * @function module:hcje/domTools~BusyIndicator#end
  */
 
 /**
- * Busy indicator that displays an indicator on the DOM. It includes a timeout that defaults to 15 seconds
+ * Busy indicator that displays an indicator in the DOM. It includes a timeout that defaults to 15 seconds
  * @implements module:hcje/domTools~BusyIndicator
  */ 
 export class TimeLimitedBusyIndicator {
-  /** Visual indicator @type {Element} */
+  /** Visual indicator.
+   * @type {Element} */
   #element;
-  /** Aria label @type {string} */
+  /** Aria label.
+   * @type {string} */
   #label;
-  /** Timeout in seconds @type {number} */
+  /** Timeout in seconds.
+   * @type {number} */
   #timeoutS;
-  /** Timeout message @type {string} */
+  /** Timeout message.
+   * @type {string} */
   #timeoutMessage;
-  /** Timeout timer id @type {number} */
+  /** Timeout timer id.
+   * @type {number} */
   #timerId;
-  /** Started flag @type {boolean} */
+  /** Started flag.
+   * @type {boolean} */
   #started;
 
   /**
    * Create a busy indicator.
-   * The indicator automatically added to the DOM. If the timeoutSeconds are > 0, then the **end** must be called
-   * otherwise the user will be offered the chance to navigate back in history or reload.
+   * The indicator is automatically added to the DOM. If the timeoutSeconds are > 0, then the **end** method **must** be called,
+   * otherwise the indicator will time out and the user will be offered the chance to navigate back in history or reload.
    * @param {Object} options
-   * @param {string} [options.label = 'Busy'] - added as an **aria-label**.
-   * @param {number} options.timeoutS - timeout in seconds.
-   * @param {string} options.timeoutMessage - message to display on timeout. This should include a prompt that that
-   * if OK is selected the page will wait and if cancel is selected the page will reload.
-   * The default message, with no translation, is
+   * @param {string} [options.label = 'Busy'] - Label added as an **aria-label**.
+   * @param {number} options.timeoutS - Timeout in seconds.
+   * @param {string} options.timeoutMessage - Message to display on timeout. This should include a prompt that that
+   * if OK is selected the page will wait, and if cancel is selected the page will reload.
+   * The default message, which has no localisation, is
    * "The last action is taking too long. Do you want to wait? If you cancel, the game will reload.";
    */ 
   constructor(options) {
     this.#label = options.label ?? 'Busy';
     this.#timeoutS = options.timeoutS ?? 15;
     this.#timeoutMessage = options.timeoutMessage ??
-        'The last action is taking too long. Do you want to wait? if you cancel, the game will reload.';
+        'The last action is taking too long. Do you want to wait? If you cancel, the game will reload.';
     this.#started = false;
   }
 
   /**
    * Create the busy indicator.
+   * @private
    */
   #createIndicator() {
     this.#element = createChild(document.body, 'progress', 'hcje-busy-indicator');
@@ -1478,8 +1590,9 @@ export class TimeLimitedBusyIndicator {
   }
 
   /**
-   * Activate the timeout handler. If a timeout occurs, the confirm dialog displaye the timeout message.
+   * Activate the timeout handler. If a timeout occurs, the confirm dialog displays the timeout message.
    * If cancel is selected, the page reloads, otherwise the timeout handler is reactivated.
+   * @private
    */
   #activateTimeoutHandler() {
     this.#timerId = setTimeout(() => {
@@ -1495,7 +1608,7 @@ export class TimeLimitedBusyIndicator {
   }
 
   /**
-   * @borrows module:hcje/domTools~BusyIndicator#start
+   * @inheritdoc
    */
   start() {
     if (this.#started) {
@@ -1508,13 +1621,12 @@ export class TimeLimitedBusyIndicator {
     }
   }
   /**
-   * @borrows module:hcje/domTools~BusyIndicator#start
    * The instance has no further use and should be discarded.
+   * @inheritdoc
    */
   end() {
     clearTimeout(this.#timerId);
     this.#element.remove();
   }
 }
-
 

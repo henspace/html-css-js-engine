@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: hcje-lib.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/custom-theme.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: hcje-lib.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @license MIT
+ * Copyright © 2025 Steve Butler (henspace.com)
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the “Software”),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM,OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/**
+ * @module hcjeLib 
+ * @description
+ * This adds the hcje library to the window object using the hcjeLib namespace. Using this approach instead of
+ * importing the [hcje/engine]{@link module:hcje/engine} module can prevent some cross origin issues that may occur. Note 
+ * that only the modules imported by the [hcje/engine]{@link module:hcje/engine} module are included.
+ */
+import * as hcje from './hcje.js';
+
+if (window.hcjeLib) {
+  throw('hcjeLib already exists in window object. Rename.');
+} else {
+  window.hcjeLib = hcje;
+}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-hcje_audio.html">hcje/audio</a></li><li><a href="module-hcje_build-constants.html">hcje/build-constants</a></li><li><a href="module-hcje_device.html">hcje/device</a></li><li><a href="module-hcje_domTools.html">hcje/domTools</a></li><li><a href="module-hcje_engine.html">hcje/engine</a></li><li><a href="module-hcje_errors.html">hcje/errors</a></li><li><a href="module-hcje_images.html">hcje/images</a></li><li><a href="module-hcje_scenes.html">hcje/scenes</a></li><li><a href="module-hcje_sprites.html">hcje/sprites</a></li><li><a href="module-hcje_storage.html">hcje/storage</a></li><li><a href="module-hcje_translation.html">hcje/translation</a></li><li><a href="module-hcje_utils.html">hcje/utils</a></li><li><a href="module-hcjeLib.html">hcjeLib</a></li></ul><h3>Classes</h3><ul><li><a href="module-hcje_audio-AudioManager.html">AudioManager</a></li><li><a href="module-hcje_device.Keyboard.html">Keyboard</a></li><li><a href="module-hcje_domTools.Button.html">Button</a></li><li><a href="module-hcje_domTools.ButtonControl.html">ButtonControl</a></li><li><a href="module-hcje_domTools.CheckboxControl.html">CheckboxControl</a></li><li><a href="module-hcje_domTools.ElementWrapper.html">ElementWrapper</a></li><li><a href="module-hcje_domTools.GameArea.html">GameArea</a></li><li><a href="module-hcje_domTools.InputControl.html">InputControl</a></li><li><a href="module-hcje_domTools.MenuBar.html">MenuBar</a></li><li><a href="module-hcje_domTools.SpinnerControl.html">SpinnerControl</a></li><li><a href="module-hcje_domTools.TextElement.html">TextElement</a></li><li><a href="module-hcje_domTools.TimeLimitedBusyIndicator.html">TimeLimitedBusyIndicator</a></li><li><a href="module-hcje_domTools-BaseControl.html">BaseControl</a></li><li><a href="module-hcje_errors.Logger.html">Logger</a></li><li><a href="module-hcje_images.ImageGenerator.html">ImageGenerator</a></li><li><a href="module-hcje_sprites.Animator.html">Animator</a></li><li><a href="module-hcje_sprites.BaseSpriteAdjuster.html">BaseSpriteAdjuster</a></li><li><a href="module-hcje_sprites.Bouncer.html">Bouncer</a></li><li><a href="module-hcje_sprites.DomImageSpriteFactory.html">DomImageSpriteFactory</a></li><li><a href="module-hcje_sprites.DomImageSpriteRenderer.html">DomImageSpriteRenderer</a></li><li><a href="module-hcje_sprites.DomTextSpriteRenderer.html">DomTextSpriteRenderer</a></li><li><a href="module-hcje_sprites.Dynamics.html">Dynamics</a></li><li><a href="module-hcje_sprites.ReachTargetXY.html">ReachTargetXY</a></li><li><a href="module-hcje_sprites.Sprite.html">Sprite</a></li><li><a href="module-hcje_sprites.TerminateOutOfBounds.html">TerminateOutOfBounds</a></li><li><a href="module-hcje_sprites.TextureManager.html">TextureManager</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-hcje_domTools-BusyIndicator.html">BusyIndicator</a></li><li><a href="module-hcje_sprites-AnimationTarget.html">AnimationTarget</a></li><li><a href="module-hcje_sprites-DynamicsLimiter.html">DynamicsLimiter</a></li><li><a href="module-hcje_sprites-ImageSpriteFactory.html">ImageSpriteFactory</a></li><li><a href="module-hcje_sprites-SpriteRenderer.html">SpriteRenderer</a></li><li><a href="module-utils-Waiter.html">Waiter</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Dec 05 2025 14:57:16 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

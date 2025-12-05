@@ -1,3 +1,5 @@
 {
-  "source": "./source"
+  "source": "./source",
+  "resultsFolder": "./test_results",
+  "noTimeStamp": true
 }

@@ -122,17 +122,21 @@ import * as utils from './utils.js';
  * [getAudioManager]{@link module:hcje/audio.getAudioManager} method.
  */
 class AudioManager {
-  /** Audio player factory @type {module:hcje/audio~AudioPlayerFactory} */
+  /** @type {module:hcje/audio~AudioPlayerFactory} */
   #audioPlayerFactory;
-  /** Map of sound effects. @type {Map<string, HTMLAudioElement>} */
+  /** Map of sound effects.
+   * @type {Map<string, HTMLAudioElement>} */
   #soundEffects = new Map();
-  /** Background music. @type {module:hcje/audio~MusicPlayer} */
+  /** @type {module:hcje/audio~MusicPlayer} */
   #backgroundMusic;
-  /** The underlying AudioContext @type {AudioContext} */
+  /** The underlying [AudioContext]{@link https://developer.mozilla.org/en-US/docs/Web/API/AudioContext}.
+   * @type {AudioContext} */
   context;
-  /** Dynamics compressor @type {DynamicsCompressorNode} */
+  /** Dynamics compressor.
+   * @type {DynamicsCompressorNode} */
   #decompressor;
-  /** Global gain @type {GainNode} */
+  /** Global gain.
+   * @type {GainNode} */
   #gain
   
   /**
@@ -148,17 +152,18 @@ class AudioManager {
   }
   
   /**
-   * Get the input for the audio manager. This is where all nodes should connect if they want to 
+   * The input for the audio manager. This is where all nodes should connect if they want to 
    * connect to the destination of the underlying destination.
    * @returns {AudioNode}
+   * @readonly
    */
   get inputNode() {
     return this.#gain;
   }
 
   /**
-   * Get the gain value. 
-   * @returns {AudioParam}
+   * The gain value. When changed, this is almost instantaneous but a small time constant is applied to minimise clicks.
+   * @type {AudioParam}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/GainNode/gain}
    */ 
   get gain() {
@@ -167,19 +172,20 @@ class AudioManager {
 
   /**
    * Set the gain value. This is an almost instantaneous change but a time constant is applied to minimise clicks.
-   * @param {number} value - gain value
+   * @type {number}
+   * @ignore
    */
   set gain(value) {
     this.#gain.gain.setTargetAtTime(value, this.context.currentTime, 0.08);
   }
   
   /**
-   * Create a {@link module:hcje/audio~AudioSfxPlayer}. It is stored in a map of sound effects. It is only stored once
+   * Create an [AudioSfxPlayer]{@link module:hcje/audio~AudioSfxPlayer}. It is stored in a map of sound effects. It is only stored once
    * ready to play, so it may not be available in the map immediately. If the definition includes a **loop** property, 
    * it is set to false as sound effects are not allowed to loop.
    * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - Details of the sound
-   *   to add
-   * @returns {Promise} fulfils to true on success. 
+   *   to add.
+   * @returns {Promise} Fulfils to true on success. 
    */
   addAudioSfx(definition) {
     if (definition.loop) {
@@ -210,9 +216,9 @@ class AudioManager {
    * Set the background music. The background music will automatically start.
    * Any stop or start commands to the player are cached, so that if it takes a long time to 
    * load, the final playing state will still reflect the last command received.
-   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - details of the music
+   * @param {module:hcje/audio~AudioDefinition|module:hcje/audio~SynthAudioDefinition} definition - Details of the music
    *   to add.
-   * @returns {Promise} fulfils to true on success.
+   * @returns {Promise} Fulfils to true on success.
    */
   setMusic(definition) {
     console.debug(`Set music ${definition.title} called.`);

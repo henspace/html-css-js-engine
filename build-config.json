@@ -1,5 +1,7 @@
 {
-  "outputDir": "./build",
+  "outputDir": "./docs",
+  "subDir": "boj",
+  "readme": "./github_pages_root/README.md",
   "zippedOutputDir": "./build_ZIPPED",
   "root": "source",
   "filter": {

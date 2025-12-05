@@ -1,4 +1,3 @@
-
 /**
  * @license MIT
  * Copyright © 2025 Steve Butler (henspace.com)
@@ -24,32 +23,37 @@
 /**
  * @module hcje/images
  * @description
- * Functions to aid with the management of images.
+ * Functions and classes to facilitate the generation of random images which are then provided as data URLs for use in
+ * image elements. Each image is composed of a number of cells. This allows, for example, an image of multiple circles
+ * to be created without the need for any supporting media file.
  */
 
 import * as utils from "./utils.js";
 
 /**
+ * Data provided to a cell painter function.
  * @typedef {Object} CellPainterData
- * @propery {CanvasRenderingContext2D} context - rendering context
- * @property {module:hcje/utils~Dimensions} imageSize
- * @property {module:hcje/utils~RectData} cell
- * @property {Object} custom - additional painter specific data
+ * @propery {CanvasRenderingContext2D} context - Rendering context
+ * @property {module:hcje/utils~Dimensions} imageSize - Dimensions of the image.
+ * @property {module:hcje/utils~RectData} cell - Rectangle data for the cell.
+ * @property {Object} custom - Additional painter specific data.
  */
 
 /**
+ * Function responsible for painting a cell (rectangular area).
  * @typedef {function(CellPainterData)} CellPainter
  */ 
 
 
-
-
 /**
+ * Painter for a text cell.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
- * @param {string} data.custom.fontName - CSS font name
- * @param {string | Array<string>} data.custom.text
- * @param {boolean} [data.custom.fitWidth] - normally text is fitted to the height of a cell.
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to be painted.
+ *  Additional data describing the text are provided in the data.custom property.
+ * @param {string} data.custom.fontName - Font name supplied as a CSS font name
+ * @param {string | Array<string>} data.custom.text - Text to paint.
+ * @param {boolean} [data.custom.fitWidth] - If true, the text is fitted to the width of a cell. Normally it is fitted
+ *   to the height of a cell.
  */
 export function textCellPainter(data) {
   const word = utils.getRandomMember(data.custom?.text ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
@@ -69,10 +73,12 @@ export function textCellPainter(data) {
 }
 
 /**
+ * Painter for an image cell.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
- * @param {HTMLImageElement | SVGImageElement | ImageBitmap} data.custom.image
- * @param {boolean} data.custom.keepAspect
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to be painted. 
+ *  Additional data describing the image are provided in the data.custom property.
+ * @param {HTMLImageElement | SVGImageElement | ImageBitmap} data.custom.image - Image to paint.
+ * @param {boolean} data.custom.keepAspect - If true, maintain the image's aspect ratio.
  */
 export function imageCellPainter(data) {
   if (!data.custom?.image) {
@@ -87,8 +93,9 @@ export function imageCellPainter(data) {
 }
 
 /**
+ * Circle painter.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
  */
 export function circleCellPainter(data) {
   data.context.beginPath();
@@ -102,8 +109,9 @@ export function circleCellPainter(data) {
 }
 
 /**
+ * Triangle painter.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
  */
 export function triangleCellPainter(data) {
   const custom = data.custom ?? {};
@@ -122,8 +130,9 @@ export function triangleCellPainter(data) {
 }
 
 /**
+ * Random path painter.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
  */
 export function randomPathCellPainter(data) {
   const custom = data.custom ?? {};
@@ -150,10 +159,12 @@ export function randomPathCellPainter(data) {
 }
 
 /**
+ * Path painter.
  * @see module:hcje/images~CellPainter
- * @param {module:hcje/images~CellPainterData} data
- * @param {Array<module:hcje/utils~Coordinate> data.custom.points
- * @param {boolean} data.custom.fill
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
+ *  Additional data describing the path and fill are provided in the data.custom property.
+ * @param {Array<module:hcje/utils~Coordinate>} data.custom.points - Array of coordinates describing the path.
+ * @param {boolean} data.custom.fill - If true, the path is filled.
  */
 export function pathCellPainter(data) {
   const points = data.custom.points;
@@ -175,32 +186,36 @@ export function pathCellPainter(data) {
 }
 
 /**
+ * Configuration data for an automatically generated image. The image is created from a 2 dimensional array of square
+ * cells arranged to fit within the image. To provide more variation, the size of each cell can be slightly randomised.
  * @typedef {Object} ImageConfig
- * @property {module:hcje/utils~Dimensions} imageSize
+ * @property {module:hcje/utils~Dimensions} imageSize - Dimensions of the image.
  * @property {CellPainter} cellPainter
  * @property {Object} cellConfig
  * @property {string} [cellConfig.backgroundColor = 'transparent'] - CSS color of background
- * @property {number} [cellConfig.jitter = 0] - proportion of cell size by which a cell can be repositioned.
- * @property {number} [cellConfig.minScale = 1] - minimum scale applied to cell size
- * @property {number} [cellConfig.maxScale = 1] - maximum scale applied to cell size
- * @property {Array<string>} [cellConfig.palette = ['black']] - array of CSS colors used for foreground colors
- * @property {number} [cellConfig.rowCount = 1] - number of rows
- * @property {number} [cellConfig.strokeWidth = 8] - stroke width
- * @property {boolean} [cellConfig.strokeWithinCell = false] - if true, the cell size passed to painters is reduced so 
+ * @property {number} [cellConfig.jitter = 0] - Proportion of the cell size by which a cell can be repositioned.
+ * @property {number} [cellConfig.minScale = 1] - Minimum scale applied to cell size
+ * @property {number} [cellConfig.maxScale = 1] - Maximum scale applied to cell size
+ * @property {Array<string>} [cellConfig.palette = ['black']] - array of possibl CSS colors used for foreground colors
+ * @property {number} [cellConfig.rowCount = 1] - Number of rows into which the image is divided. Cells are square, so
+ *   the number of columns is automatically calculated.
+ * @property {number} [cellConfig.strokeWidth = 8] - Stroke width
+ * @property {boolean} [cellConfig.strokeWithinCell = false] - If true, the cell size passed to painters is reduced so 
  * that strokes up to the border will fit within the original cell size.
- * @property {Object} [custom] - additional information that might be required by a specific painter
+ * @property {Object} [custom] - Additional information that might be required by a specific painter
  */
 
 /**
- * Create a image generator. This can create data urls for automatically generated images.
+ * Class for an image generator. This can create data urls for automatically generated images.
  */
 export class ImageGenerator {
-  /** Cache of dynamic images held as object urls. @type {Map<string, string>} */
+  /** Cache of dynamic images held as object urls.
+   * @type {Map<string, string>} */
   #cache = new Map();
 
   /**
-   * Revoke a url when it's no longer needed and remove from the cache.
-   * @param {string} cacheId
+   * Revoke a previously cached data url and remove from the cache.
+   * @param {string} cacheId - ID of the cached image.
    */
   revokeCacheId(cacheId) {
     if (!this.#cache.has(cacheId)) {
@@ -221,11 +236,12 @@ export class ImageGenerator {
   }
 
   /**
-   * Create an object URL or take from the cache if it exists..
-   * @param {string} cacheId - the image will be held in a cache for future retrieval or revocation. 
-   * @param {ImageConfig} config
-   * @returns {Promise} fulfils to a string containing a blob URL. 
-   * {@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
+   * Create an object URL for an automatically generated image. If the image has been previously cached, the cached
+   * version is returned and a new image is **NOT** returned. 
+   * @param {string} cacheId - ID of the image held in a cache for future retrieval or revocation. 
+   * @param {module:hcje/images/ImageConfig} config - Image configuration.
+   * @returns {Promise} Fulfils to a string containing a blob URL. 
+   * [Blob]{@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
    */
   createObjectUrlOrUseCache(cacheId, config) {
     if (!cacheId) {
@@ -245,10 +261,10 @@ export class ImageGenerator {
   }
   
   /**
-   * Create an object URL.
-   * @param {ImageConfig} config
-   * @returns {Promise} fulfils to a string containing a blob URL. 
-   * {@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
+   * Create an object URL for an automatically generated image.
+   * @param {module:hcje/images~ImageConfig} config - Image configuration.
+   * @returns {Promise} Fulfils to a string containing a blob URL. 
+   * [Blob]{@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
    */
   createObjectUrl(config) {
     const backgroundColor = config.cellConfig?.backgroundColor ?? 'transparent';

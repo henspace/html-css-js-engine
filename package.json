@@ -6,12 +6,14 @@
   "type": "module",
   "scripts": {
     "document": "npm run document-engine & npm run document-tools",
-    "document-engine": "jsdoc ./source/hcje/scripts --destination ./jsdoc/engine -c jsdoc-config.json --readme ./source/hcje/README.md",
-    "document-tools": "jsdoc ./tools --destination ./jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md",
+    "document-engine": "jsdoc ./source/hcje/scripts --destination ./docs/jsdoc/engine -c jsdoc-config.json --readme ./README.md",
+    "document-tools": "jsdoc ./tools --destination ./docs/jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md",
     "test": "node ./tools/testing/runner.js test-config.json",
     "serve-build": "node ./tools/server/server.js 8080 ./build",
     "serve-source": "node ./tools/server/server.js 8080 ./source",
-    "build": "node ./tools/build/build.js ./build-config.json"
+    "build": "node ./tools/build/build.js ./build-config.json",
+    "prebuild": "npm run test",
+    "postbuild": "npm run document"
   },
   "keywords": [
     "game",

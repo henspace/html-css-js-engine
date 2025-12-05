@@ -5,5 +5,15 @@
   "plugins": ["plugins/markdown"],
   "source": {
     "excludePattern": "\\.test\\.js$"
+  },
+  "templates": {
+    "default": {
+      "layoutFile": "./jsdoc_theme/layout.tmpl",
+      "staticFiles": {
+        "include": [
+          "./jsdoc_theme/static"
+        ]
+      }
+    }
   }
 }

@@ -1,4 +1,3 @@
-
 /**
  * @license MIT
  * Copyright © 2025 Steve Butler (henspace.com)
@@ -24,12 +23,14 @@
 /**
  * @module hcje/device
  * @description
- * Various utilities for getting information from the system. This includes the keyboard.
+ * Various utilities for managing the device the app is running on. In this context, the window size is also regarded
+ * as device information as not controlled by the app itself and more represents the environment in which it is
+ * running.
  */
 
 /**
- * Get available dimensions.
- * @param {Element} [element = window] - element to check
+ * Get the dimensions of an element. 
+ * @param {Element} [element = window] - Element to check. Defaults to the window.
  * @returns {{width: number, height: number}}
  */
 export function getDimensions(element) {
@@ -48,12 +49,13 @@ export function getDimensions(element) {
 /** 
  * Get an appropriate scale to allow a rectangle to fit in the body.
  * Typically no element is provided and the body will have been set in css to fit the screen.
- * @param {number} width - rectangle width
- * @param {height} height - rectangle height
- * @param {boolean} cover - should rect cover body. Fits if false
+ * @param {number} width - Rectangle width
+ * @param {height} height - Rectangle height
+ * @param {boolean} cover - Should scale result in the rectangle covering the element or fitting within it. Fits if
+ *   false.
  * @param {Object} options
- * @param {number} options.margin - margin around the rectangle.
- * @param {Element} options.element - element to use for bounds.
+ * @param {number} options.margin - Margin around the rectangle.
+ * @param {Element} options.element - Element to use for bounds.
  *  Defaults to using the window.
  * @returns {number}
  */
@@ -76,11 +78,11 @@ export function getScaleToFitOrCover(width, height, cover, options) {
 /** 
  * Get an appropriate scale to allow a rectangle to fit in the body.
  * The body should have been set in css to fit the screen.
- * @param {number} width - rectangle width
- * @param {height} height - rectangle height
+ * @param {number} width - Rectangle width
+ * @param {height} height - Rectangle height
  * @param {Object} options
- * @param {number} options.margin - margin around rectangle
- * @param {Element} options.element - element to use for bounds.
+ * @param {number} options.margin - Margin around rectangle
+ * @param {Element} options.element - Element to use for bounds.
  *  Defaults to window innerWidth;
  * @returns {number}
  */
@@ -91,11 +93,11 @@ export function getScaleToFit(width, height, options) {
 /** 
  * Get an appropriate scale to allow a rectangle to cover the body.
  * The body should have been set in css to fit the screen.
- * @param {number} width - rectangle width
- * @param {height} height - rectangle height
+ * @param {number} width - Rectangle width
+ * @param {height} height - Rectangle height
  * @param {Object} options
- * @param {number} options.margin - margin around rectangle
- * @param {Element} options.element - element to use for bounds.
+ * @param {number} options.margin - Margin around rectangle
+ * @param {Element} options.element - Element to use for bounds.
  *  Defaults to window innerWidth;
  * @returns {number}
  */
@@ -115,17 +117,21 @@ export function getScaleToCover(width, height, options) {
 
 /**
  * @typedef {Object} KeyEventListener
- * @property {function()} callback - function to call on event
- * @property {boolean} noRepeat - if true key repeats are ignored.
+ * @property {function()} callback - Function to call on event
+ * @property {boolean} noRepeat - If true, key repeats are ignored.
  */
+
 /**
  * Keyboard handler.
  */
 export class Keyboard {
+  /** @type {string} */
   static #VIRTUAL_KEYDOWN_EVENT = 'virtualKeyDown';
 
-  /** Map of listeners. @type {Map<string, function>} */
+  /** Map of listeners.
+   * @type {Map<string, function>} */
   #listeners;
+  
   /**
    * Construct the keyboard handler.
    */ 
@@ -143,16 +149,16 @@ export class Keyboard {
   }
   /**
    * Add keydown listener.
-   * @param {string} key - string representation of key. 
+   * @param {string} key - String representation of key. 
    *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
-   * @param {function()} listener - callback function.
+   * @param {function()} listener - Callback function.
    */
   addDownListener(key, listener) {
     this.#listeners.set(key, listener);
   }
   /**
-   * Remove keydown listener.
-   * @param {string} key - string representation of key. 
+   * Remove keydown listener previously added via a call to [addDownListener]{@link module:hcje/device.Keyboard#addDownListener}.
+   * @param {string} key - String representation of key. 
    */
   removeDownListener(key) {
     this.#listeners.delete(key);
@@ -160,9 +166,9 @@ export class Keyboard {
 
   /**
    * Dispatch a virtual key down event.
-   * @param {string} key - string representation of key. 
+   * @param {string} key - String representation of key. 
    *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
-   * @param {EventTarget} [dispatcher = window] - event target used to dispatch the event.
+   * @param {EventTarget} [dispatcher = window] - Event target used to dispatch the event.
    */
   static simulateKeydown(key, dispatcher = window) {
     dispatcher.dispatchEvent(new CustomEvent(Keyboard.#VIRTUAL_KEYDOWN_EVENT, {detail: {key}}));
@@ -172,8 +178,8 @@ export class Keyboard {
 
 /**
  * Put the element into fullscreen mode.
- * @param {Element} [element = Document.documentElement] - the element to go into fullscreen.
- * @param {Object} [options] - see [requestFullscreen options]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen#options}
+ * @param {Element} [element = Document.documentElement] - The element to go into fullscreen.
+ * @param {Object} [options] - See [requestFullscreen options]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen#options}
  */ 
 export function enterFullscreen(element = document.documentElement, options) {
   if (!document.fullscreenElement) {

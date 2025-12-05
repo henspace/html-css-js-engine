@@ -27,14 +27,47 @@
  * Including this module will automatically handle 'error' and 'unhandledrejection' events if not caught.
  */
 
+/** 
+ * Default message used for fatal errors. The user can select to reload the page or cancel and go back to the previous
+ * page.
+ * @type {string}
+ * @private
+ */ 
+let  fatalMessagePreamble = `Whoops! A serious error has occurred:`;
+let  fatalMessagePostamble = `Do you want to reload the page? If you cancel, we'll try to go back to the previous page.`;
+
+/**
+ * Set fatal error confirmation messages. When a fatal error occurs, the user is given the choice to either
+ * reload the page, the OK option on the standard confirm dialog, or go back to the previous page by selecting CANCEL.
+ * The confirm dialog shows the preamble, followed by an error message, a blank line and then finally the postamble.
+ *
+ * The defaults are shown below:
+ *
+ * + preamble: 'Whoops! A serious error has occurred:'
+ * + postamble: 'Do you want to reload the page? If you cancel, we'll try to go back to the previous page.'
+ *
+ * This method allows you to change these strings to allow localisation.
+ *
+ * @param {string} preamble - The new preamble. Blank or undefined text will be ignored and not change the current value.
+ * @param {string} postamble - The new postamble. Blank or undefined text will be ignored and not change the current value.
+ */
+export function setFatalErrorText(preamble, postamble) {
+  if (preamble) {
+    fatalMessagePreamble = preamble;
+  }
+  if (postamble) {
+    fatalMessagePostamble = postamble;
+  }
+}
+
 /**
  * Show a fatal error. NB we don't use translation in case the error occurred in translation.
  * There is no return as the function either reloads or goes back in the history.
- * @param {string} message
+ * @param {string} message - Message to include
  */
-export function showAndHandleFatalError(message) {
+export function showAndHandleFatalError(message, choiceMessage) {
   console.trace(message);
-  const choice = confirm(`Whoops! A serious error has occurred: ${message}\n\nDo you want to reload the page? If you cancel, we'll try to go back to the previous page.`);
+  const choice = confirm(`${fatalMessagePreamble}\n${message}\n\n${fatalMessagePostamble}`);
   if (choice) {
     location.reload();
   } else {
@@ -48,14 +81,16 @@ export function showAndHandleFatalError(message) {
  * with multiple messages that may not need to be logged.
  */
 export class Logger {
-  /** Log messages @type {string[]} */
+  /** Log messages.
+   * @type {string[]} */
   #log;
-  /** Max number of lines retained @type{number} */
+  /** Max number of lines retained.
+   * @type{number} */
   #maxSize;
 
   /** 
    * Construct the logger. 
-   * @param {number} [maxSize = 100] maximum number of messages retained.
+   * @param {number} [maxSize = 100] Maximum number of messages retained.
    */
   constructor(maxSize = 100) {
     this.#log = [];
@@ -64,7 +99,8 @@ export class Logger {
 
   /**
    * Append message to the queue.
-   * @param {string} message - the text to add to the log.
+   * @param {string} message - The text to add to the log.
+   * @private
    */
   #append(message) {
     if (this.#log.length >= this.#maxSize) {
@@ -74,8 +110,9 @@ export class Logger {
   }
 
   /**
-   * Get the log as markdown list.
-   * @returns {string}
+   * Markdown list representation of the log.
+   * @type {string}
+   * @readonly
    */
   get markdown() {
     let result = '';
@@ -93,7 +130,8 @@ export class Logger {
   }
   /**
    * Normal log message.
-   * @param {string} message - text to add to the log.
+   * The message is still sent to the console.
+   * @param {string} message - Text to add to the log.
    */ 
   log(message) {
     this.#append(message);
@@ -101,15 +139,17 @@ export class Logger {
   }
   /**
    * Debug log message.
-   * @param {string} message - text to add to the log.
+   * The message is still sent to the console.
+   * @param {string} message - Text to add to the log.
    */ 
   debug(message) {
     this.#append(`debug: ${message}`);
-    console.log(message);
+    console.debug(message);
   }
   /**
-   * Debug log message.
-   * @param {string} message - text to add to the log.
+   * Error log message.
+   * The message is still sent to the console.
+   * @param {string} message - Text to add to the log.
    */ 
   error(message) {
     this.#append(`error: ${message}`);
@@ -117,15 +157,17 @@ export class Logger {
   }
   /**
    * Info log message.
-   * @param {string} message - text to add to the log.
+   * The message is still sent to the console.
+   * @param {string} message - Text to add to the log.
    */ 
   info(message) {
     this.#append(`info: ${message}`);
     console.info(message);
   }
   /**
-   * Warn log message.
-   * @param {string} message - text to add to the log.
+   * Warning log message.
+   * The message is still sent to the console.
+   * @param {string} message - Text to add to the log.
    */ 
   warn(message) {
     this.#append(`warn: ${message}`);
@@ -141,7 +183,4 @@ window.addEventListener('error', ((error) => {
 window.addEventListener('unhandledrejection', ((event) => {
   showAndHandleFatalError(`Unhandled promise rejection: ${event.reason}`);
 }));
-
-
-
 

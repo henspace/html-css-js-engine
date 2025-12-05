@@ -23,7 +23,9 @@
 /**
  * @module hcjeLib 
  * @description
- * This adds the hcje library to the window object using the hcjeLib namespace.
+ * This adds the hcje library to the window object using the hcjeLib namespace. Using this approach instead of
+ * importing the [hcje/engine]{@link module:hcje/engine} module can prevent some cross origin issues that may occur. Note 
+ * that only the modules imported by the [hcje/engine]{@link module:hcje/engine} module are included.
  */
 import * as hcje from './hcje.js';
 

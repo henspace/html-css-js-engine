@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Module: hcjeTools/testing/runner</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/custom-theme.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Module: hcjeTools/testing/runner</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Script for running tests. This is intended to be run as a Node.js script.</p>
+<p>Usage:</p>
+<ul>
+<li>runner configFileOrDir
+<ul>
+<li>configFileOrDir: either the path to a folder to be tested or a JSON file of a
+<a href="module-hcjeTools_testing_runner.html#~TestConfig">TestConfig</a> object.</li>
+</ul>
+</li>
+</ul>
+<h2>Testing a module</h2>
+<p>In order to be tested, a module requires a test module to be created and the test module's name must end with <strong>.test.js</strong>.</p>
+<p>As a minimum, the test module must export an array named <strong>tests</strong> containing the
+<a href="module-hcjeTools_testing_runner.html#~TestDefinition">TestDefinition</a> objects.</p>
+<p>It can also export the following optional functions:</p>
+<ul>
+<li>beforeModuleTests(): called at the start of the module test.</li>
+<li>beforeEachTest(): called before each individual test described by its
+<a href="module-hcjeTools_testing_runner.html#~TestDefinition">TestDefinition</a></li>
+<li>afterEachTest(): called after each individual test described by its
+<a href="module-hcjeTools_testing_runner.html#~TestDefinition">TestDefinition</a></li>
+<li>afterModuleTests(): called at the end of the module test.</li>
+</ul>
+<p>Note that each <a href="module-hcjeTools_testing_runner.html#~TestDefinition">TestDefinition</a> is run synchronously to ensure
+tests are run in the order described in the <strong>tests</strong> object.</p>
+<p>The runner script will look for all test modules, <strong>*.test.js</strong>, in the <strong>source</strong> folder and its subfolders and
+run every test described by the exported <strong>tests</strong> objects.</p>
+<h3>Example</h3>
+<p>Here is an example file which would run a single test on the parseInt function.</p>
+<pre class="prettyprint source"><code>import * as utils from './utils.js';
+
+export const tests = [
+ {
+   description: 'parseInt normal',
+   run: () => utils.parseInt('4.5'),
+   expected: 4,
+   compare: '===',
+ }
+];
+</code></pre></div>
+        
+
+        
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line24">line 24</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~writeResultsToConsole"><span class="type-signature">(inner) </span>writeResultsToConsole<span class="signature">(testResults)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Write the results to the console.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>testResults</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-hcjeTools_testing_runner.html#~TestResult">module:hcjeTools/testing/runner~TestResult</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The test results.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line273">line 273</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~writeResultsToFile"><span class="type-signature">(inner) </span>writeResultsToFile<span class="signature">(testResults, resultsFolder, noTimeStamp<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Create a Markdown file of the results.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>testResults</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-hcjeTools_testing_runner.html#~TestResult">module:hcjeTools/testing/runner~TestResult</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The test results.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resultsFolder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Folder to which the results file is written. Results are written to the file
+test-results-timestamp.md</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>noTimeStamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>If true the file is written without the timestamp in the filename.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line301">line 301</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Type Definitions</h3>
+
+        
+                
+<h4 class="name" id="~TestConfig">TestConfig</h4>
+
+
+
+
+<div class="description">
+    <p>Configuration options for testing.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>noTimeStamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>If true, the results file will not include a time stamp in the filename.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>source</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The folder containing the modules to be tested. Testing includes all subfolders.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resultsFile</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The file to which to write the results. If it includes a directory, that will be
+created if necessary.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line154">line 154</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+<h4 class="name" id="~TestDefinition">TestDefinition</h4>
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Description of the test used in results.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>run</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-hcjeTools_testing_runner.html#~runTest">module:hcjeTools/testing/runner~runTest</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The test function to run. This should return the result or a Promise that
+fulfils to the result;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>expected</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The expected result. If this is an Error object, an exception is expected and
+the exception error message is checked against the incoming message.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>check</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-hcjeTools_testing_runner.html#~check">module:hcjeTools/testing/runner~check</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run to check the result.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>compare</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-hcjeTools_testing_runner.html#~compare">module:hcjeTools/testing/runner~compare</a></span>
+|
+
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run to compare the result. If a string is provided
+it is used as a lookup into the standard comparisons:</p>
+<ul>
+<li>&quot;equivalent&quot;: both the expected and result values are converted using <code>JSON.stringify</code> and then a simple equality test used.</li>
+<li>&quot;exception&quot;: an exception is expected to be thrown. A &quot;match&quot; test described below is then used.</li>
+<li>&quot;match&quot;: the expected result should be a RegExp. The result is coerced into a string and then tested using the
+expected result RegExp.</li>
+<li>&quot;==&quot;: a simple equality test is used.</li>
+<li>&quot;===&quot;: a strict equality test is used.</li>
+<li>&quot;=Ndp&quot;: a simple comparison where the result and expected values are fixed to N decimal places before using a
+strict equality test. For convenience, there can be one to three equals signs at the beginning of the string but
+this will not affect the result as both the result and expect values must be numeric and a strict comparison is
+always used.</li>
+</ul></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line74">line 74</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+<h4 class="name" id="~TestModule">TestModule</h4>
+
+
+
+
+<div class="description">
+    <p>Module that is to be tested.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>beforeModuleTests</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run before any tests in the module run.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>beforeEachTest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run before each test.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>afterEachTest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run after each test.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>afterModuleTests</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Function to run after all tests in the module have run.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tests</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="module-hcjeTools_testing_runner.html#~TestDefinition">module:hcjeTools/testing/runner~TestDefinition</a>></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Tests that are to be run</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line163">line 163</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+<h4 class="name" id="~TestResult">TestResult</h4>
+
+
+
+
+<div class="description">
+    <p>Encapsulation of the result of running a test.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Test description</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The actual result returned by the test. This will be undefined if the test failed.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Error</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Error if test failed. This will be undefined if the test passed.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line123">line 123</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+
+    
+
+    
+    <h4 class="name" id="~check"><span class="type-signature"></span>check<span class="signature">(result)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Function used for checking the results from <a href="module-hcjeTools_testing_runner.html#~runTest">module:hcjeTools/testing/runner~runTest</a>.
+Unlike the <a href="module-hcjeTools_testing_runner.html#~compare">Compare</a> function, this is used for checking the result
+itself as opposed to comparing against a specified expected result. This is particularly useful where data used when
+running the test are required for evaluating whether the test was successful. In this case, the result returned from
+the <a href="module-hcjeTools_testing_runner.html#~runTest">RunTest</a> function can return an object containing both the normal
+result and the data required for evaluation. As this object will be passed to the check function, the function will
+be able to determine whether the run was successful.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The result to check.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line102">line 102</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>Thrown if the result fails the checks.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+
+
+
+
+
+            
+                
+
+    
+
+    
+    <h4 class="name" id="~compare"><span class="type-signature"></span>compare<span class="signature">(result, expected)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Function used for comparing the results from <a href="module-hcjeTools_testing_runner.html#~runTest">module:hcjeTools/testing/runner~runTest</a> against an expected result.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The actual result</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>expected</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The expected result</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line115">line 115</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>Thrown if the result does not compare correctly against the expected value.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+
+
+
+
+
+            
+                
+
+    
+
+    
+    <h4 class="name" id="~runTest"><span class="type-signature"></span>runTest<span class="signature">()</span><span class="type-signature"> &rarr; {*|Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Function used for running tests.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="testing_runner.js.html">testing/runner.js</a>, <a href="testing_runner.js.html#line96">line 96</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Either the result itself or a Promise that fulfils to the result.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">*</span>
+|
+
+<span class="param-type">Promise</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+            
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-hcjeTools_build_build.html">hcjeTools/build/build</a></li><li><a href="module-hcjeTools_server_requestListener.html">hcjeTools/server/requestListener</a></li><li><a href="module-hcjeTools_server_server.html">hcjeTools/server/server</a></li><li><a href="module-hcjeTools_testing_runner.html">hcjeTools/testing/runner</a></li><li><a href="module-hcjeTools_testing_utils.html">hcjeTools/testing/utils</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Dec 05 2025 14:57:18 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

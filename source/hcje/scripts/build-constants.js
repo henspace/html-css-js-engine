@@ -23,7 +23,19 @@
 /**
  * @module hcje/build-constants
  * @description
- * Data that is added by the build script
+ * Data that is added by the build script.
+ */
+
+/** @type {Object}
+ * @property {string} author - Author taken from package.json.
+ * @property {string} buildDateIso - Date of the build.
+ * @property {string} buildId - ID based upon the date and time of the build.
+ * @property {string} buildYear - Four digit year of the build.
+ * @property {string} description - Description taken from package.json.
+ * @property {string} licence - Licence taken from package.json.
+ * @property {string} name - Name of the app taken from package.json.
+ * @property {string} version - Version taken from package.json.
+ * @readonly
  */
 export const BUILD_DATA = {
   author: '%%_AUTHOR_%%',

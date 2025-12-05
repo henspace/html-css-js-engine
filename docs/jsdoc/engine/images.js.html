@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: images.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/custom-theme.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: images.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @license MIT
+ * Copyright © 2025 Steve Butler (henspace.com)
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the “Software”),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM,OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/**
+ * @module hcje/images
+ * @description
+ * Functions and classes to facilitate the generation of random images which are then provided as data URLs for use in
+ * image elements. Each image is composed of a number of cells. This allows, for example, an image of multiple circles
+ * to be created without the need for any supporting media file.
+ */
+
+import * as utils from "./utils.js";
+
+/**
+ * Data provided to a cell painter function.
+ * @typedef {Object} CellPainterData
+ * @propery {CanvasRenderingContext2D} context - Rendering context
+ * @property {module:hcje/utils~Dimensions} imageSize - Dimensions of the image.
+ * @property {module:hcje/utils~RectData} cell - Rectangle data for the cell.
+ * @property {Object} custom - Additional painter specific data.
+ */
+
+/**
+ * Function responsible for painting a cell (rectangular area).
+ * @typedef {function(CellPainterData)} CellPainter
+ */ 
+
+
+/**
+ * Painter for a text cell.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to be painted.
+ *  Additional data describing the text are provided in the data.custom property.
+ * @param {string} data.custom.fontName - Font name supplied as a CSS font name
+ * @param {string | Array&lt;string>} data.custom.text - Text to paint.
+ * @param {boolean} [data.custom.fitWidth] - If true, the text is fitted to the width of a cell. Normally it is fitted
+ *   to the height of a cell.
+ */
+export function textCellPainter(data) {
+  const word = utils.getRandomMember(data.custom?.text ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+  let fontSize = data.cell.height;
+  data.context.font = `${fontSize}px ${data.custom?.fontName ?? 'sans-serif'}`;
+  data.context.textBaseline = 'middle';
+  if (data.custom?.fitWidth) {
+    const textMetrics = data.context.measureText(word);
+    fontSize = fontSize * data.cell.width / textMetrics.width;
+    data.context.font = `${fontSize}px ${data.custom?.fontName ?? 'sans-serif'}`;
+  }
+  if (data.custom?.fill) {
+    data.context.fillText(word, data.cell.x, data.cell.y + data.cell.height / 2);
+  } else {
+    data.context.strokeText(word, data.cell.x, data.cell.y + data.cell.height / 2);
+  }
+}
+
+/**
+ * Painter for an image cell.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to be painted. 
+ *  Additional data describing the image are provided in the data.custom property.
+ * @param {HTMLImageElement | SVGImageElement | ImageBitmap} data.custom.image - Image to paint.
+ * @param {boolean} data.custom.keepAspect - If true, maintain the image's aspect ratio.
+ */
+export function imageCellPainter(data) {
+  if (!data.custom?.image) {
+    console.error(`Image not provided in data.custom.image.`);
+    return;
+  }
+  let height = data.cell.height;
+  if (data.custom?.keepAspect &amp;&amp; data.custom.image.width != 0) {
+    height = data.cell.width * data.custom.image.height / data.custom.image.width;
+  }
+  data.context.drawImage(data.custom.image, data.cell.x, data.cell.y, data.cell.width, height);
+}
+
+/**
+ * Circle painter.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
+ */
+export function circleCellPainter(data) {
+  data.context.beginPath();
+  data.context.arc(data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2,
+    data.cell.width / 2, 0, 2 * Math.PI);
+  if (data.custom?.fill) {
+    data.context.fill();
+  } else {
+    data.context.stroke();
+  }
+}
+
+/**
+ * Triangle painter.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
+ */
+export function triangleCellPainter(data) {
+  const custom = data.custom ?? {};
+  custom.points = [
+    {x: data.cell.x, y: data.cell.y + data.cell.height},
+    {x: data.cell.x + data.cell.width / 2, y: data.cell.y},
+    {x: data.cell.x + data.cell.width, y: data.cell.y + data.cell.height},
+  ];
+  const pathData = {
+    context: data.context,
+    imageSize: data.imageSize,
+    cell: data.cell,
+    custom,
+  }
+  pathCellPainter(pathData);
+}
+
+/**
+ * Random path painter.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
+ */
+export function randomPathCellPainter(data) {
+  const custom = data.custom ?? {};
+  let vertices = Math.max(4, data.custom.vertices ?? 0);
+  const points = [];
+  points.push({x: data.cell.x + data.cell.width / 2, y: data.cell.y});
+  points.push({x: data.cell.x + data.cell.width, y: data.cell.y + data.cell.height / 2});
+  points.push({x: data.cell.x + data.cell.width / 2, y: data.cell.y + data.cell.height});
+  points.push({x: data.cell.x, y: data.cell.y + data.cell.height / 2});
+
+  for (let index = 4; index &lt; data.cell.vertices; index++) {
+    const x = utils.getRandomIntInclusive(data.cell.x, data.cell.x + data.cell.width);
+    const y = utils.getRandomIntInclusive(data.cell.y, data.cell.y + data.cell.height);
+    points.push({x, y});
+  }
+  custom.points = utils.shuffle(points);
+  const pathData = {
+    context: data.context,
+    imageSize: data.imageSize,
+    cell: data.cell,
+    custom,
+  }
+  pathCellPainter(pathData);
+}
+
+/**
+ * Path painter.
+ * @see module:hcje/images~CellPainter
+ * @param {module:hcje/images~CellPainterData} data - Data describing the cell to paint.
+ *  Additional data describing the path and fill are provided in the data.custom property.
+ * @param {Array&lt;module:hcje/utils~Coordinate>} data.custom.points - Array of coordinates describing the path.
+ * @param {boolean} data.custom.fill - If true, the path is filled.
+ */
+export function pathCellPainter(data) {
+  const points = data.custom.points;
+  if (!points || points.length &lt; 2) {
+    console.error('Attempt to draw path with less than 2 points ignored.');
+    return;
+  }
+  const path = new Path2D();
+  path.moveTo(points[0].x, points[0].y);
+  for (let index = 1; index &lt; points.length; index++) {
+    path.lineTo(points[index].x, points[index].y)
+  }
+  path.closePath();
+  if (data.custom?.fill) {
+    data.context.fill(path);
+  } else {
+    data.context.stroke(path);
+  }
+}
+
+/**
+ * Configuration data for an automatically generated image. The image is created from a 2 dimensional array of square
+ * cells arranged to fit within the image. To provide more variation, the size of each cell can be slightly randomised.
+ * @typedef {Object} ImageConfig
+ * @property {module:hcje/utils~Dimensions} imageSize - Dimensions of the image.
+ * @property {CellPainter} cellPainter
+ * @property {Object} cellConfig
+ * @property {string} [cellConfig.backgroundColor = 'transparent'] - CSS color of background
+ * @property {number} [cellConfig.jitter = 0] - Proportion of the cell size by which a cell can be repositioned.
+ * @property {number} [cellConfig.minScale = 1] - Minimum scale applied to cell size
+ * @property {number} [cellConfig.maxScale = 1] - Maximum scale applied to cell size
+ * @property {Array&lt;string>} [cellConfig.palette = ['black']] - array of possibl CSS colors used for foreground colors
+ * @property {number} [cellConfig.rowCount = 1] - Number of rows into which the image is divided. Cells are square, so
+ *   the number of columns is automatically calculated.
+ * @property {number} [cellConfig.strokeWidth = 8] - Stroke width
+ * @property {boolean} [cellConfig.strokeWithinCell = false] - If true, the cell size passed to painters is reduced so 
+ * that strokes up to the border will fit within the original cell size.
+ * @property {Object} [custom] - Additional information that might be required by a specific painter
+ */
+
+/**
+ * Class for an image generator. This can create data urls for automatically generated images.
+ */
+export class ImageGenerator {
+  /** Cache of dynamic images held as object urls.
+   * @type {Map&lt;string, string>} */
+  #cache = new Map();
+
+  /**
+   * Revoke a previously cached data url and remove from the cache.
+   * @param {string} cacheId - ID of the cached image.
+   */
+  revokeCacheId(cacheId) {
+    if (!this.#cache.has(cacheId)) {
+      console.error(`Ignored attempt to revoke missing cache Id ${cacheId}`);
+      return;
+    }
+    this.#cache.get(cacheId).revokeObjectURL();
+    this.#cache.delete(cacheId);
+    console.debug(`Revoked cache Id ${cacheId}`);
+  }
+
+  /**
+   * Revoke all cached urls and clear the cache.
+   */
+  revokeAll() {
+    this.#cache.forEach((url)=> url.revokeObjectURL());
+    this.#cache.clear();
+  }
+
+  /**
+   * Create an object URL for an automatically generated image. If the image has been previously cached, the cached
+   * version is returned and a new image is **NOT** returned. 
+   * @param {string} cacheId - ID of the image held in a cache for future retrieval or revocation. 
+   * @param {module:hcje/images/ImageConfig} config - Image configuration.
+   * @returns {Promise} Fulfils to a string containing a blob URL. 
+   * [Blob]{@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
+   */
+  createObjectUrlOrUseCache(cacheId, config) {
+    if (!cacheId) {
+      return Promise.reject(new Error(`Attempt to create an image with no cache id rejected.`));
+    }
+    if (this.#cache.has(cacheId)) {
+      return Promise.resolve(this.#cache.get(cacheId));
+    } else {
+      return this.createObjectUrl(config)
+        .then((url) => {
+          if (cacheId) {
+            this.#cache.set(cacheId, url);
+          }
+          return url;
+        });
+    }
+  }
+  
+  /**
+   * Create an object URL for an automatically generated image.
+   * @param {module:hcje/images~ImageConfig} config - Image configuration.
+   * @returns {Promise} Fulfils to a string containing a blob URL. 
+   * [Blob]{@link https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/blob}
+   */
+  createObjectUrl(config) {
+    const backgroundColor = config.cellConfig?.backgroundColor ?? 'transparent';
+    const jitter = config.cellConfig?.jitter ?? 0;
+    const maxScale = config.cellConfig?.maxScale ?? 1;
+    const minScale = config.cellConfig?.minScale ?? 1;
+    const palette = config.cellConfig?.palette ?? ['black'];
+    const rowCount = config.cellConfig?.rowCount ?? 1;
+    const strokeWidth = config.cellConfig?.strokeWidth ?? 4;
+    const strokeWithinCell = config.cellConfig?.strokeWithinCell ?? false;
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = config.imageSize.width;
+    canvas.height = config.imageSize.height;
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, config.imageSize.width, config.imageSize.height);
+    if (rowCount &lt;= 0) {
+      return Promise.reject(new Error(`Attempt made to create image with invalid rowCount of ${rowCount}`));
+    }
+    const cellSide = config.imageSize.height / rowCount;
+    const columns = Math.ceil(config.imageSize.width / cellSide);
+    for (let row = 0; row &lt; rowCount; row++) {
+      for (let col = 0; col &lt; columns; col++) {
+        const color = utils.getRandomMember(palette);
+        const cellMargin = strokeWithinCell ? strokeWidth / 2 : 0;
+        const cell = {
+          x: cellMargin + col * cellSide + utils.getRandomNumberBetween(-cellSide * jitter, cellSide * jitter),
+          y: cellMargin + row * cellSide + utils.getRandomNumberBetween(-cellSide * jitter, cellSide * jitter),
+          width: utils.getRandomNumberBetween(cellSide * minScale, cellSide * maxScale) - 2 * cellMargin,
+          height: utils.getRandomNumberBetween(cellSide * minScale, cellSide * maxScale) - 2 * cellMargin,
+        }
+        context.fillStyle = color;
+        context.strokeStyle = color;
+        context.lineWidth = strokeWidth;
+        context.lineJoin = 'round';
+        if (!config.cellPainter) {
+          return Promise.reject(new Error(`No cell painter so image cannot be drawn.`));
+        }
+        config.cellPainter({
+          context, 
+          imageSize: config.imageSize, 
+          cell,
+          custom: config.custom
+        })
+      }
+    }
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        console.log(blob);
+        resolve(URL.createObjectURL(blob));
+      });
+    });
+  }
+}
+
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-hcje_audio.html">hcje/audio</a></li><li><a href="module-hcje_build-constants.html">hcje/build-constants</a></li><li><a href="module-hcje_device.html">hcje/device</a></li><li><a href="module-hcje_domTools.html">hcje/domTools</a></li><li><a href="module-hcje_engine.html">hcje/engine</a></li><li><a href="module-hcje_errors.html">hcje/errors</a></li><li><a href="module-hcje_images.html">hcje/images</a></li><li><a href="module-hcje_scenes.html">hcje/scenes</a></li><li><a href="module-hcje_sprites.html">hcje/sprites</a></li><li><a href="module-hcje_storage.html">hcje/storage</a></li><li><a href="module-hcje_translation.html">hcje/translation</a></li><li><a href="module-hcje_utils.html">hcje/utils</a></li><li><a href="module-hcjeLib.html">hcjeLib</a></li></ul><h3>Classes</h3><ul><li><a href="module-hcje_audio-AudioManager.html">AudioManager</a></li><li><a href="module-hcje_device.Keyboard.html">Keyboard</a></li><li><a href="module-hcje_domTools.Button.html">Button</a></li><li><a href="module-hcje_domTools.ButtonControl.html">ButtonControl</a></li><li><a href="module-hcje_domTools.CheckboxControl.html">CheckboxControl</a></li><li><a href="module-hcje_domTools.ElementWrapper.html">ElementWrapper</a></li><li><a href="module-hcje_domTools.GameArea.html">GameArea</a></li><li><a href="module-hcje_domTools.InputControl.html">InputControl</a></li><li><a href="module-hcje_domTools.MenuBar.html">MenuBar</a></li><li><a href="module-hcje_domTools.SpinnerControl.html">SpinnerControl</a></li><li><a href="module-hcje_domTools.TextElement.html">TextElement</a></li><li><a href="module-hcje_domTools.TimeLimitedBusyIndicator.html">TimeLimitedBusyIndicator</a></li><li><a href="module-hcje_domTools-BaseControl.html">BaseControl</a></li><li><a href="module-hcje_errors.Logger.html">Logger</a></li><li><a href="module-hcje_images.ImageGenerator.html">ImageGenerator</a></li><li><a href="module-hcje_sprites.Animator.html">Animator</a></li><li><a href="module-hcje_sprites.BaseSpriteAdjuster.html">BaseSpriteAdjuster</a></li><li><a href="module-hcje_sprites.Bouncer.html">Bouncer</a></li><li><a href="module-hcje_sprites.DomImageSpriteFactory.html">DomImageSpriteFactory</a></li><li><a href="module-hcje_sprites.DomImageSpriteRenderer.html">DomImageSpriteRenderer</a></li><li><a href="module-hcje_sprites.DomTextSpriteRenderer.html">DomTextSpriteRenderer</a></li><li><a href="module-hcje_sprites.Dynamics.html">Dynamics</a></li><li><a href="module-hcje_sprites.ReachTargetXY.html">ReachTargetXY</a></li><li><a href="module-hcje_sprites.Sprite.html">Sprite</a></li><li><a href="module-hcje_sprites.TerminateOutOfBounds.html">TerminateOutOfBounds</a></li><li><a href="module-hcje_sprites.TextureManager.html">TextureManager</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-hcje_domTools-BusyIndicator.html">BusyIndicator</a></li><li><a href="module-hcje_sprites-AnimationTarget.html">AnimationTarget</a></li><li><a href="module-hcje_sprites-DynamicsLimiter.html">DynamicsLimiter</a></li><li><a href="module-hcje_sprites-ImageSpriteFactory.html">ImageSpriteFactory</a></li><li><a href="module-hcje_sprites-SpriteRenderer.html">SpriteRenderer</a></li><li><a href="module-utils-Waiter.html">Waiter</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Dec 05 2025 14:57:16 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

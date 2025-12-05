@@ -124,14 +124,14 @@ class MockLocalStorage {
 
 /**
  * Function to run before testing.
- * @see {module:hcje/testing/runner~TestModule}
+ * @see {module:hcjeTools/testing/runner~TestModule}
  **/
 export function beforeModuleTests() {
   console.log('Running beforeModuleTests function.');
 }
 /**
  * Function to run before each test.
- * @see {module:hcje/testing/runner~TestModule}
+ * @see {module:hcjeTools/testing/runner~TestModule}
  **/
 export function beforeEachTest() {
   console.log('Running beforeEachTest function.');
@@ -140,14 +140,14 @@ export function beforeEachTest() {
 
 /**
  * Function to run after each test.
- * @see {module:hcje/testing/runner~TestModule}
+ * @see {module:hcjeTools/testing/runner~TestModule}
  **/
 export function afterEachTest() {
   console.log('Running afterEachTest function.');
 }
 /**
  * Function to run before testing.
- * @see {module:hcje/testing/runner~TestModule}
+ * @see {module:hcjeTools/testing/runner~TestModule}
  **/
 export function afterModuleTests() {
   console.log('Running afterModuleTests function.');
@@ -157,12 +157,11 @@ export function afterModuleTests() {
 /** Test value @type{Object} */
 const itemValue =  {item1: 99, item2: 'test'};
 
-/** Tests to run.  * @type {Array<module:hcje/utils~TestDefinition>} */
+/** Tests to run.  * @type {Array<module:hcjeTools/utils~TestDefinition>} */
 export const tests = [
   {
     description: 'Exception thrown if no storage key set',
     run: () => {
-      global.localStorag
       return storage.getItem('TEST_VALUE');
     },
     expected: /storageKeyPrefix has not been set/,

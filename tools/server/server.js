@@ -21,7 +21,7 @@
  */
 
 /**
- * @module tools/server/server
+ * @module hcjeTools/server/server
  * @description
  * Simple test server.
  *
@@ -38,7 +38,12 @@
 import * as  http from 'http';
 import * as path from 'node:path';
 import { existsSync, lstatSync } from 'node:fs';
-import { RequestListener } from './request-listener.js';
+import { createRequestListener } from './request-listener.js';
+
+
+
+
+
 
 if (process.argv.length < 4 || process.argv.length > 5) {
   throw new Error('Incorrect arguments.\nUsage server port folder [subfolder]');
@@ -97,12 +102,12 @@ if (!lstatSync(ROOT).isDirectory()) {
 }
 
 /**
- * The server's request listener. @type{module:tools/server/request_listener~RequestListener}
+ * The server's request listener. @type{module:hcjeTools/server/request_listener~RequestListener}
  * @private
  */
-const reqListener = new RequestListener(ROOT);
+const reqListener = createRequestListener(ROOT);
 
-http.createServer(reqListener.listener).listen(PORT, HOST, () => {
+http.createServer(reqListener).listen(PORT, HOST, () => {
   console.log(
     `Server running on http://${HOST}:${PORT}.\nServing from ${ROOT}`
   );

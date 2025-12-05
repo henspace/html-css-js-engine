@@ -21,20 +21,19 @@
  */
 
 /**
- * @module tools/testing/utils
+ * @module hcjeTools/testing/utils
  * @description
- * Very simple tools for unit testing. These are used by {@link module:tools/testing/runner} to test JavaScript files.
- *
- * The module is written so that test scripts do not need to import the module. Importing is handled by the
- * {@link module:tools/testing/runner} script.
- *
+ * Very simple tools for unit testing. These are used by {@link module:hcjeTools/testing/runner} to test JavaScript files.
+ * The module is used soley by the [runner.js]{@link module:hcjeTools/testing/runner} script and there is no need to
+ * import it or call its methods directly from any test script.
  */
 
 
 /**
  * Run test function ensuring result is a promise
- * @param {function()} fn - the function to run.
+ * @param {function()} fn - The function to run.
  * @returns {Promise}
+ * @private
  */
 function runAsPromise(fn) {
   try {
@@ -49,40 +48,29 @@ function runAsPromise(fn) {
   }
 }
 
-/**
- * Function used for running tests.
- * @function module:tools/testing/utils~RunTest
- * @returns {*|Promise} the result. 
- */
-
-/**
- * Function used for comparing the results from {@link module:tools/testing/utils~RunTest} against an expected result.
- * @function module:tools/testing/utils~Compare
- * @param {*} result - the actual result
- * @param {*} expected - the expected result
- * @throws {Error} on failure.
- */
 
 /**
  * Throw error using standardised message format.
- * @param {string} message - start of message which will be followed by the received and expected values.
- * @param {*} received - value received as result of test.
- * @param {*} expected - expected value.
+ * @param {string} message - Start of message which will be followed by the received and expected values.
+ * @param {*} received - Value received as result of test.
+ * @param {*} expected - Expected value.
  * @throws {Error}
  * @private
  */
 function throwFailure(message, received, expected) {
-  throw new Error(`${message}\nReceived: ${received}\nExpected: ${expected}`);
+  throw new Error(`${message}\n\n+ Received: ${received}\n+ Expected: ${expected}`);
 }
 
 /**
  * Test if the result matches a regex.
- * @param {*} result - result to test. This is coerced to a string.
- * @param {RegExp} testRegex - test regex
- * @throws {Error} on test failure.
- * @private
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script by setting an appropriate value for the compare property 
+ *   in the [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition}.
+ * @param {*} result - Result to test. This is coerced to a string.
+ * @param {RegExp} testRegex - Test regex
+ * @throws {Error} Error thrown on test failure.
  */
-function match(result, testRegex) {
+export function match(result, testRegex) {
   if (!(testRegex instanceof RegExp)) {
     throw new Error('This comparision requires a regular expression as the expected result.');
   }
@@ -93,11 +81,13 @@ function match(result, testRegex) {
 
 /**
  * Test if result and error are equal.
- * @param {Error} result
- * @param {Error} expected
- * @return {Promise} fulfils to undefined if equal. Rejects if the result and expected are not regarded as equal.
- * @see module:tools/testing/utils~Compare
- * @private
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script by setting an appropriate value for the compare property 
+ *   in the [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition}.
+ * @param {Error} result - The actual result.
+ * @param {Error} expected - The expected result
+ * @throws {Error} Throws error if the result and expected are not regarded as equal.
+ * @see module:hcjeTools/testing/utils~compare
  */
 
 export function areEqual(result, expected) {
@@ -107,12 +97,33 @@ export function areEqual(result, expected) {
 }
 
 /**
+ * Test if result and error are equal to a defined number of decimal places.
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script by setting an appropriate value for the compare property 
+ *   in the [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition}.
+ * @param {Error} result - The actual result.
+ * @param {Error} expected - The expected result
+ * @param {number} - The number of decimal places.
+ * @throws {Error} Throws error if the result and expected are not equal when fixed to the specified number of decimal
+ * places.
+ * @see module:hcjeTools/testing/utils~compare
+ */
+
+export function areEqualToDp(result, expected, decimalPlaces) {
+  if (result.toFixed(dp) !== expected.toFixed(dp)) {
+    throwFailure(`Result !== expected! to ${dp} decimal places.`, result, expected);
+  }
+}
+
+/**
  * Test if result and error strictly equal.
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script by setting an appropriate value for the compare property 
+ *   in the [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition}.
  * @param {Error} result
  * @param {Error} expected
- * @return {Promise} Fulfils to undefined if equal. Rejects if the result and expected are not regarded as equal.
- * @see module:tools/testing/utils~Compare
- * @private
+ * @throws {Error} Throws error if the result and expected are not regarded as equal.
+ * @see module:hcjeTools/testing/utils~compare
  */
 
 export function areStrictlyEqual(result, expected) {
@@ -123,46 +134,24 @@ export function areStrictlyEqual(result, expected) {
 
 /**
  * Test if result and error equivalent. The test is done by stringify both and then comparing.
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script by setting an appropriate value for the compare property 
+ *   in the [TestDefinition]{@link module:hcjeTools/testing/runner~TestDefinition}.
  * @param {Error} result
  * @param {Error} expected
- * @return {Promise} Fulfils to undefined if equal. Rejects if the result and expected are not regarded as equal.
- * @see module:tools/testing/utils~Compare
- * @private
+ * @throws {Error} Throws error if the result and expected are not regarded as equal.
+ * @see module:hcjeTools/testing/utils~compare
  */
 
 export function areEquivalent(result, expected) {
   return areEqual(JSON.stringify(result), JSON.stringify(expected));
 }
 
-/**
- * @typedef {Object} TestDefinition
- * @property {module:tools/testing/utils~RunTest} run - the test function to run. This should return the result or a promise that
- * fulfils to the result;
- * @property {*} expected - the expected result. If this is an Error object, an exception is expected and 
- * the exception error message is checked against the incoming message.
- * @property {module:tools/testing/utils~Compare|string} compare - function to run to compare the result. If a string is provided
- * it is used as a lookup into the standard comparisons:
- * + "equivalent": both the expected and result values are converted using `JSON.stringify` and then an an exception is expected to be thrown. A "match" test described below is then used.
- * + "exception": an exception is expected to be thrown. A "match" test described below is then used.
- * + "match": the expected result should be a RegExp. The result is coerced into a string and then a simple equality 
- * test used as the comparison.
- * `expected.test(result)` used as the comparison.
- * + "==": a simple equality test is used.
- * + "===": a strict equality test is used.
- */
-
-/**
- * Encapsulation of the result of running a test.
- * @typedef {Object} TestResult
- * @property {string} description - test description
- * @property {*} result - the result of the test. This will be undefined if test failed.
- * @property {Error} error - error if test failed. This will be undefined if test passed.
- */ 
 
 
 
 /**
- * Map of comparisons @type{Map<string,module:tools/testing/utils~Compare>}
+ * Map of comparisons @type{Map<string,module:hcjeTools/testing/utils~compare>}
  * @private
  */ 
 const CompareFunctions = new Map([
@@ -176,15 +165,23 @@ const CompareFunctions = new Map([
 /**
  * Get the compare function. If the value parameter is a function, it is just 
  * returned as the compare function.
- * @param {string|function} [value] - the name of the function. If not provided simple == test is applied.
- * @returns {module:tools/testing/utils~Compare}
+ * @param {string|module:hcjeTools/testing/utils~compare} [value] - A  comparision function or the name of a built-in 
+ * function. If not provided simple == test is applied. 
+ * @returns {module:hcjeTools/testing/utils~compare}
  * @throws {Error} if value is not a valid comparison value.
  * @private
  */
 function getCompareFunction(value) {
   if (!value) {
     return areEqual;
-  } else if (typeof value === 'function') {
+  }
+  if (typeof value === 'string') {
+    const match = value.match(/^={1,3}(\d+)dp$/i);
+    if (match) {
+      return (result, expected) => areEqualToDp(result, expected, match[1]);
+    }
+  }
+  if (typeof value === 'function') {
     return value;
   } else {
     const fn = CompareFunctions.get(value);
@@ -197,19 +194,29 @@ function getCompareFunction(value) {
 
 /** 
  * Run a test.
- * @param {string} moduleName - name of the module under test.
- * @param {module:tools/testing/utils~TestDefinition} definition - details of the test.
- * @returns {module:tools/testing/utils~TestResult}
+ * There is normally no need to use this method directly as it is automatically invoked by the 
+ *   [runner]{@link module:hcjeTools/testing/runner} script.
+ * @param {string} moduleName - Name of the module under test.
+ * @param {module:hcjeTools/testing/runner~TestDefinition} definition - Details of the test.
+ * @returns {Promise} Fulfils to [TestResult]{@link module:hcjeTools/testing/runner~TestResult}
  */ 
 export function it(moduleName, definition) {
   let testResult = {
     description: `${moduleName}: ${definition.description}`,
   };
-  const compare = getCompareFunction(definition.compare);
   console.log(`Run it: ${definition.description}`);
+  const compare = getCompareFunction(definition.compare);
   return runAsPromise(definition.run)
     .then((result) => {
-      compare(result, definition.expected);
+      if (!definition.check && !definition.expected) {
+        throw new Error('You must provide either a check function or expected value in the test.');
+      }
+      if (definition.check) {
+        definition.check(result);
+      } 
+      if (definition.expected) {
+        compare(result, definition.expected);
+      }
       testResult.result = result;
       return testResult;
     })

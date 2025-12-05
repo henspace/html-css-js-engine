@@ -21,7 +21,7 @@
  */
 
 /**
- * @module tools/build/build
+ * @module hcjeTools/build/build
  * @description
  * Script for building the source and intended to be run under Node.js.
  * The size of the resulting script is reduced by removing comments and leading and
@@ -33,61 +33,68 @@
  *
  * ## Configuration file
  * The script should be passed the path to a configuration file as the only command line argument.
- * This is used to control the output. The configuration file is a JSON representation of the following object:
- * ```
- * {
- *   outputDir: string, // path to where the resulting files will be copied.
- *   zippedOutputDir: string, // path to where a zipped copy of the output will be placed.
- *                            // This will include the version from package.json in the file name
- *   root: string, // path to the source folder containing the files to copy to the **outputDir**.
- *   filter: { // detail of filters to restrict the files copied to the output.
- *     includeFiles: { // regular expression detail. Only file names matching the regular expression are included.
- *                     // The regular expression is created as `new RegExp(regex, flags)`.
- *       regex: string, // the string that forms the regular expression.
- *       flags: string // any flags to use with the regular expression.
- *     },
- *     excludeFiles: { // regular expression detail. Any file names matching the regular expression are excluded.
- *       regex: string, // the string that forms the regular expression.
- *       flags: string // any flags to use with the regular expression.
- *     },
- *     excludeDirs: { // regular expression detail. Any directory names matching the regular expression are excluded.
- *       regex: string, // the string that forms the regular expression.
- *       flags: string // any flags to use with the regular expression.
- *     }
- *   },
- *   parserConfig: { // additional detail added to the output for specific file types:
- *     html { // additional text for html files:
- *       prefix: string // text added at the beginning of the output.
- *       suffix: string // text added at the end of the output.
- *     },
- *     js { // additional text for JavaScript files.
- *       prefix: string // text added at the beginning of the output.
- *       suffix: string // text added at the end of the output.
- *     },
- *     md: { // additional text for Markdown files.
- *       prefix: string // text added at the beginning of the output.
- *       suffix: string // text added at the end of the output.
- *     }
- *   },
- *   zipCommand: string // command to run to create the zip file. The text **${zipOutputDir}** and **{zipSourceDir}**
- *                      // are replaced by the path to where the zip file should be written and the path to the files 
- *                      // that should be zipped.
- * }
- * ```
+ * This is used to control the output. The configuration file is a JSON representation of a
+ * [ConfigurationOptions]{@link module:hcjeTools/build/build~ConfigurationOptions} object.
  *
  * ## Template strings
  *
  * When html, js, or md files are processed, the following template strings are replaced. They are all case-sensitive.
  *
- * +  %%_AUTHOR_%% replaced by **author** field  from package.json
- * +  %%_BUILD_DATE_ISO_%% replaced by date of the build in ISO format.
- * +  %%_BUILD_YEAR_%% replaced by year of the build.
- * +  %%_BUILD_ID_%% replaced by a short code based on the date and time of the build.
- * +  %%_DESCRIPTION_%% replaced by the **description** field from package.json.
- * +  %%_LICENCE_%% or %%_LICENSE_%% replaced by the **license** field from package.json.
- * +  %%_NAME_%% replaced by the **name** field from package.json
- * +  %%_VERSION_%% replaced by the **version** field from package.json.
+ * +  **%%\_AUTHOR\_%%** replaced by **author** field  from package.json
+ * +  **%%\_BUILD\_DATE\_ISO\_%%** replaced by date of the build in ISO format.
+ * +  **%%\_BUILD\_YEAR\_%%** replaced by year of the build.
+ * +  **%%\_BUILD\_ID\_%%** replaced by a short code based on the date and time of the build.
+ * +  **%%\_DESCRIPTION\_%%** replaced by the **description** field from package.json.
+ * +  **%%\_LICENCE\_%%** or %%\_LICENSE\_%% replaced by the **license** field from package.json.
+ * +  **%%\_NAME\_%%** replaced by the **name** field from package.json
+ * +  **%%\_VERSION\_%%** replaced by the **version** field from package.json.
  **/
+
+/** 
+ * Configuration object.
+ * @typedef {Object} ConfigurationOptions
+ * @property {string} outputDir - Path to where the resulting files will be copied. Only ./build or ./docs are permitted.
+ * @property {string} subDir - If provided, the build will be placed in **outputDir/subDir**.
+ * @property {string} zippedOutputDir - Path to where a zipped copy of the build output will be placed.
+ *   This will include the version from package.json in the file name. Note, if a subdir is provided, this will
+ *   contain the contents of **outputDir/subDir** not **outputDir**.
+ * @property {string} readme - Path to a readme file that is written to the **outputDir**. This is written pre-build,
+ *   so if the source folder (root) also contains a readme file, and the **subDir** option is not set, the readme
+ *   will be overwritten.
+ * @property {string} root - Path to the source folder containing the files to copy to the **outputDir**.
+ *
+ * @property {Object} filter - Detail of filters to restrict the files copied to the output.
+ * @property {Object} filter.includeFiles - Regular expression detail. Only file names matching the regular expression 
+ *   are included. The regular expression is created as `new RegExp(regex, flags)`.
+ * @property {string} filter.includeFiles.regex - The string that forms the regular expression.
+ * @property {string} filter.includeFiles.flags - Any flags to use with the regular expression.
+ * 
+ * @property {Object} filter.excludeFiles - Regular expression detail. Any file names matching the regular expression are excluded.
+ * @property {string} filter.excludeFiles.regex - The string that forms the regular expression.
+ * @property {string} filter.excludeFiles.flags - Any flags to use with the regular expression.
+ *  
+ * @property {Object} filter.excludeDirs - Regular expression detail. Any directory names matching the regular expression are excluded.
+ * @property {string} filter.excludeDirs.regex - The string that forms the regular expression.
+ * @property {string} filter.excludeDirs.flags - Any flags to use with the regular expression.
+ *
+ * @property {Object} parserConfig - Additional detail added to the output for specific file types:
+ * @property {Object} parserConfig.html - Additional text for html files:
+ * @property {string} parserConfig.html.prefix - Text added at the beginning of the output.
+ * @property {string} parserConfig.html.suffix - Text added at the end of the output.
+ *
+ * @property {Object} parserConfig.js - Additional text for JavaScript files:
+ * @property {string} parserConfig.js.prefix - Text added at the beginning of the output.
+ * @property {string} parserConfig.js.suffix - Text added at the end of the output.
+ *
+ * @property {Object} parserConfig.md - Additional text for Markdown files:
+ * @property {string} parserConfig.md.prefix - Text added at the beginning of the output.
+ * @property {string} parserConfig.md.suffix - Text added at the end of the output.
+ *
+ * @property {string} zipCommand - Command to run to create the zip file. The text **${zipOutputDir}** and 
+ *   **${zipSourceDir}** are replaced by the path to where the zip file should be written and the path to the files 
+ *  that should be zipped.
+ */
+
 import * as fsPromises from 'node:fs/promises';
 import { existsSync, mkdirSync } from 'node:fs';
 import * as path from 'node:path';
@@ -254,10 +261,11 @@ function removeDir(path) {
  * @param {string} sourceDir - source directory
  * @param {string} targetDir - target directory
  * @param {Object} options
- * @param {RegExp} options.includeFiles - filter for file names. Only these are included.
- * @param {RegExp} options.excludeFiles - filter for file names. These are excluded.
- * @param {RegExp} options.excludeDirs - filter for directories that are excluded.
- * @param {Object} options.parserConfig - options for parsers.
+ * @param {RegExp} options.includeFiles - Filter for file names. Only these are included.
+ * @param {RegExp} options.excludeFiles - Filter for file names. These are excluded.
+ * @param {RegExp} options.excludeDirs - Filter for directories that are excluded.
+ * @param {Object} options.parserConfig - Options for parsers.
+ * @param {Object} options.packageDetails - Node package information
  * @returns {Promise}
  * @private
  */
@@ -338,7 +346,7 @@ if (process.argv.length < 3) {
 let configFile = process.argv[2];
 console.log(`Loading options from ${configFile}`);
 let options;
-
+let buildOutputDir;
 
 fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then((json) => {
@@ -347,6 +355,10 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then(() => fsPromises.readFile(configFile, {encoding: 'utf-8'}))
   .then((json) => {
     options = JSON.parse(json);
+    buildOutputDir = options.outputDir;
+    if (options.subDir) {
+      buildOutputDir = path.join(buildOutputDir, options.subDir);
+    }
   })
   .then(() => {
     if (!/^\.\/(?:build|docs)$/.test(options.outputDir)) {
@@ -354,8 +366,16 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     }
     return removeDir(options.outputDir);
   })
-  .then(() => fsPromises.mkdir(options.outputDir, {recursive: true}))
+  .then(() => fsPromises.mkdir(buildOutputDir, {recursive: true}))
   .then(() => fsPromises.mkdir(options.zippedOutputDir, {recursive: true}))
+  .then(() => {
+    if (options.readme) {
+      return copyFile(options.readme, options.outputDir, {
+          parserConfig: options.parserConfig,
+          packageDetails: packageDetails
+      })
+    }
+  })
   .then(() => {
     let includeFilesRegex;
     let excludeFilesRegex;
@@ -369,7 +389,7 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     if (options.filter?.excludeDirs) {
       excludeDirsRegex = new RegExp(options.filter.excludeDirs.regex, options.filter.excludeDirs.flags);
     }
-    return copyDirectory(options.root, options.outputDir, {
+    return copyDirectory(options.root, buildOutputDir, {
         includeFiles: includeFilesRegex,
         excludeFiles: excludeFilesRegex,
         excludeDirs: excludeDirsRegex,
