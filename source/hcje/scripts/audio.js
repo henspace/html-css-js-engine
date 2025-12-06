@@ -1438,7 +1438,7 @@ export const Instrument = {
   SNARE: {
     adsr: [0.01, 0.01, 0.1, 0.01],
     allowMerge: false,
-    maxGain: 1,
+    maxGain: 0.5,
     sustainTime: 0.05,
     sweepFactor: 1,
     waveform: 'noise',
