@@ -514,12 +514,12 @@ function synthToCode(synthDef) {
           lines.push(`      instrument: {`);
           lines.push(`        adsr: [${track.instrument.adsr.join(', ')}],`);
           lines.push(`        allowMerge: ${track.instrument.allowMerge},`);
-          lines.push(`        maxGain: ${track.instrument.maxGain},`);
           lines.push(`        sustainTime: ${track.instrument.sustainTime},`);
           lines.push(`        sweepFactor: ${track.instrument.sweepFactor},`);
           lines.push(`        waveform: '${track.instrument.waveform}',`);
           lines.push(`      },`);
         }
+        lines.push(`      maxGain: ${track.maxGain},`);
         lines.push(`      octave: ${track.octave}`);
       }
       if (track.detune) {
@@ -558,6 +558,7 @@ function editTrack(trackIndex, track) {
     maxValue: 7,
     onChange: (octave) => track.octave = octave
   });
+
 
   const detune = new hcje.domTools.InputControl({
     label: 'Detune cents',
@@ -608,10 +609,10 @@ function editTrack(trackIndex, track) {
   
   const maxGain = new hcje.domTools.InputControl({
     label: 'Max gain %',
-    initialValue: track.instrument.maxGain * 100,
+    initialValue: Math.round(track.maxGain * 100),
     placeholder: 'Max gain',
     constrain: '+INT',
-    onChange: (value) => track.instrument.maxGain = Number.parseInt(value) / 100
+    onChange: (value) => track.maxGain = (Number.parseInt(value) / 100).toFixed(2)
   });
   
   const sweepFactor = new hcje.domTools.InputControl({
@@ -664,24 +665,28 @@ function addSynthesiserTest() {
         instrument: structuredClone(hcje.audio.Instrument.PIANO),
         octave: 4,
         notes: 'CDEFGAB+C',
+        maxGain: 1
       },
       {
         detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.CYMBAL), 
         octave: 7,
-        notes: 'G'
+        notes: 'G',
+        maxGain: 0.2
       },
       {
         detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.SNARE),
         octave: 6,
-        notes: '~G'
+        notes: '~G',
+        maxGain: 1
       },
       {
         detune: 0,
         instrument: structuredClone(hcje.audio.Instrument.DRUM),
         octave: 2,
-        notes: 'C~C~'
+        notes: 'C~C~',
+        maxGain: 1
       },
     ]
   }

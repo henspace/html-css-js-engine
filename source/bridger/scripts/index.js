@@ -134,7 +134,8 @@ const SYNTH_DEFINITION = {
     {
       instrument: hcjeLib.audio.Instrument.SNARE,
       notes: '~G~',
-      octave: 6
+      octave: 6,
+      maxGain: 0.2
     },
     {
       instrument: hcjeLib.audio.Instrument.DRUM,

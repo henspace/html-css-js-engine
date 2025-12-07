@@ -56,6 +56,7 @@ import * as utils from './utils.js';
  * @typedef {Object} SynthTrack 
  * @property {number} detune - Value by which to detune the oscillator. 
  *   See [OscillatorNode detune property]{@link https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/detune}.
+ * @property {number} maxGain - Maximum gain at end of attack. 
  * @property {module:hcje/audio~SynthInstrument} instrument - The instrument for the track.
  * @property {number} octave - The octave for the notes. There are eight available octaves from 0 to 7 with octave
  * 4 tuned to middle A.
@@ -101,7 +102,6 @@ import * as utils from './utils.js';
  * @property {number} sustainTime - Duration in seconds of the sustain in the ADSR envelope.
  * @property {boolean} allowMerge - Merger notes. If true, a note that is played before the previous note starts to
  *   release, will just continue at the previous sustain level if the note is the the same frequency as the previous.
- * @property {number} maxGain - Maximum gain at end of attack. 
  * @property {number} sweepFactor - Sweep the frequency to an end frequency calculated as the starting frequency times
  * the sweepFactor.
  */
@@ -111,6 +111,7 @@ import * as utils from './utils.js';
  * @typedef {Array<number>} SynthDecodedSequence
  * @property {number} detune - detune value for oscillator.
  * @property {Array<number>} freqs - array of frequencies.
+ * @property {number} maxGain - maximum gain applied after attack.
  *
  * @private
  */
@@ -316,7 +317,7 @@ class SequencePlayer {
     this.#gainNode = config.gainNode;
     this.#sourceNode = config.sourceNode;
     this.#merge = !!config.sequence.instrument.merge;
-    this.#maxGain = config.sequence.instrument.maxGain ?? 1;
+    this.#maxGain = config.sequence.maxGain ?? 1;
     this.#position = 0;
     this.#lastFrequency = 0;
     this.#usesAdsr = !!config.sequence.instrument.adsr;
@@ -903,7 +904,7 @@ class AudioPlayerFactory {
     this.#buildFrequencyTables();
     const trackOctave = track.octave ?? 4;
     let detune = track.detune ?? 0;
-    
+    let maxGain = track.maxGain ?? 1; 
     const noteDefns = [...track.notes.matchAll(/(\+*|-*)?([ABCDEFG~](?:[#b])?)(\d)?(\.)?([@$])?/gm)];
     const freqData = [];
     for (const noteDefn of noteDefns) {
@@ -950,7 +951,7 @@ class AudioPlayerFactory {
         }
       }
     }
-    return freqData.length > 0 ? {detune, instrument: track.instrument, freqs: freqData} : null;
+    return freqData.length > 0 ? {detune, instrument: track.instrument, freqs: freqData, maxGain} : null;
   }
   
   /**
@@ -1411,7 +1412,6 @@ export const Instrument = {
   CYMBAL: {
     adsr: [0.01, 0.01, 0.3, 0.3],
     allowMerge: false,
-    maxGain: 0.2,
     sustainTime: 0.05,
     sweepFactor: 2,
     waveform: 'noise',
@@ -1420,7 +1420,6 @@ export const Instrument = {
   DRUM: {
     adsr: [0.01, 0.05, 0.1, 0.2],
     allowMerge: false,
-    maxGain: 1,
     sustainTime: 0.1,
     sweepFactor: 0.8,
     waveform: 'sine',
@@ -1429,7 +1428,6 @@ export const Instrument = {
   PIANO: {
     adsr: [0.01, 0.25, 0.1, 0.1],
     allowMerge: false,
-    maxGain: 1,
     sustainTime: 0.1,
     sweepFactor: 1,
     waveform: 'sine',
@@ -1438,7 +1436,6 @@ export const Instrument = {
   SNARE: {
     adsr: [0.01, 0.01, 0.1, 0.01],
     allowMerge: false,
-    maxGain: 0.5,
     sustainTime: 0.05,
     sweepFactor: 1,
     waveform: 'noise',
