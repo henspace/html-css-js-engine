@@ -10,7 +10,7 @@ Amstrad monitor was black and white, but I've gone with green on black as it jus
 
 ## Version details
 
-+ version 0.0.15 [miuryh0q]
++ version 0.0.16 [mivqkn4n]
 + &copy; 2025 Steve Butler (henspace.com)
 
 ## Credits
