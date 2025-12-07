@@ -1,6 +1,6 @@
 {
   "name": "hcje",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "HTML-CSS-JS-Engine",
   "main": "index.js",
   "type": "module",
