@@ -17,3 +17,8 @@ Despite these limitations, there are some possible advantages:
 + The maintenance of the code does not require ongoing checks for vulnerabilities that may appear over time in external
 libraries.
 
+## Source code
+
+The source code is open source and available in the GitHub
+[html-css-js-engine](https://github.com/henspace/html-css-js-engine) repository.
+

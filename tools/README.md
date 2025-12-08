@@ -17,3 +17,8 @@ data in the source.
 + [server.js]{@link module:hcjeTools/server/server}: a simple web server for test purposes only.
 + [runner.js]{@link module:hcjeTools/testing/runner}: a very simple test script.
 
+## Source code
+
+The source code is open source and available in the GitHub
+[html-css-js-engine](https://github.com/henspace/html-css-js-engine) repository.
+
