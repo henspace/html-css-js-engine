@@ -182,7 +182,7 @@ export class Keyboard {
  * @param {Object} [options] - See [requestFullscreen options]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen#options}
  */ 
 export function enterFullscreen(element = document.documentElement, options) {
-  if (!document.fullscreenElement) {
+  if (!document.fullscreenElement && element.requestFullscreen) {
     element.requestFullscreen()
       .then(() => console.debug(`Into fullscreen`))
       .catch((error) => {
@@ -195,7 +195,7 @@ export function enterFullscreen(element = document.documentElement, options) {
  * Exit fullscreen mode.
  */
 export function exitFullscreen() {
-  if (document.fullscreenElement) {
+  if (document.fullscreenElement && document.exitFullscreen) {
     document.exitFullscreen()
       .then(() => console.debug('Exited fullscreen mode.'))
       .catch((err) => console.error('Failed to exit fullscreen mode:', err));
