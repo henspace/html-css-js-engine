@@ -17,6 +17,11 @@ Despite these limitations, there are some possible advantages:
 + The maintenance of the code does not require ongoing checks for vulnerabilities that may appear over time in external
 libraries.
 
+## Documentation
+
+Check out the [html-css-js-engine documentation](https://henspace.github.io/html-css-js-engine/) for more detailed 
+information and a test game showing the engine in action.
+
 ## Source code
 
 The source code is open source and available in the GitHub
