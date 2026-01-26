@@ -32,5 +32,13 @@
       "suffix": ""
     }
   },
-  "zipCommand": "\"C:\\Program Files\\7-Zip\\7z.exe\" a -tzip ${zipOutputDir} .\\${zipSourceDir}\\*"  
+  "zipOptions": {
+    "linux": {
+      "cmd": "zip ${zipOutputFile} -r .",
+      "cd": true
+    },
+    "win32": {
+      "cmd": "\"C:\\Program Files\\7-Zip\\7z.exe\" a -tzip ${zipOutputFile} .\\${zipSourceFiles}\\*"
+    }
+  }
 }

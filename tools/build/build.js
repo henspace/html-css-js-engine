@@ -57,7 +57,7 @@
  * @property {string} subDir - If provided, the build will be placed in **outputDir/subDir**.
  * @property {string} zippedOutputDir - Path to where a zipped copy of the build output will be placed.
  *   This will include the version from package.json in the file name. Note, if a subdir is provided, this will
- *   contain the contents of **outputDir/subDir** not **outputDir**.
+ *   contain the contents of **outputDir/subDir** not **outputDir**. This directory is relative to the package.
  * @property {string} readme - Path to a readme file that is written to the **outputDir**. This is written pre-build,
  *   so if the source folder (root) also contains a readme file, and the **subDir** option is not set, the readme
  *   will be overwritten.
@@ -89,16 +89,28 @@
  * @property {Object} parserConfig.md - Additional text for Markdown files:
  * @property {string} parserConfig.md.prefix - Text added at the beginning of the output.
  * @property {string} parserConfig.md.suffix - Text added at the end of the output.
- *
- * @property {string} zipCommand - Command to run to create the zip file. The text **${zipOutputDir}** and 
- *   **${zipSourceDir}** are replaced by the path to where the zip file should be written and the path to the files 
- *  that should be zipped.
+ * @property {module:hcjeTools/build/build/ZipOptions} zipOptions - Zip options for different platforms. 
+ */
+
+/**
+ * @typedef {Object} ZipDetail
+ * @property {string} cmd - The command to create the zip file. 
+ * The text values **${zipOutputFile}** and  **${zipSourceFiles}** are respectively replaced by the path to
+ * the resulting zip file and the path to the files that should be zipped.
+ * @property {boolean} cd - Should the current working directory be changed to the location of the source files to be
+ *   zipped when running the zip command.
+ */
+
+/**
+ * @typedef{Object<string, module:hcjeTools/build/build/ZipDetail} ZipOptions - Zip options where the keys should 
+ *  match the [process.platform]{@link https://nodejs.org/api/process.html#processplatform} variable.
  */
 
 import * as fsPromises from 'node:fs/promises';
 import { existsSync, mkdirSync } from 'node:fs';
 import * as path from 'node:path';
 import { exec } from 'node:child_process';
+import * as process from 'node:process';
 
 /**
  * Show usage.
@@ -309,20 +321,40 @@ async function copyDirectory(sourceDir, targetDir, options) {
  * Compress folder. 
  * The zip command is executed. The ${zipSourceDir} and ${zipOutputDir} parameters are replaced by the sourceDir and
  * outputDir parameters.
- * @param {string} zipCommand - command to execute to create the zip file
- * @param {string} sourceDir - path to the files to zip.
- * @param {string} outputDir - path to the location where the zip files should be placed.
+ * @param {module:hcjeTools/build/build/ZipOptions} zipOptions - options to create the zip file
+ * @param {string} sourceFiles - path to the files to zip. This is relative to the package script.
+ * @param {string} outputFile - path to the resulting zip file. This is relative to the package script. 
  * @returns {Promise}
  * @private
  */
-function compressFolder(zipCommand, sourceDir, outputDir) {
-  let cmd = zipCommand.replace(/\${zipSourceDir}/g, sourceDir);
-  cmd = cmd.replace(/\${zipOutputDir}/g, outputDir);
+function compressFolder(zipOptions, sourceFiles, outputFile) {
+  const zipPlatform = zipOptions[process.platform];
+  if (!zipPlatform) {
+    console.error(`No suitable zip options found for the ${process.platform} platform.`);
+    return Promise.resolve()  ;
+  }
+ 
+  if (!zipPlatform.cmd) {
+    console.error(`No suitable zip command found for the ${process.platform} platform.`);
+    return Promise.resolve()  ;
+  }
+  
+  let options = { encoding: 'utf-8' };
+  if (zipPlatform.cd) {
+    console.log(`Run zip in ${sourceFiles}`);
+    options.cwd = sourceFiles;
+    outputFile = path.relative(sourceFiles, outputFile);
+  }
+
+  let cmd = zipPlatform.cmd.replace(/\${zipSourceFiles}/g, sourceFiles);
+  cmd = cmd.replace(/\${zipOutputFile}/g, outputFile);
+  const cwd = zipPlatform.cwd || '.';
   console.log(`Zip command: ${cmd}`);
 
-  return new Promise((resolve) => exec(cmd, {encoding: 'utf-8'}, (err, stdout, stderr) => {
+
+  return new Promise((resolve) => exec(cmd, options, (err, stdout, stderr) => {
     if (err) {
-      console.error(`Failed to compress ${sourceDir}: ${err.message}`);
+      console.error(`Failed to compress ${sourceFiles}: ${err.message}`);
     } else {
       console.log(stdout);
     }
@@ -400,7 +432,7 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then(() => {
     const zipName = (`${packageDetails.name}_${packageDetails.version}`
         .replace(/[.]/g, '_')).toLowerCase();
-    return compressFolder(options.zipCommand, options.outputDir, path.join(options.zippedOutputDir, zipName));
+    return compressFolder(options.zipOptions, buildOutputDir, path.join(options.zippedOutputDir, zipName));
   })
   .then(() => {
     console.log(`Build complete.`); 
