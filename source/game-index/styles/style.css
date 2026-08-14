@@ -1,0 +1,15 @@
+body {
+  background-color:black;
+  color: white;
+  font: 18px Tahoma, Verdana, sans-serif;
+  padding: 1em;
+}
+
+a, a:link, a:visited {
+  color: gold
+}
+
+a:hover, a:active {
+  text-decoration: wavy underline; 
+}
+
