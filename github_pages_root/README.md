@@ -12,8 +12,7 @@ Documentation for the engine and associated build tools can be found below. This
 + [Engine](./jsdoc/engine/index.html)
 + [Associated tools](./jsdoc/tools/index.html)
 
-## Game test 
+## Test games 
 
-A simple test game is provided to show the engine in use.
-
-+ [Bridge over Jupiter](./boj/index.html)
+A number of [simple test games](./games/index.html) are available to show the engine in use. You can check these out to
+investigate the engine further or just to have a bit of fun.

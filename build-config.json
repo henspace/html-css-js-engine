@@ -1,6 +1,6 @@
 {
   "outputDir": "./docs",
-  "subDir": "boj",
+  "subDir": "games",
   "readme": "./github_pages_root/README.md",
   "zippedOutputDir": "./build_ZIPPED",
   "root": "source",
