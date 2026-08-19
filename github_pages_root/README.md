@@ -14,5 +14,5 @@ Documentation for the engine and associated build tools can be found below. This
 
 ## Test games 
 
-A number of [simple test games](./games/index.html) are available to show the engine in use. You can check these out to
+A test game, [Bridge Over Jupiter](./games/index.html) is available to show the engine in use. You can check this out to
 investigate the engine further or just to have a bit of fun.
