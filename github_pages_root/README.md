@@ -1,5 +1,7 @@
 # HTML-CSS-JavaScript-Engine (HCJE)
 
+The code is currently underdevelopment to improve its use as a submodule.
+
 This is the launch page for the HTML-CSS-JavaScript Engine or HCJE. 
 
 The engine itself is designed to help with the creation of simple games that do not use a canvas element. It's more of a
