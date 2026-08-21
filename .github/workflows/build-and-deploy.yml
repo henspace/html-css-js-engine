@@ -29,11 +29,15 @@ jobs:
       - name: Generate Docs Folder
         run: 
           echo "Working directory"
-
           pwd
 
-          echo "Run build script"
+          echo "List working directory"
+          ls -la
+
+          echo "List tools directory"
+          ls -la tools/build
           
+          echo "Run build script"
           node ./tools/build/build.js ./build-github-config.json
       - name: Checkout
         uses: actions/checkout@v4
