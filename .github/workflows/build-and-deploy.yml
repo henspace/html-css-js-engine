@@ -28,14 +28,7 @@ jobs:
     steps:
       - name: Generate Docs Folder
         run: 
-          echo "=== CURRENT WORKING DIRECTORY ==="
-          pwd
-          echo "=== LISTING FILES IN THE ROOT ==="
-          ls -la
-          echo "=== LISTING TOOLS/BUILD DIRECTORY ==="
-          ls -la tools/build || echo "tools/build folder not found!"
-          echo "=== RUNNING NODE SCRIPT ==="
-          node ./tools/build/build.js
+          node ./tools/build/build.js ./build-github-config.json
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages

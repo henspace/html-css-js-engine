@@ -31,14 +31,5 @@
       "prefix": "/* Copyright %%_BUILD_YEAR_%% %%_AUTHOR_%%\n * License: %%_LICENCE_%%\n */\n",
       "suffix": ""
     }
-  },
-  "zipOptions": {
-    "linux": {
-      "cmd": "zip ${zipOutputFile} -r .",
-      "cd": true
-    },
-    "win32": {
-      "cmd": "\"C:\\Program Files\\7-Zip\\7z.exe\" a -tzip ${zipOutputFile} .\\${zipSourceFiles}\\*"
-    }
   }
 }

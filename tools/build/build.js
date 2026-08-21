@@ -563,9 +563,12 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
       });
   })
   .then(() => {
-    const zipName = (`${packageDetails.name}_${packageDetails.version}`
-        .replace(/[.]/g, '_')).toLowerCase();
-    return compressFolder(options.zipOptions, buildOutputDir, path.join(options.zippedOutputDir, zipName));
+    if (options.zipOptions) {
+      const zipName = (`${packageDetails.name}_${packageDetails.version}`
+          .replace(/[.]/g, '_')).toLowerCase();
+      return compressFolder(options.zipOptions, buildOutputDir, path.join(options.zippedOutputDir, zipName));
+    }
+    return;
   })
   .then(() => {
     console.log(`Build complete.`); 
