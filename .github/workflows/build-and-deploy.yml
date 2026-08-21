@@ -1,5 +1,5 @@
 # Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Build docs folder then deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Build then deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
   # Runs on pushes targeting the default branch
@@ -26,27 +26,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate Docs Folder
-        run: 
-          echo "Working directory"
-          pwd
-
-          echo "List working directory"
-          ls -la
-
-          echo "List tools directory"
-          ls -la tools/build
-          
-          echo "Run build script"
-          node ./tools/build/build.js ./build-github-config.json
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Generate build folder
+        run:  node ./tools/build/build.js ./build-github-config.json
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./docs
+          source: ./build
           destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
