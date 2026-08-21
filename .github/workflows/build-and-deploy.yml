@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate Docs Folder
-        run: node tools/build/build.js
+        run: node ./tools/build/build.js
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
