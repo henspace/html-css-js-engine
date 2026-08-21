@@ -28,6 +28,12 @@ jobs:
     steps:
       - name: Generate Docs Folder
         run: 
+          echo "Working directory"
+
+          pwd
+
+          echo "Run build script"
+          
           node ./tools/build/build.js ./build-github-config.json
       - name: Checkout
         uses: actions/checkout@v4
