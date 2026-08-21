@@ -38,17 +38,41 @@
  *
  * ## Template strings
  *
- * When html, js, or md files are processed, the following template strings are replaced. They are all case-sensitive.
+ * When html, js, or md files are processed, the following predefined template strings are replaced. They are all
+ * case-sensitive.
  *
  * +  **%%\_AUTHOR\_%%** replaced by **author** field  from package.json
  * +  **%%\_BUILD\_DATE\_ISO\_%%** replaced by date of the build in ISO format.
  * +  **%%\_BUILD\_YEAR\_%%** replaced by year of the build.
  * +  **%%\_BUILD\_ID\_%%** replaced by a short code based on the date and time of the build.
- * +  **%%\_DESCRIPTION\_%%** replaced by the **description** field from package.json.
- * +  **%%\_LICENCE\_%%** or %%\_LICENSE\_%% replaced by the **license** field from package.json.
- * +  **%%\_NAME\_%%** replaced by the **name** field from package.json
- * +  **%%\_VERSION\_%%** replaced by the **version** field from package.json.
+ * +  **%%\_DESCRIPTION\_%%** replaced by the **description** property from package.json.
+ * +  **%%\_DISPLAY\_NAME\_%%** replaced by the **_customHcje.displayName** property from package.json
+ * +  **%%\_LICENCE\_%%** or %%\_LICENSE\_%% replaced by the **license** property from package.json.
+ * +  **%%\_NAME\_%%** replaced by the **name** property from package.json
+ * +  **%%\_VERSION\_%%** replaced by the **version** property from package.json.
+ * 
+ * Custom template variables can be created by adding custom template values to the package's 
+ * `_customHcje.templateVariables` property. This property should be an array of replacement objects, each with a 
+ * name and value. The name is converted to a template name by adding `%%_` at the front and `_%%` at the end. For
+ * example:
+ *
+ * ```
+ * "customHcje" {
+ *  "templateVariables": [
+ *    {"name": "MY_NAME", "value": "John Doe"}
+ *  ]
+ * }
+ * ```
+ * 
+ * The entry above would result in `%%_MY_NAME_%%` being replaced with `John Doe`.
  **/
+
+/**
+ * @typedef {Object} ReplacementDefn
+ * @property {RegExp|string} pattern - regular expression or string to match.
+ * @property {string} replacement - replacement text which can include capture groups. 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace}
+ */
 
 /** 
  * Configuration object.
@@ -60,7 +84,7 @@
  *   contain the contents of **outputDir/subDir** not **outputDir**. This directory is relative to the package.
  * @property {string} readme - Path to a readme file that is written to the **outputDir**. This is written pre-build,
  *   so if the source folder (root) also contains a readme file, and the **subDir** option is not set, the readme
- *   will be overwritten.
+ *   will be overwritten. It will be renamed to README.md when copied.
  * @property {string} root - Path to the source folder containing the files to copy to the **outputDir**.
  *
  * @property {Object} filter - Detail of filters to restrict the files copied to the output.
@@ -80,15 +104,16 @@
  * @property {Object} parserConfig - Additional detail added to the output for specific file types:
  * @property {Object} parserConfig.html - Additional text for html files:
  * @property {string} parserConfig.html.prefix - Text added at the beginning of the output.
- * @property {string} parserConfig.html.suffix - Text added at the end of the output.
+ * @property {module:hcjeTools/build/build/ReplacementDefn[]} parseConfig.html.replacements - text replacements.
  *
  * @property {Object} parserConfig.js - Additional text for JavaScript files:
  * @property {string} parserConfig.js.prefix - Text added at the beginning of the output.
- * @property {string} parserConfig.js.suffix - Text added at the end of the output.
+ * @property {module:hcjeTools/build/build/ReplacementDefn[]} parseConfig.js.replacements - text replacements.
  *
  * @property {Object} parserConfig.md - Additional text for Markdown files:
  * @property {string} parserConfig.md.prefix - Text added at the beginning of the output.
- * @property {string} parserConfig.md.suffix - Text added at the end of the output.
+ * @property {module:hcjeTools/build/build/ReplacementDefn[]} parseConfig.md.replacements - text replacements.
+ *
  * @property {module:hcjeTools/build/build/ZipOptions} zipOptions - Zip options for different platforms. 
  */
 
@@ -131,7 +156,7 @@ function showUsageAndExit(message) {
  * @returns {string} data with template variables replaced.
  * @private
  */
-function replaceTemplateVariables(data) {
+function replaceTemplateVariables(data, packageDetails) {
   const date = new Date();
   data = data.replace(/%%_AUTHOR_%%/g, packageDetails.author);
   data = data.replace(/%%_BUILD_DATE_ISO_%%/g, date.toISOString().substring(0, 10));
@@ -141,48 +166,102 @@ function replaceTemplateVariables(data) {
   data = data.replace(/%%_LICEN[CS]E_%%/g, packageDetails.license);
   data = data.replace(/%%_NAME_%%/g, packageDetails.name);
   data = data.replace(/%%_VERSION_%%/g, packageDetails.version);
+  
+  data = replaceCustomTemplateVariables(data, packageDetails);
+  return data;
+}
+
+
+/**
+ * Replace custom template variables. It runs through custom template values in the package's 
+ * `_customHcje.templateVariables` property. This property should be an array of replacement objects, each with a 
+ * name and value. The name is converted to a template name by adding `%%_` at the front and `_%%` at the end.
+ * @param {string} data - the string to process.
+ * @param {Object} packageDetails - the object form of package.json.
+ * @returns {string}
+ */
+function replaceCustomTemplateVariables(data, packageDetails) {
+  const replacements = packageDetails._customHcje?.templateVariables;
+  if (!replacements) {
+    return data;
+  }
+  for (const replacement of replacements) {
+    data = data.replace(`%%_${replacement.name}_%%`, replacement.value);
+  }
+  return data;
+}
+
+/**
+ * Implement all replacements defined in array of replacement definitions.
+ * @param {string} data - the string to process.
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} replacements - text replacements.
+ * @returns {string}
+ * @private
+ */
+function implementReplacements(data, replacements) {
+  if (!replacements) {
+    return data;
+  }
+  for (const replacementDefn of replacements) {
+    if (replacementDefn.pattern) {
+      data = data.replace(replacementDefn.pattern, replacementDefn.replacement);
+    } else {
+      console.error(`Replacement definition found with no pattern property.`);
+    }
+  }
   return data;
 }
 
 /**
  * Reduce size of js file.
  * @param {string} data - data to parse 
- * @param {string} prefix - added to start of content
+ * @param {Object} config - configuration options
+ * @param {string} config.prefix - added to start of content
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} config.replacements - text replacements.
  * @param {Object} packageDetails - details from package.json
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} replacements - text replacements.
  * @returns {string}
  * @private
  */ 
-function parseJs(data, prefix, packageDetails) {
+function parseJs(data, config, packageDetails) {
     data = data.replace(/(?:^|[\r\n\t]) *\/\*.*?\*\//gs, '');
     data = data.replace(/^\s+/gm, '');
     data = data.replace(/\s+$/gm, '');
-    data = prefix + data;
+    data = config.prefix + data;
+    data = implementReplacements(data, config.replacements); 
     return replaceTemplateVariables(data, packageDetails);
 }
 
 /**
  * Parse markdown file replacing template variables.
  * @param {string} data - data to parse 
- * @param {string} prefix - added to start of content
+ * @param {Object} config - configuration options
+ * @param {string} config.prefix - added to start of content
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} config.replacements - text replacements.
  * @param {Object} packageDetails - details from package.json
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} replacements - text replacements.
  * @returns {string}
  * @private
  */ 
-function parseMarkdown(data, prefix, packageDetails) {
-    data = prefix + data;
+function parseMarkdown(data, config, packageDetails) {
+    data = config.prefix + data;
+    data = implementReplacements(data, config.replacements); 
     return replaceTemplateVariables(data, packageDetails);
 }
 
 /**
  * Parse html file replacing template variables.
  * @param {string} data - data to parse 
- * @param {string} prefix - added to start of content
+ * @param {Object} config - configuration options
+ * @param {string} config.prefix - added to start of content
+ * @param {module:hcjeTools/build/build/ReplacementDefn[]} config.replacements - text replacements.
  * @param {Object} packageDetails - details from package.json
  * @returns {string}
  * @private
  */ 
-function parseHtml(data, prefix, packageDetails) {
-    data = prefix + data;
+function parseHtml(data, config, packageDetails) {
+    data = config.prefix + data;
+    data = implementReplacements(data, config.replacements); 
     return replaceTemplateVariables(data, packageDetails);
 }
 
@@ -201,7 +280,7 @@ function parseHtml(data, prefix, packageDetails) {
 function copyAndParse(filePath, destFile, options) {
   return fsPromises.readFile(filePath, {encoding: 'utf-8'})
     .then((contents) => {
-      contents = options.parser(contents, options.config.prefix,
+      contents = options.parser(contents, options.config,
         options.packageDetails) ;
       return contents;  
     })
@@ -220,12 +299,14 @@ function copyAndParse(filePath, destFile, options) {
  * @param {Object} options
  * @param {Object} options.parserConfig - options for parsers
  * @param {Object} options.packageDetails - node package information
+ * @param {string} options.targetFilename - defaults to original name
  * @returns {Promise}
  * @private
  */
 function copyFile(filePath, targetDir, options) {
   console.log(`Copy file ${filePath} to ${targetDir}`);
-  const destination = path.join(targetDir, path.basename(filePath));
+  const targetFilename = options?.targetFilename || path.basename(filePath);
+  const destination = path.join(targetDir, targetFilename);
   const extension = path.extname(filePath).toLowerCase();
   let parserOptions;
   switch (extension) {
@@ -318,6 +399,31 @@ async function copyDirectory(sourceDir, targetDir, options) {
 
 
 /**
+ * Copy directories to output directories. The name of the source 
+ * directory is added to the target so that the original structure is 
+ * maintained. If the directory does not exist, it's created.
+ * @param {string[]} sourceDirs - source directories
+ * @param {string[]} targetDirs - target directories (length must match sourceDirs)
+ * @param {Object} options
+ * @param {RegExp} options.includeFiles - Filter for file names. Only these are included.
+ * @param {RegExp} options.excludeFiles - Filter for file names. These are excluded.
+ * @param {RegExp} options.excludeDirs - Filter for directories that are excluded.
+ * @param {Object} options.parserConfig - Options for parsers.
+ * @param {Object} options.packageDetails - Node package information
+ * @returns {Promise}
+ * @private
+ */
+async function copyDirectories(sourceDirs, targetDirs, options) {
+  if (sourceDirs.length != targetDirs.length) {
+    throw new Error("Cannot copy directories as source and target directories lengths are different.");
+  }
+  for (let index = 0; index < sourceDirs.length; index++) {
+    await copyDirectory(sourceDirs[index], targetDirs[index], options);
+  }
+  return Promise.resolve();
+}
+
+/**
  * Compress folder. 
  * The zip command is executed. The ${zipSourceDir} and ${zipOutputDir} parameters are replaced by the sourceDir and
  * outputDir parameters.
@@ -376,9 +482,14 @@ if (process.argv.length < 3) {
 } 
 
 let configFile = process.argv[2];
+
 console.log(`Loading options from ${configFile}`);
 let options;
 let buildOutputDir;
+let hcjeSubmoduleOutputDir;
+
+const HCJE_DESTINATION_FOLDER_NAME = '_hcje'; 
+const HCJE_SUBMODULE = 'html-css-js-engine';
 
 fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then((json) => {
@@ -391,6 +502,9 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     if (options.subDir) {
       buildOutputDir = path.join(buildOutputDir, options.subDir);
     }
+    if (existsSync(HCJE_SUBMODULE)) {
+      hcjeSubmoduleOutputDir = path.join(buildOutputDir, HCJE_DESTINATION_FOLDER_NAME);
+    }
   })
   .then(() => {
     if (!/^\.\/(?:build|docs)$/.test(options.outputDir)) {
@@ -401,10 +515,23 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then(() => fsPromises.mkdir(buildOutputDir, {recursive: true}))
   .then(() => fsPromises.mkdir(options.zippedOutputDir, {recursive: true}))
   .then(() => {
+    if (hcjeSubmoduleOutputDir) {
+      mkdirSync(hcjeSubmoduleOutputDir)
+      if (!options.parserConfig.html.replacments) {
+        options.parserConfig.html.replacements = [];
+      }
+      options.parserConfig.html.replacements.push({
+        pattern: new RegExp(`\.\./${HCJE_SUBMODULE}/source/hcje/`, 'g'),
+        replacement: `./${HCJE_DESTINATION_FOLDER_NAME}/`
+      });
+    }
+  })
+  .then(() => {
     if (options.readme) {
       return copyFile(options.readme, options.outputDir, {
           parserConfig: options.parserConfig,
-          packageDetails: packageDetails
+          packageDetails: packageDetails,
+          targetFilename: 'README.md'
       })
     }
   })
@@ -421,13 +548,19 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     if (options.filter?.excludeDirs) {
       excludeDirsRegex = new RegExp(options.filter.excludeDirs.regex, options.filter.excludeDirs.flags);
     }
-    return copyDirectory(options.root, buildOutputDir, {
+    const sourceDirs = [options.root];
+    const targetDirs = [buildOutputDir];
+    if (hcjeSubmoduleOutputDir) {
+      sourceDirs.push(path.join(HCJE_SUBMODULE, 'source', 'hcje'));
+      targetDirs.push(hcjeSubmoduleOutputDir);
+    }
+    return copyDirectories(sourceDirs, targetDirs, {
         includeFiles: includeFilesRegex,
         excludeFiles: excludeFilesRegex,
         excludeDirs: excludeDirsRegex,
         parserConfig: options.parserConfig,
         packageDetails: packageDetails
-      })
+      });
   })
   .then(() => {
     const zipName = (`${packageDetails.name}_${packageDetails.version}`

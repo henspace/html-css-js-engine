@@ -24,7 +24,6 @@
  * @module hcje/engine
  * @description
  * This is a barrel module aggregating the engine modules and provided for convenience only.
- * Note that not all modules are included.
  *
  * Included:
  *
@@ -34,14 +33,11 @@
  * + hcje/domTools
  * + hcje/errors
  * + hcje/images
+ * + hcje/scenes
  * + hcje/sprites
  * + hcje/storage
  * + hcje/utils
  *
- * Not included:
- *
- * + hcje/images
- * + hcje/scenes
  */
 
 export * as audio from './audio.js';
@@ -50,6 +46,7 @@ export * as device from './device.js';
 export * as domTools from './dom-tools.js';
 export * as errors from './errors.js';
 export * as images from './images.js';
+export * as scenes from './scenes.js';
 export * as sprites from './sprites.js';
 export * as storage from './storage.js';
 export * as utils from './utils.js';
