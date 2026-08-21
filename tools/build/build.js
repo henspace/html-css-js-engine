@@ -522,7 +522,7 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
       }
       options.parserConfig.html.replacements.push({
         pattern: new RegExp(`\.\./${HCJE_SUBMODULE}/source/hcje/`, 'g'),
-        replacement: `./${HCJE_DESTINATION_FOLDER_NAME}/`
+        replacement: `${HCJE_DESTINATION_FOLDER_NAME}/`
       });
     }
   })
