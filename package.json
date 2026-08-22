@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "document": "npm run document-engine & npm run document-tools",
-    "document-engine": "jsdoc ./source/hcje/scripts --destination ./docs/jsdoc/engine -c jsdoc-config.json --readme ./README.md",
-    "document-tools": "jsdoc ./tools --destination ./docs/jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md",
+    "document-engine": "jsdoc ./source/hcje/scripts --destination ./build/jsdoc/engine -c jsdoc-config.json --readme ./README.md",
+    "document-tools": "jsdoc ./tools --destination ./build/jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md",
     "test": "node ./tools/testing/runner.js test-config.json",
     "serve-build": "node ./tools/server/server.js 8080 ./build/games",
     "serve-source": "node ./tools/server/server.js 8080 ./source",
