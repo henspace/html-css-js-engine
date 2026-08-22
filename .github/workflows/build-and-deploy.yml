@@ -30,10 +30,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Build code
         run:  node ./tools/build/build.js ./build-github-config.json
-      - name: Generate JSDoc  
+      - name: Install JSDoc  
         run: npm install -g jsdoc
-        run: jsdoc ./source/hcje/scripts --destination ./build/jsdoc/engine -c jsdoc-config.json --readme ./README.md"
-        run: jsdoc ./tools --destination ./build/jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md"
+      - name: Generate engine docs  
+        run: jsdoc ./source/hcje/scripts --destination ./build/jsdoc/engine -c jsdoc-config.json --readme ./README.md
+      - name: Generate tools docs  
+        run: jsdoc ./tools --destination ./build/jsdoc/tools -c jsdoc-config.json --readme ./tools/README.md
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
