@@ -1,7 +1,5 @@
 # HTML-CSS-JavaScript-Engine (HCJE)
 
-The code is currently underdevelopment to improve its use as a submodule.
-
 This is the launch page for the HTML-CSS-JavaScript Engine or HCJE. 
 
 The engine itself is designed to help with the creation of simple games that do not use a canvas element. It's more of a
@@ -58,8 +56,7 @@ outputFolder
 
 To utilise the build tools when the engine has been incorporated as a submodule, the following scripts can be used.
 The `prebuild`, `postbuild` and `document` scripts assume [JSDoc](https://jsdoc.app/) has been installed, but those
-scripts are not required for the build. The build output is directed to a folder called `docs` to facilite serving the
-resulting build via [GitHub Pages](https://docs.github.com/en/pages).
+scripts are not required for the build. 
 
 ```
 "scripts": {
@@ -75,5 +72,5 @@ resulting build via [GitHub Pages](https://docs.github.com/en/pages).
 
 ## Test games 
 
-A test game, [Bridge Over Jupiter](./games/index.html) is available to show the engine in use. You can check this out to
-investigate the engine further or just to have a bit of fun.
+A test game, [Bridge Over Jupiter](./games/index.html) is available to show the engine in use. You can check this out
+to investigate the engine further or just to have a bit of fun.

@@ -13,7 +13,7 @@ of **JSDoc**, which is used to generate the documentation. This constraint does 
 
 Despite these limitations, there are some possible advantages:
 
-+ Testing can be undertaken by serving the source code directly without waiting for any intermediate packaging process.
++ Testing can be undertaken by serving the source code directly without waiting for any intermediate build process.
 + The maintenance of the code does not require ongoing checks for vulnerabilities that may appear over time in external
 libraries.
 
