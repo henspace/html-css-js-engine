@@ -566,7 +566,7 @@ export class Sprite {
  */
 
 /**
- * Bouncer class which adjusts the [Dynamics]{@link module:hcje/sprites.Dynamics] of a [Sprite]{@link module:hcje/sprites.Sprite]
+ * Bouncer class which adjusts the [Dynamics]{@link module:hcje/sprites.Dynamics} of a [Sprite]{@link module:hcje/sprites.Sprite}
  * so that it bounces within predefined bounds.
  * @implements {module:hcje/sprites~DynamicsLimiter}
  */
