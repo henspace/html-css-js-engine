@@ -23,9 +23,32 @@
 /**
  * @module hcje/sprites
  * @description
- * Module providing handling for sprite sheets created by
+ * Module providing handling for sprite sheets typically created by
  * [TexturePacker]{@link https://www.codeandweb.com/texturepacker}. The sprite sheet must have been exported using the 
- * JSON (Hash) format and sprite rotation within the sheet is **NOT** supported.
+ * JSON (Hash) format: trimming and sprite rotation within the sheet is **NOT** supported. Only part of the information
+ * in the Hash format JSON file is used. If you are not using TexturePacker, you can create the JSON file manually by
+ * referring to 
+ * [PackedSpritesTextureData]{@link module:hcje/sprites~PackedSpritesTextureData} for details of the object to be
+ * encoded in the file.
+ */
+
+/** 
+ * Frame object encoded using JSON within a texture's data file to provide information about an individual frame.
+ * @typedef {Object} PackedSpritesFrameData
+ * @property {Object} frame - information locating the sprite image in the texture.
+ * @property {number} frame.x - x position of the sprite image in the texture.
+ * @property {number} frame.y - y position of the sprite image in the texture.
+ * @property {number} frame.w - width of the sprite image in the texture.
+ * @property {number} frame.h - height of the sprite image in the texture.
+ */
+
+/**
+ * Object encoded using JSON within a texture's data file and used for extrating individual frames from the texture
+ * file. The object is a subset of the object contained within the JSON (Hash) data file created by
+ * [TexturePacker]{@link https://www.codeandweb.com/texturepacker}.
+ * @typedef {Object} PackedSpritesTextureData
+ * @property {Object<string, module:hcje/sprites~PackedSpritesFrameData>} frames - root object containing individual
+ * data for extracting individual sprite images from a texture.
  */
 
 import * as utils from './utils.js';
@@ -172,7 +195,7 @@ export class DomTextSpriteRenderer extends domTools.TextElement {
  * @param {string} txt - The contents of the sprite.
  * @param {Object} options - Configuration options.
  * @param {boolean} options.markdown - If true, the txt property is parsed as markdown.
- * @param {module:hcje/utils~Dimensions} dimensions - Sprite size. Width must be provided. Use 0 for the height if you
+ * @param {module:hcje/utils~Dimensions} options.dimensions - Sprite size. Width must be provided. Use 0 for the height if you
  *   want this to size automatically based on the text to be rendered.
  * @returns {module:hcje/sprites.Sprite}
  */
@@ -747,8 +770,9 @@ export class TextureManager {
 
   /**
    * Construct the texture manager.
-   * @param {Object} data - Texture data from the JSON file created by the file created by TexturePacker JSON (Hash)
-   * export. Rotation of sprites in the texture is not permitted.
+   * @param {module:hcje/sprites~PackedSpritesTextureData} data - Texture data from the JSON file typically created 
+   * from the file exported by TexturePacker in JSON (Hash) format.
+   * export. Rotation and trimming of sprites in the texture is not permitted.
    * @param {HTMLImageElement} texture - The sprite sheet texture.
    */
   constructor(data, texture, spriteFactory) {
@@ -788,7 +812,7 @@ export class TextureManager {
    * is returned using the baseName. Its state name is set to 'anon'.
    * @param {string} stateConfigs[].name - Name of the state.
    * @param {number} stateConfigs[].interval - Update interval in ms.
-   * @param {module:hcje/sprites~CycleTypeEnumValue} stateConfigs[].cycleType - Yype of animation cycle
+   * @param {module:hcje/sprites~CycleTypeEnumValue} stateConfigs[].cycleType - Type of animation cycle
    * @param {module:hcje/sprites~frameNameGenerator} [nameGen] - The frame name generator. If not provided, the frame
    * index is simply appended to the base name in front of the extension.
    * @returns {module:hcje/sprites.Sprite}
