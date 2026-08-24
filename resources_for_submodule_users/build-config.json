@@ -1,0 +1,41 @@
+{
+  "outputDir": "./build",
+  "subDir": "",
+  "readme": "README.md",
+  "zippedOutputDir": "",
+  "root": "source",
+  "filter": {
+    "includeFiles": {
+      "regex": "[.](?:css|html|jpeg|jpg|js|json|png|md|mp3|txt)$",
+      "flags": "i"
+    },
+    "excludeFiles": {
+      "regex": "(?:^[_.]|\\.test\\.(?:html|js)$)",
+      "flags": ""
+    },
+    "excludeDirs": {
+      "regex": "^[_.]",
+      "flags": ""
+    }
+  },
+  "parserConfig": {
+    "html": {
+      "prefix": ""
+    },
+    "md": {
+      "prefix": ""
+    },
+    "js": {
+      "prefix": "/* Copyright %%_BUILD_YEAR_%% %%_AUTHOR_%%\n * License: %%_LICENCE_%%\n */\n"
+    }
+  },
+  "zipOptions": {
+    "linux": {
+      "cmd": "zip ${zipOutputFile} -r .",
+      "cd": true
+    },
+    "win32": {
+      "cmd": "\"C:\\Program Files\\7-Zip\\7z.exe\" a -tzip ${zipOutputFile} .\\${zipSourceFiles}\\*"
+    }
+  }
+}

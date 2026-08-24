@@ -179,6 +179,7 @@ function replaceTemplateVariables(data, packageDetails) {
  * @param {string} data - the string to process.
  * @param {Object} packageDetails - the object form of package.json.
  * @returns {string}
+ * @private
  */
 function replaceCustomTemplateVariables(data, packageDetails) {
   const replacements = packageDetails._customHcje?.templateVariables;
@@ -469,6 +470,28 @@ function compressFolder(zipOptions, sourceFiles, outputFile) {
 }
 
 /**
+ * Create a zip file.
+ * @param {string} folderToZip - the directory containing the files to zip.
+ * @param {string} zippedOutputDir - directory in which the fil should be placed.
+ * @param {module:hcjeTools/build/build/ZipOptions} zipOptions - options for zip files from the configuration file.
+ * @private
+ */ 
+function createZipFile(folderToZip, zippedOutputDir, zipOptions) {
+  if (zippedOutputDir && zipOptions) {
+    return fsPromises.mkdir(options.zippedOutputDir, {recursive: true})
+      .then(() => {
+        const zipName = (`${packageDetails.name}_${packageDetails.version}`
+            .replace(/[.]/g, '_')).toLowerCase();
+        return compressFolder(options.zipOptions, folderToZip, path.join(options.zippedOutputDir, zipName));
+      });
+  } else {
+    console.log("No zip file created. To create a zip file both zippedOutputDir and zipOptions need to be set in the configuration file.");
+    return Promise.resolve();
+  }
+}
+
+
+/**
  * Details of the package. This will be taken from package.json
  * @type {Object}
  * @private
@@ -487,9 +510,10 @@ console.log(`Loading options from ${configFile}`);
 let options;
 let buildOutputDir;
 let hcjeSubmoduleOutputDir;
+let hcjeSubmoduleSourceDir;
 
 const HCJE_DESTINATION_FOLDER_NAME = '_hcje'; 
-const HCJE_SUBMODULE = 'html-css-js-engine';
+const HCJE_SUBMODULE_NAME = 'html-css-js-engine';
 
 fsPromises.readFile('package.json', {encoding: 'utf-8'})
   .then((json) => {
@@ -502,8 +526,13 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     if (options.subDir) {
       buildOutputDir = path.join(buildOutputDir, options.subDir);
     }
-    if (existsSync(HCJE_SUBMODULE)) {
+    hcjeSubmoduleSourceDir = path.join(options.root, HCJE_SUBMODULE_NAME, 'source', 'hcje');
+    console.log(`Looking for submodule source in ${hcjeSubmoduleSourceDir}`);
+    if (existsSync(hcjeSubmoduleSourceDir)) {
+      console.log('Submodule found.');
       hcjeSubmoduleOutputDir = path.join(buildOutputDir, HCJE_DESTINATION_FOLDER_NAME);
+    } else {
+      console.log('No submodule found.');
     }
   })
   .then(() => {
@@ -513,7 +542,6 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     return removeDir(options.outputDir);
   })
   .then(() => fsPromises.mkdir(buildOutputDir, {recursive: true}))
-  .then(() => fsPromises.mkdir(options.zippedOutputDir, {recursive: true}))
   .then(() => {
     if (hcjeSubmoduleOutputDir) {
       mkdirSync(hcjeSubmoduleOutputDir)
@@ -521,7 +549,7 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
         options.parserConfig.html.replacements = [];
       }
       options.parserConfig.html.replacements.push({
-        pattern: new RegExp(`\.\./${HCJE_SUBMODULE}/source/hcje/`, 'g'),
+        pattern: new RegExp(`(\./)?${HCJE_SUBMODULE_NAME}/source/hcje/`, 'g'),
         replacement: `${HCJE_DESTINATION_FOLDER_NAME}/`
       });
     }
@@ -551,7 +579,7 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
     const sourceDirs = [options.root];
     const targetDirs = [buildOutputDir];
     if (hcjeSubmoduleOutputDir) {
-      sourceDirs.push(path.join(HCJE_SUBMODULE, 'source', 'hcje'));
+      sourceDirs.push(hcjeSubmoduleSourceDir);
       targetDirs.push(hcjeSubmoduleOutputDir);
     }
     return copyDirectories(sourceDirs, targetDirs, {
@@ -562,16 +590,11 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
         packageDetails: packageDetails
       });
   })
-  .then(() => {
-    if (options.zipOptions) {
-      const zipName = (`${packageDetails.name}_${packageDetails.version}`
-          .replace(/[.]/g, '_')).toLowerCase();
-      return compressFolder(options.zipOptions, buildOutputDir, path.join(options.zippedOutputDir, zipName));
-    }
-    return;
-  })
+  .then(() => createZipFile(buildOutputDir, options.zippedOutputDir, options.zipOptions))
   .then(() => {
     console.log(`Build complete.`); 
   });
+
+
 
 
