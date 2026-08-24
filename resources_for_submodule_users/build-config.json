@@ -14,7 +14,7 @@
       "flags": ""
     },
     "excludeDirs": {
-      "regex": "^[_.]",
+      "regex": "^([_.]|html-css-js-engine)",
       "flags": ""
     }
   },

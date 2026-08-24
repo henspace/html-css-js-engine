@@ -350,7 +350,7 @@ export class Sprite {
   /**
    * Adjuster used by the sprite. 
    * When changing the property, if there is a current adjuster, it is automatically marked as complete with an
-   * undefined reason; however, its **onCompletion* function will not be called. If you need the function to be called, 
+   * undefined reason; however, its **onCompletion** function will not be called. If you need the function to be called, 
    * call the current adjuster's **markComplete** method first before changing this property.
    * @type {module:hcje/sprites.BaseSpriteAdjuster}
    */
@@ -360,7 +360,7 @@ export class Sprite {
 
   /**
    * Set the adjuster. If there is a current adjuster, it is automatically marked as complete with an undefined 
-   * reason; however, its **onCompletion* function will not be called. If you need the function to be called, 
+   * reason; however, its **onCompletion** function will not be called. If you need the function to be called, 
    * call the adjuster's **markComplete** method first.
    * @param {module:hcje/sprites.BaseSpriteAdjuster} adjuster - New adjuster to use.
    * @ignore
@@ -540,7 +540,8 @@ export class Sprite {
   }
 
   /**
-   * The current sprite position. Changes are instantaneous and can later be modified by the dynamics.
+   * The current sprite position. Changes are instantaneous and can later be modified by the dynamics. Position is
+   * the top-left corner of the sprite.
    * @type {module:hcje/utils~PositionData}
    */
   get position() {
