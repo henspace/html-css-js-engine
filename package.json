@@ -2,8 +2,8 @@
   "name": "hcje",
   "version": "0.0.17",
   "description": "HTML-CSS-JS-Engine",
-  "main": "index.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "document": "npm run document-engine & npm run document-tools",
     "document-engine": "jsdoc ./source/hcje/scripts --destination ./build/jsdoc/engine -c jsdoc-config.json --readme ./README.md",

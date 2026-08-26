@@ -26,7 +26,9 @@
  * Module providing handling for sprite sheets typically created by
  * [TexturePacker]{@link https://www.codeandweb.com/texturepacker}. The sprite sheet must have been exported using the 
  * JSON (Hash) format: trimming and sprite rotation within the sheet is **NOT** supported. Only part of the information
- * in the Hash format JSON file is used. If you are not using TexturePacker, you can create the JSON file manually by
+ * in the Hash format JSON file is used. CodeAndWeb, the creators of TexturePacker also have a free online version
+ * [Free Sprite Sheet Packer](https://www.codeandweb.com/free-sprite-sheet-packer) which can also be used but without
+ * the efficiency of the full version. If you are not using TexturePacker, you can create the JSON file manually by
  * referring to 
  * [PackedSpritesTextureData]{@link module:hcje/sprites~PackedSpritesTextureData} for details of the object to be
  * encoded in the file.
@@ -55,12 +57,13 @@ import * as utils from './utils.js';
 import * as domTools from './dom-tools.js';
 
 /**
- * Frame name generator for sprite names in a texture.
+ * Frame name generator for sprite names in a texture. 
  * @callback frameNameGenerator
  * @param {string} baseName - The string from which the final name is created.
  * @param {string} state - The state of the sprite. E.g. idle, walking etc.
  * @param {number} index - The 0 based frame index.
- * @returns {string} The frame name.
+ * @returns {string} The frame name which corresponds to the key in the `frames` object in
+ * [PackedSpritesTextureData]{@link module:hcje/sprites~PackedSpritesTextureData} JSON file.
  */ 
 
 /**
@@ -80,7 +83,7 @@ import * as domTools from './dom-tools.js';
 
 /**
  * Type of animation cycles.
- * @enum {CycleTypeEnumValue}
+ * @enum {CycleType}
  * @property {CycleTypeEnumValue} NONE - No cycling of the animation.
  * @property {CycleTypeEnumValue} LOOP - When the last frame is reached, jump back to the first frame and continue.
  * @property {CycleTypeEnumValue} OSCILLATE - When the last frame is reached, animate back down the frames to the
@@ -814,7 +817,8 @@ export class TextureManager {
    * @param {string} stateConfigs[].name - Name of the state.
    * @param {number} stateConfigs[].interval - Update interval in ms.
    * @param {module:hcje/sprites~CycleTypeEnumValue} stateConfigs[].cycleType - Type of animation cycle
-   * @param {module:hcje/sprites~frameNameGenerator} [nameGen] - The frame name generator. If not provided, the frame
+   * @param {module:hcje/sprites~frameNameGenerator} [nameGen = module:hcje/sprites.TextureManager#createFrameName] - 
+   * The frame name generator. If not provided, the default frame name generator is used.
    * index is simply appended to the base name in front of the extension.
    * @returns {module:hcje/sprites.Sprite}
    * @throws {Error} Error thrown if **spriteFactory** property not set.
@@ -885,7 +889,7 @@ function loadImage(source) {
  * @param {string} dataUrl - Url used to retrieve the spritesheet data file.
  * @param {string} imagesUrl - Url used to retrieve the associated spritesheet.
  * @param {module:hcje/domTools~BusyIndicator} [busyIndicator] -Indicator to show loading.
- * @returns {Promise} Fulfils to {module:hcje/sprites~TextureManager}; undefined on error.
+ * @returns {Promise} Fulfils to {@link module:hcje/sprites.TextureManager}; undefined on error.
  */
 export function loadSpriteSheet(dataUrl, textureUrl, busyIndicator) {
   busyIndicator?.start();

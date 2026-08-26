@@ -1566,16 +1566,16 @@ export class TimeLimitedBusyIndicator {
    * otherwise the indicator will time out and the user will be offered the chance to navigate back in history or reload.
    * @param {Object} options
    * @param {string} [options.label = 'Busy'] - Label added as an **aria-label**.
-   * @param {number} options.timeoutS - Timeout in seconds.
-   * @param {string} options.timeoutMessage - Message to display on timeout. This should include a prompt that that
+   * @param {number} [options.timeoutS = 15] - Timeout in seconds.
+   * @param {string} [options.timeoutMessage = default message] - Message to display on timeout. This should include a prompt that that
    * if OK is selected the page will wait, and if cancel is selected the page will reload.
    * The default message, which has no localisation, is
    * "The last action is taking too long. Do you want to wait? If you cancel, the game will reload.";
    */ 
   constructor(options) {
-    this.#label = options.label ?? 'Busy';
-    this.#timeoutS = options.timeoutS ?? 15;
-    this.#timeoutMessage = options.timeoutMessage ??
+    this.#label = options?.label ?? 'Busy';
+    this.#timeoutS = options?.timeoutS ?? 15;
+    this.#timeoutMessage = options?.timeoutMessage ??
         'The last action is taking too long. Do you want to wait? If you cancel, the game will reload.';
     this.#started = false;
   }

@@ -1,0 +1,36 @@
+{"frames": {
+
+"player_eating0.png":
+{
+	"frame": {"x":1,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"player_eating1.png":
+{
+	"frame": {"x":51,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
+"player_eating2.png":
+{
+	"frame": {"x":101,"y":1,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "sprite-sheet.png",
+	"format": "RGBA8888",
+	"size": {"w":150,"h":50},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:1907b6c970bce9ad5e2a426ea6df5bb4:9039e33a651b8f07a401981581d616ad:4cb984b15aa0f50ff47c18de1fc08384$"
+}
+}
