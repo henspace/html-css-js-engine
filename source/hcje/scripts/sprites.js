@@ -676,7 +676,6 @@ export class Dynamics {
 
   /**
    * Construct the instance setting all motion to zero.
-   * @param {module:hcje/sprites.Sprite} sprite - Sprite that is controlled.
    * @param {module:hcje/sprites~DynamicsLimiter} [limiter] - Limiter to constrain dynamics.
    */ 
   constructor(limiter) {

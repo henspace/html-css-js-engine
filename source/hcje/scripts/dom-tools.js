@@ -166,7 +166,7 @@ export function createDivider(config) {
  * @property {string} labelOn - The label for toggle buttons if on.
  * @property {string} className - Additional class name applied to the button's container.
  * @property {module:hcje/domTools~ButtonListener} onClick - Listener called on the click event.
- * @property {number} repeatInterval - Set the button to repeat with the specified interval in ms. If the button is
+ * @property {module:hcje/domTools~ButtonRepeatInterval} interval - Set the button to repeat with the specified interval in ms. If the button is
  * set as a toggle button, this is ignored. Note that if a repeat interval is provided, a 
  * button repeater is used for handling events. Instead of just using 
  * the **click** event, the repeater will use [Pointer events]{@link https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events}
@@ -500,7 +500,7 @@ class ButtonRepeater {
   }
 
   /**
-   * End the repetition. This handles the timeout and interval ids separately, although as the id share the same pool,
+   * End the repetition. This handles the timeout and interval ids separately, although as the ids share the same pool,
    * they could have shared the same property. They have only be separated for clarity; see 
    * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/clearInterval}.
    * @private

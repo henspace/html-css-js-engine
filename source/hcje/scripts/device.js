@@ -150,8 +150,8 @@ export class Keyboard {
   /**
    * Add keydown listener.
    * @param {string} key - String representation of key. 
-   *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
-   * @param {function()} listener - Callback function.
+   *   See the [KeyboardEvent.key values]{@link https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_value}.
+   * @param {module:hcje/device~KeyEventListener} listener - Listener for the key press.
    */
   addDownListener(key, listener) {
     this.#listeners.set(key, listener);
@@ -167,7 +167,7 @@ export class Keyboard {
   /**
    * Dispatch a virtual key down event.
    * @param {string} key - String representation of key. 
-   *   See the [KeyboardEvent.key property]{@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key}.
+   *   See the [KeyboardEvent.key values]{@link https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_value}.
    * @param {EventTarget} [dispatcher = window] - Event target used to dispatch the event.
    */
   static simulateKeydown(key, dispatcher = window) {
