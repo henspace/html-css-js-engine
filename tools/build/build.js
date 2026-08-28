@@ -28,8 +28,9 @@
  * trailing spaces.
  *
  * Usage:
- * + build configFile
+ * + build configFile [--nozip]
  *     + configFile: the configuration file; see below.
+ *     + --nozip: if present, no zip file is created.
  *
  * ## Configuration file
  * The script should be passed the path to a configuration file as the only command line argument.
@@ -144,7 +145,7 @@ import * as process from 'node:process';
  */
 function showUsageAndExit(message) {
   console.error(message);
-  console.error('\nUsage: build configFile');
+  console.error('\nUsage: build configFile [--nozip]');
   process.exit(1);
 }
 
@@ -505,8 +506,10 @@ if (process.argv.length < 3) {
 } 
 
 let configFile = process.argv[2];
+const NO_ZIP = /^--nozip$/i.test(process.argv[3]);
 
 console.log(`Loading options from ${configFile}`);
+
 let options;
 let buildOutputDir;
 let hcjeSubmoduleOutputDir;
@@ -590,7 +593,13 @@ fsPromises.readFile('package.json', {encoding: 'utf-8'})
         packageDetails: packageDetails
       });
   })
-  .then(() => createZipFile(buildOutputDir, options.zippedOutputDir, options.zipOptions))
+  .then(() => {
+    if (NO_ZIP) {
+      console.log(`Zip file creation switched off via --nozip option.`);
+    } else { 
+      return createZipFile(buildOutputDir, options.zippedOutputDir, options.zipOptions);
+    }
+  })
   .then(() => {
     console.log(`Build complete.`); 
   });
