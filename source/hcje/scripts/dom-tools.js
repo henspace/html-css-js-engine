@@ -1636,6 +1636,6 @@ export class TimeLimitedBusyIndicator {
  * @returns {string}
  */ 
 export function getHcjeAssetHref(name) {
-  return new URL(`../assets/${name.replace(/[/\]/g)}`, import.meta.url).href;
+  return new URL(`../assets/${name.replace(/(?:\/|\\)/g, '_')}`, import.meta.url).href;
 } 
 
