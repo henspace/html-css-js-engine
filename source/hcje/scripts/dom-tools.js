@@ -1128,7 +1128,7 @@ export class SpinnerControl extends BaseControl {
   }
 }
 
-/*
+/**
  * Encapsulation of a DOM menu bar.
  */
 export class MenuBar {
@@ -1168,6 +1168,9 @@ export class MenuBar {
  * to set the class of the menu bar container to 'open' when open.
  * It is expected that the the display of these elements will
  * be controlled by CSS.
+ *
+ * There is no need to add the menu bar as this is done automatically in the constructor. It is either added to the
+ * `config.parentElement` or the `document.body`.
  * 
  * @param {Object} config
  * @param {Element} [config.parentElement = document.body] - The menu element is added to the parent
@@ -1629,13 +1632,4 @@ export class TimeLimitedBusyIndicator {
     this.#element.remove();
   }
 }
-
-/**
- * Get the name of an asset in the HCJE regardless of where the HCJE has been installed.
- * @param {string} name - the name of the asset in the HCJE's asset folder.
- * @returns {string}
- */ 
-export function getHcjeAssetHref(name) {
-  return new URL(`../assets/${name.replace(/(?:\/|\\)/g, '_')}`, import.meta.url).href;
-} 
 

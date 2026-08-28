@@ -409,4 +409,13 @@ export function fetchArrayBuffer(url, options) {
     })
 }
 
+/**
+ * Get the name of an asset in the HCJE regardless of where the HCJE has been installed.
+ * @param {string} name - the name of the asset in the HCJE's asset folder.
+ * @returns {string}
+ */ 
+export function getHcjeAssetHref(name) {
+  return new URL(`../assets/${name.replace(/(?:\/|\\)/g, '_')}`, import.meta.url).href;
+} 
+
 
