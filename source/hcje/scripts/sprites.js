@@ -580,6 +580,15 @@ export class Sprite {
  * Limiter for a [Dynamics]{@link module:hcje/sprites.Dynamics} class.
  * During the animation cycle a [Sprite]{@link module:hcje/sprites.Sprite} calls the 
  * [limit]{@link module:hcje/sprites~DynamicsLimiter#limit} method to modify the current dynamics if necessary.
+ * The function of a limiter can be replicated by using an object which extends the 
+ * [BaseSpriteAdjuster]{@link module:hcje/sprites.BaseSpriteAdjuster} class; however, there are some subtle differences
+ * in use case.
+ *
+ * + Limiters normally exist for the lifetime of an object.
+ * + Limiters typically only alter the dynamics or position of a sprite.
+ * + Adjusters are often transient and can call a function to provide notice of its completion.
+ * + Adjusters are typically used to make more comprehensive modifications to a sprite.
+ *
  * @interface DynamicsLimiter
  */
 
@@ -941,7 +950,9 @@ export function loadSpriteSheet(dataUrl, textureUrl, busyIndicator) {
 
 /**
  * Base adjuster. An adjuster is an object that can manipulate a [Sprite]{@link module:hcje/sprites.Sprite}.The 
- * base adjuster does nothing and is expected to be overridden.
+ * base adjuster's `adjust` method does nothing and is expected to be overridden. Unlike a 
+ * [DynamicsLimiter]{@link module:hcje/sprites~DynamicsLimiter}, adjusters normally have a limited lifetime and can
+ * call a completion function, set by the `onCompletion` property, when its activity has completed.
  */
 export class BaseSpriteAdjuster {
   /** Completion flag.
@@ -975,7 +986,7 @@ export class BaseSpriteAdjuster {
 
   /**
    * Set as complete. 
-   * @param {*} reason - Reason for completion. This is passed to the onCompletion callback if provided.
+   * @param {*} reason - Reason for completion. This is passed to the `onCompletion` callback if provided.
    */
   markComplete(reason) {
     this._sprite = undefined; // releases circular references.

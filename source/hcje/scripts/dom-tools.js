@@ -1171,9 +1171,9 @@ export class MenuBar {
  * 
  * @param {Object} config
  * @param {Element} [config.parentElement = document.body] - The menu element is added to the parent
- * @param {module:hcje/domTools~ElementWrapper|Element} config.opener - Element used to open and close the menu bar.
- * @param {module:hcje/domTools~ElementWrapper|Element} config.closer - Element used to close the menu bar
- * @param {module:hcje/domTools~ElementWrapper|Element} config.children - Buttons to add to menu
+ * @param {module:hcje/domTools.ElementWrapper|Element} config.opener - Element used to open and close the menu bar.
+ * @param {module:hcje/domTools.ElementWrapper|Element} config.closer - Element used to close the menu bar
+ * @param {module:hcje/domTools.ElementWrapper|Element} config.children - Buttons to add to menu
  * @param {function()} [config.onOpen] - Function called when menu opened via the opener. 
  * @param {function()} [config.onClose] - Function called when menu closed via the closer.
  */
@@ -1629,4 +1629,13 @@ export class TimeLimitedBusyIndicator {
     this.#element.remove();
   }
 }
+
+/**
+ * Get the name of an asset in the HCJE regardless of where the HCJE has been installed.
+ * @param {string} name - the name of the asset in the HCJE's asset folder.
+ * @returns {string}
+ */ 
+export function getHcjeAssetHref(name) {
+  return new URL(`../assets/${name.replace(/[/\]/g)}`, import.meta.url).href;
+} 
 
