@@ -1128,7 +1128,7 @@ export class SpinnerControl extends BaseControl {
   }
 }
 
-/**
+/*
  * Encapsulation of a DOM menu bar.
  */
 export class MenuBar {
@@ -1139,13 +1139,13 @@ export class MenuBar {
   /** The element that opens the menu.
    * @type {module:hcje/domTools~ElementWrapper|HTMLElement} */
   #opener;
-  /** The element that opens the menu.
+  /** The element that closes the menu.
    * @type {module:hcje/domTools~ElementWrapper|HTMLElement} */
   #closer;
   /** Function called when menu opened.
    * @type {function()} */
   onOpen;
-  /** Function called when menu opened.
+  /** Function called when menu closed.
    * @type {function()} */
   onClose;
 
@@ -1183,7 +1183,7 @@ export class MenuBar {
     this.onOpen = config.onOpen;
     this.onClose = config.onClose;
     this.#opener = config.opener;
-    this.#closer = config.close;
+    this.#closer = config.closer;
 
     const parentElement = config.parentElement || document.body;
     parentElement.appendChild(this.#menuBar);
